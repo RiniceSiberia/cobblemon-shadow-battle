@@ -10,13 +10,11 @@ import com.google.gson.JsonObject;
 import dev.architectury.platform.Platform;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -49,6 +47,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomActionPayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomListPayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomStatePayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.ServerDexPayload;
+import io.github.rinicesiberia.shadowbattle.battle.RoomDirectoryState;
 import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
 
 public final class CrossServerBattleService {
@@ -69,12 +68,7 @@ public final class CrossServerBattleService {
    private ScheduledExecutorService idleTimer;
    private ScheduledFuture<?> idleDisconnect;
    private static final int IDLE_DISCONNECT_MIN_SECONDS = 5;
-   private CrossServerBattleService.RoomBoard roomCache;
-   private final Map<UUID, Boolean> roomWaiters = new LinkedHashMap<>();
-   private boolean roomFetchInFlight;
-   private final Map<UUID, String> roomBoardSent = new HashMap<>();
-   private static final long ROOM_CACHE_MS = 4500L;
-   private static final long ROOM_OPEN_MS = 1000L;
+   private final RoomDirectoryState<List<RoomListPayload.Room>> roomDirectory = new RoomDirectoryState<>();
    private volatile int chatObserversReported = -1;
    private volatile boolean chatEnabled = true;
    private volatile boolean emailEnabled = false;
@@ -271,12 +265,7 @@ public final class CrossServerBattleService {
 
       this.dex.suspend(reason);
       this.chatObserversReported = -1;
-      this.onServerThread(() -> {
-         this.roomCache = null;
-         this.roomWaiters.clear();
-         this.roomBoardSent.clear();
-         this.roomFetchInFlight = false;
-      });
+      this.onServerThread(this.roomDirectory::clearSession);
       this.battleQueue.clear();
       this.previews.clear();
       this.auth.clear();
@@ -494,10 +483,7 @@ public final class CrossServerBattleService {
       LOGGER.warn("Battle server error [{}]: {}", code, text);
       if (!"hello".equals(BattleServerClient.str(document, "about", ""))) {
          if ("room_list".equals(BattleServerClient.str(document, "about", ""))) {
-            this.onServerThread(() -> {
-               this.roomFetchInFlight = false;
-               this.roomWaiters.clear();
-            });
+            this.onServerThread(this.roomDirectory::cancelRequests);
          }
 
          MirrorBattle mirror = CrossServerBattles.byRemoteId(BattleServerClient.str(document, "battleId", ""));
@@ -1014,27 +1000,27 @@ public final class CrossServerBattleService {
       if (!this.isConnected()) {
          return this.notConnected("auth.not_connected");
       } else {
-         CrossServerBattleService.RoomBoard board = this.roomCache;
-         long age = board == null ? Long.MAX_VALUE : System.currentTimeMillis() - board.at();
-         if (board != null && age < (refresh ? 4500L : 1000L)) {
-            this.deliverRooms(participant.getUUID(), board, refresh);
+         RoomDirectoryState.Snapshot<List<RoomListPayload.Room>> snapshot = this.roomDirectory.reusable(System.currentTimeMillis(), refresh);
+         if (snapshot != null) {
+            this.deliverRooms(participant.getUUID(), snapshot, refresh);
             return null;
          } else {
-            this.roomWaiters.merge(participant.getUUID(), refresh, (existing, added) -> existing && added);
-            if (this.roomFetchInFlight) {
+            this.roomDirectory.enqueue(participant.getUUID(), refresh);
+            if (!this.roomDirectory.needsFetch()) {
                return null;
             } else {
                JsonObject request = BattleServerClient.msg("room_list");
                request.addProperty("ref", this.client.nextRef());
-               if (board != null) {
-                  request.addProperty("hash", board.hash());
+               RoomDirectoryState.Snapshot<List<RoomListPayload.Room>> current = this.roomDirectory.current();
+               if (current != null) {
+                  request.addProperty("hash", current.getHash());
                }
 
                if (!this.client.send(request)) {
-                  this.roomWaiters.remove(participant.getUUID());
+                  this.roomDirectory.abandon(participant.getUUID());
                   return Msg.of(ChatFormatting.RED, "auth.send_failed");
                } else {
-                  this.roomFetchInFlight = true;
+                  this.roomDirectory.markFetchStarted();
                   return null;
                }
             }
@@ -1045,24 +1031,26 @@ public final class CrossServerBattleService {
    void refreshRooms(UUID participantUuid) {
       if (CrossServerBattles.byLocalPlayer(participantUuid) == null) {
          this.withParticipant(participantUuid, participant -> {
-            this.roomCache = null;
+            this.roomDirectory.invalidate();
             this.requestRooms(participant);
          });
       }
    }
 
    private void onRoomList(JsonObject document) {
-      this.roomFetchInFlight = false;
-      CrossServerBattleService.RoomBoard board;
-      if (BattleServerClient.bool(document, "unchanged", false) && this.roomCache != null) {
-         board = new CrossServerBattleService.RoomBoard(this.roomCache.rooms(), this.roomCache.hash(), System.currentTimeMillis());
+      List<RoomListPayload.Room> rooms;
+      String hash;
+      RoomDirectoryState.Snapshot<List<RoomListPayload.Room>> current = this.roomDirectory.current();
+      if (BattleServerClient.bool(document, "unchanged", false) && current != null) {
+         rooms = current.getContent();
+         hash = current.getHash();
       } else {
-         List<RoomListPayload.Room> rooms = new ArrayList<>();
+         List<RoomListPayload.Room> decodedRooms = new ArrayList<>();
 
          for (JsonElement el : document.has("rooms") && document.get("rooms").isJsonArray() ? document.getAsJsonArray("rooms") : new JsonArray()) {
             if (el.isJsonObject()) {
                JsonObject o = el.getAsJsonObject();
-               rooms.add(
+               decodedRooms.add(
                   new RoomListPayload.Room(
                      BattleServerClient.str(o, "id", ""),
                      BattleServerClient.str(o, "name", ""),
@@ -1085,27 +1073,25 @@ public final class CrossServerBattleService {
             }
          }
 
-         board = new CrossServerBattleService.RoomBoard(List.copyOf(rooms), BattleServerClient.str(document, "hash", ""), System.currentTimeMillis());
+         rooms = List.copyOf(decodedRooms);
+         hash = BattleServerClient.str(document, "hash", "");
       }
 
-      this.roomCache = board;
-      Map<UUID, Boolean> waiting = Map.copyOf(this.roomWaiters);
-      this.roomWaiters.clear();
-
-      for (Entry<UUID, Boolean> entry : waiting.entrySet()) {
-         this.deliverRooms(entry.getKey(), board, entry.getValue());
+      RoomDirectoryState.Completion<List<RoomListPayload.Room>> completion = this.roomDirectory.complete(rooms, hash, System.currentTimeMillis());
+      for (RoomDirectoryState.Waiter waiter : completion.getWaiters()) {
+         this.deliverRooms(waiter.getParticipant(), completion.getSnapshot(), waiter.getRefresh());
       }
    }
 
-   private void deliverRooms(UUID participantUuid, CrossServerBattleService.RoomBoard board, boolean refresh) {
+   private void deliverRooms(UUID participantUuid, RoomDirectoryState.Snapshot<List<RoomListPayload.Room>> snapshot, boolean refresh) {
       this.withParticipant(
          participantUuid,
          participant -> {
             long accountNumber = this.auth.uidOf(participant.getUUID());
-            List<RoomListPayload.Room> mine = new ArrayList<>(board.rooms().size());
+            List<RoomListPayload.Room> mine = new ArrayList<>(snapshot.getContent().size());
             boolean own = false;
 
-            for (RoomListPayload.Room room : board.rooms()) {
+            for (RoomListPayload.Room room : snapshot.getContent()) {
                boolean ours = accountNumber != 0L && room.hostUid() == accountNumber;
                own |= ours;
                mine.add(
@@ -1132,10 +1118,10 @@ public final class CrossServerBattleService {
                );
             }
 
-            String stamp = board.hash() + (own ? ":own" : "");
-            if (!refresh || !stamp.equals(this.roomBoardSent.get(participant.getUUID()))) {
+            String stamp = snapshot.getHash() + (own ? ":own" : "");
+            if (this.roomDirectory.shouldDeliver(participant.getUUID(), stamp, refresh)) {
                if (CobbleBattleNetwork.sendRooms(participant, new RoomListPayload(mine, refresh))) {
-                  this.roomBoardSent.put(participant.getUUID(), stamp);
+                  this.roomDirectory.recordDelivery(participant.getUUID(), stamp);
                }
             }
          }
@@ -1543,7 +1529,7 @@ public final class CrossServerBattleService {
       this.announceSignOutputStream(participant);
       this.auth.signOut(this.client, participant);
       this.reportChatObservers();
-      this.roomBoardSent.remove(participant.getUUID());
+      this.roomDirectory.forgetDelivery(participant.getUUID());
    }
 
    void tellParticipant(UUID participantUuid, Component document) {
@@ -1561,8 +1547,5 @@ public final class CrossServerBattleService {
    public record Ranked(
       String id, String name, String battleType, int slots, int adjustLevel, boolean fullHeal, String winScore, String failScore, List<String> rules
    ) {
-   }
-
-   private record RoomBoard(List<RoomListPayload.Room> rooms, String hash, long at) {
    }
 }
