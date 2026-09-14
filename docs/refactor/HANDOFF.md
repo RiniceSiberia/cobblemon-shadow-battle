@@ -32,4 +32,6 @@ B4-mirror-participants（2026-09-15）：新增 Kotlin `MirrorParticipantState` 
 
 B4-mirror-entities（2026-09-15）：新增 Kotlin `MirrorEntityRegistry` 并接入 `MirrorBattle` 的 NPC/actor 组合和临时 Pokémon 实体引用。新增2项契约验证快照与一次性转移，全量48项测试通过，公开 `javap` 签名仍与原始 JAR 一致，提交 `b454bff`，日志位于 `D:/workspace/gradle-b4-mirror-entities.log`。
 
-B4-format-resolution（2026-09-15）：新增 Kotlin `BattleFormatResolver` 并接入 `MirrorFactory` 两条创建路径。新增3项契约验证默认格式、规则覆盖/去重、空规则回退和等级调整，全量51项测试通过，日志位于 `D:/workspace/gradle-b4-format-resolver.log`。当前代码和台账待提交；下一步处理镜像构造启动确认、失败回收和结束结果投影。
+B4-format-resolution（2026-09-15）：新增 Kotlin `BattleFormatResolver` 并接入 `MirrorFactory` 两条创建路径。新增3项契约验证默认格式、规则覆盖/去重、空规则回退和等级调整，全量51项测试通过，提交 `adaa96f`，日志位于 `D:/workspace/gradle-b4-format-resolver.log`。
+
+B4-clean-build（2026-09-15）：JDK21 下执行 `./gradlew.bat --offline clean build --console=plain` 成功，9个任务全部执行，51项测试、0失败，发布 JAR 为 `build/libs/cobblemon-shadow-battle-neoforge-0.1.3.jar`。日志位于 `D:/workspace/gradle-b4-clean-build-20260915.log`。下一步处理镜像构造启动确认、失败回收和结束结果投影；游戏客户端、专用服务端和真实远端服务仍未验证。

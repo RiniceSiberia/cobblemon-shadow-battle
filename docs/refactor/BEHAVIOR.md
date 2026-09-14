@@ -47,3 +47,5 @@ B4-mirror-participants：`MirrorBattle` 的参与者、座位、观战者和双�
 B4-mirror-entities：`MirrorBattle` 创建的 NPC/远端 actor 组合及临时 Pokémon 实体引用已委托给 Kotlin `MirrorEntityRegistry`。快照不转移清理责任，`take` 返回当前不可变副本后清空，空引用不登记。新增2项容器契约，全量48项测试通过；`MirrorBattle` 公开 `javap` 签名继续与原始 JAR 一致。真实实体生成、延迟清理和异常回收仍待游戏内验证。
 
 B4-format-resolution：`MirrorFactory` 的远端规则描述解析已迁移到 Kotlin `BattleFormatResolver`，远端与本地双方创建路径共用。缺少 `formatJson` 时按 `format` 标识使用 Cobblemon 默认格式；显式规则去重并保留顺序；空规则沿用基础格式；`adjustLevel` 按远端值覆盖。新增3项契约测试，全量51项测试通过。真实 BattleRegistry 启动仍待验证。
+
+B4-clean-build：在 JDK 21 下执行 `./gradlew.bat --offline clean build --console=plain`，9个任务全部实际执行，51项测试、0失败，thin JAR 与包含隔离依赖的发布 JAR 均生成。日志位于 `D:/workspace/gradle-b4-clean-build-20260915.log`。此证据覆盖编译、测试和打包，不替代客户端、服务端及远端对战服务集成验证。
