@@ -1,6 +1,6 @@
 # 恢复入口
 
-当前批次 B2：配置与身份业务 Kotlin 迁移。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。Gradle build 成功，13个测试全部通过（Configuration 5，Value 3，Transport 2，Chat 3）。IDEA使用相同Gradle模型，实际界面导入尚未测试。
+当前批次 B4/B5：队列状态与内部命名持续整理。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-14 使用 JDK 21 执行 `--offline test` 成功，32 项测试全部通过；IDEA使用相同Gradle模型，实际界面导入尚未测试。
 
 业务源码基线为本地提交 2b4ea8d；本批次提交包含测试和构建。首次 Modrinth 下载 TLS 中断，通过缓存相同版本原件重试成功，项目不依赖 .deps 绝对路径。此前 tests 缺 Gson 依赖已修复。
 
@@ -19,3 +19,5 @@ B-vendor-chat完成：复制SnakeYAML源码已通过Git可恢复删除，Maven 2
 B4-projection已提交状态组件及30项测试。建立了Java语义符号初始清单SYMBOLS.csv（5033条，含需排除的编译器生成record成员，尚未用于最终比例）。下一步先校正符号统计/审查安全改名，再继续大型服务与UI批次。
 
 B5命名批次已完成并通过Gradle build，见build/gradle-b5-rename.log。当前工作区含419项语义改名；需先提交并重新生成符号清单，再推进BattleQueue/CrossServerBattleService剩余业务迁移。
+
+B6-queue-state（2026-09-14）：新增 Kotlin `QueueReferenceBook`，集中管理等待队伍、房间查询引用和房主引用的绑定、领取、清理；新增2项状态契约测试。当前 Java `BattleQueue` 尚未接入该组件，下一步按加入/退出/失败清理链路逐段委托并补测试。最近提交 `e7e4097`，验证日志位于 `D:/workspace/gradle-b6-queue-test.log`。
