@@ -47,6 +47,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomActionPayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomListPayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomStatePayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.ServerDexPayload;
+import io.github.rinicesiberia.shadowbattle.battle.BattleResultProjection;
 import io.github.rinicesiberia.shadowbattle.battle.RoomDirectoryState;
 import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
 
@@ -1328,54 +1329,27 @@ public final class CrossServerBattleService {
       for (UUID who : mirror.localPlayers()) {
          BattleInfo battleDetails = mirror.infoFor(who);
          if (battleDetails != null) {
-            BattleOutcome outcome;
-            if ("win".equals(reason) && !winnerSeat.isEmpty()) {
-               outcome = winnerSeat.equals(mirror.seatOf(who)) ? BattleOutcome.WIN : BattleOutcome.LOSS;
-            } else if ("tie".equals(reason)) {
-               outcome = BattleOutcome.TIE;
-            } else {
-               outcome = BattleOutcome.ABORTED;
-            }
-
-            ScoreChange score = this.scoreFor(document, who);
+            BattleOutcome outcome = BattleResultProjection.outcome(reason, winnerSeat, mirror.seatOf(who));
+            ScoreChange score = BattleResultProjection.scoreFor(document, who);
             this.withParticipant(who, participant -> ApiEvents.battleEnded(participant, battleDetails, outcome, reason, score));
          }
       }
    }
 
-   private ScoreChange scoreFor(JsonObject document, UUID who) {
-      if (document.has("scores") && document.get("scores").isJsonArray()) {
-         for (JsonElement el : document.getAsJsonArray("scores")) {
-            if (el.isJsonObject()) {
-               JsonObject o = el.getAsJsonObject();
-               if (who.equals(uuidOrNull(BattleServerClient.str(o, "player", "")))) {
-                  return new ScoreChange(o.has("before") ? o.get("before").getAsLong() : 0L, o.has("after") ? o.get("after").getAsLong() : 0L);
-               }
-            }
-         }
-
-         return null;
-      } else {
-         return null;
-      }
-   }
-
    private void announceScores(JsonObject document) {
-      if (document.has("scores") && document.get("scores").isJsonArray()) {
-         for (JsonElement el : document.getAsJsonArray("scores")) {
-            if (el.isJsonObject()) {
-               JsonObject o = el.getAsJsonObject();
-               UUID who = uuidOrNull(BattleServerClient.str(o, "player", ""));
-               if (who != null) {
-                  long before = o.has("before") ? o.get("before").getAsLong() : 0L;
-                  long after = o.has("after") ? o.get("after").getAsLong() : 0L;
-                  long delta = after - before;
-                  boolean won = BattleServerClient.bool(o, "won", false);
-                  String signed = (delta >= 0L ? "+" : "") + delta;
-                  this.tellParticipant(who, Msg.of(won ? ChatFormatting.GREEN : ChatFormatting.RED, won ? "rank.won" : "rank.lost", signed, before, after));
-               }
-            }
-         }
+      for (BattleResultProjection.ParticipantScore score : BattleResultProjection.participantScores(document)) {
+         long delta = score.getAfter() - score.getBefore();
+         String signed = (delta >= 0L ? "+" : "") + delta;
+         this.tellParticipant(
+            score.getParticipant(),
+            Msg.of(
+               score.getWon() ? ChatFormatting.GREEN : ChatFormatting.RED,
+               score.getWon() ? "rank.won" : "rank.lost",
+               signed,
+               score.getBefore(),
+               score.getAfter()
+            )
+         );
       }
    }
 
