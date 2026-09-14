@@ -42,4 +42,6 @@ B4-pokemon-ownership（2026-09-15）：新增 Kotlin `MirrorOwnershipIndex` 并�
 
 B4-clean-build-56（2026-09-15）：JDK21 下离线空目录构建成功，9个任务全部执行，56项测试、0失败，发布 JAR 已生成；Kotlin 源码无 `!!` 和 `@Suppress`。日志位于 `D:/workspace/gradle-b4-clean-build-56-20260915.log`。下一步处理镜像构造启动确认与失败回收；游戏客户端、专用服务端和真实远端服务仍未验证。
 
-B4-npc-state（2026-09-15）：新增 Kotlin `MirrorNpcState` 并接入活跃 NPC、皮肤缓存和显示名规范化。新增3项状态契约，全量59项测试通过，`MirrorNpc` 公开 `javap` 签名与原始 JAR 一致，日志位于 `D:/workspace/gradle-b4-npc-state.log`。当前代码和台账待提交；下一步处理镜像构造启动确认、失败回收及 NPC 几何/生命周期。
+B4-npc-state（2026-09-15）：新增 Kotlin `MirrorNpcState` 并接入活跃 NPC、皮肤缓存和显示名规范化。新增3项状态契约，全量59项测试通过，`MirrorNpc` 公开 `javap` 签名与原始 JAR 一致，提交 `bac1039`，日志位于 `D:/workspace/gradle-b4-npc-state.log`。
+
+B5-public-abi（2026-09-15）：公开 ABI 审计发现并修复 `CobbleBattleConfig` 多出的公开 `validate()`，校验逻辑迁入 Kotlin `ConfigurationValidation`，包级 `GSON` 保留。原 JAR 的123个项目自有 public class 与当前发布 JAR 的 `javap -public` 对照为缺失0、差异0；全量59项测试通过。审计结果位于 `D:/workspace/cobblebattle-public-abi-filtered-20260915.json`，测试日志位于 `D:/workspace/gradle-abi-config-fix.log`。当前代码和台账待提交；下一步继续 B4 构造/清理，再执行 clean build。

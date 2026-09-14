@@ -3,6 +3,7 @@ package xiaocaoawa.minecraft.mod.cobblebattle.config
 import com.google.gson.JsonParser
 import io.github.rinicesiberia.shadowbattle.configuration.ConfigurationDocument
 import io.github.rinicesiberia.shadowbattle.configuration.ConfigurationRepository
+import io.github.rinicesiberia.shadowbattle.configuration.ConfigurationValidation
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
@@ -30,14 +31,14 @@ class ConfigurationContractTest {
             val configuration = CobbleBattleConfig()
             configuration.serverPort = port
             configuration.maxFrameBytes = 1
-            configuration.validate()
+            ConfigurationValidation.normalize(configuration)
             assertEquals(18470, configuration.serverPort)
             assertEquals(1048576, configuration.maxFrameBytes)
         }
         for (port in listOf(1, 18470, 65535)) {
             val configuration = CobbleBattleConfig()
             configuration.serverPort = port
-            configuration.validate()
+            ConfigurationValidation.normalize(configuration)
             assertEquals(port, configuration.serverPort)
         }
     }

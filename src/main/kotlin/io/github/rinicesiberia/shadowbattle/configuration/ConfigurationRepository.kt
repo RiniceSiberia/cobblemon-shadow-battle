@@ -27,7 +27,7 @@ object ConfigurationRepository {
         } catch (failure: IOException) {
             logger.error("Could not read config/cobblebattle.yml, using defaults", failure)
         }
-        return CobbleBattleConfig().also { it.validate() }
+        return CobbleBattleConfig().also(ConfigurationValidation::normalize)
     }
 
     @JvmStatic
@@ -44,7 +44,7 @@ object ConfigurationRepository {
     }
 
     private fun decode(source: String): CobbleBattleConfig? =
-        json.fromJson(ConfigurationDocument.decode(source), CobbleBattleConfig::class.java)?.also { it.validate() }
+        json.fromJson(ConfigurationDocument.decode(source), CobbleBattleConfig::class.java)?.also(ConfigurationValidation::normalize)
 
     private fun installTemplate() {
         val template = ConfigurationRepository::class.java.getResourceAsStream("/cobblebattle.yml")
