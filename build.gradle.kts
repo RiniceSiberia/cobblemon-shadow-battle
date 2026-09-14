@@ -3,6 +3,7 @@ plugins {
     idea
     kotlin("jvm") version "2.2.20"
     id("net.neoforged.moddev") version "2.0.147"
+    id("com.gradleup.shadow") version "9.1.0"
 }
 
 group = "io.github.rinicesiberia"
@@ -30,7 +31,11 @@ neoForge {
     mods { create("cobblebattle") { sourceSet(sourceSets.main.get()) } }
 }
 
+val bundledLibraries by configurations.creating
+configurations.implementation { extendsFrom(bundledLibraries) }
+
 dependencies {
+    bundledLibraries("org.yaml:snakeyaml:2.6")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.slf4j:slf4j-api:2.0.9")
     implementation("dev.architectury:architectury-neoforge:13.0.8")
@@ -40,22 +45,35 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-val java9 by sourceSets.creating
-tasks.named<JavaCompile>(java9.compileJavaTaskName) { options.release.set(9) }
+
+
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-proc:none")
 }
 tasks.test {
     useJUnitPlatform()
+    dependsOn(tasks.shadowJar)
+    systemProperty("battle.artifact", tasks.shadowJar.get().archiveFile.get().asFile.absolutePath)
     classpath += sourceSets.main.get().compileClasspath
     workingDir(layout.buildDirectory.dir("test-workspace"))
     doFirst { workingDir.mkdirs() }
 }
 tasks.jar {
-    from(java9.output) { into("META-INF/versions/9") }
+    archiveClassifier.set("thin")
+
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
 }
+tasks.shadowJar {
+    configurations = listOf(bundledLibraries)
+    archiveClassifier.set("")
+    relocate("org.yaml.snakeyaml", "io.github.rinicesiberia.shadowbattle.internal.yaml")
+    exclude("module-info.class", "META-INF/versions/*/module-info.class")
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
+}
+tasks.assemble { dependsOn(tasks.shadowJar) }
 idea.module.isDownloadSources = true
+
 

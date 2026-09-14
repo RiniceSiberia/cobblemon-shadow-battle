@@ -1,9 +1,9 @@
 package io.github.rinicesiberia.shadowbattle.configuration
 
 import com.google.gson.*
-import xiaocaoawa.minecraft.mod.cobblebattle.shaded.snakeyaml.LoaderOptions
-import xiaocaoawa.minecraft.mod.cobblebattle.shaded.snakeyaml.Yaml
-import xiaocaoawa.minecraft.mod.cobblebattle.shaded.snakeyaml.constructor.SafeConstructor
+import org.yaml.snakeyaml.LoaderOptions
+import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.constructor.SafeConstructor
 
 /** 将安全加载的 YAML 映射转换为配置对象所需的 JSON 树。 */
 object ConfigurationDocument {
@@ -26,3 +26,4 @@ object ConfigurationDocument {
         else -> JsonPrimitive(java.lang.String.valueOf(value))
     }
 }
+

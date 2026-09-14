@@ -25,3 +25,7 @@ B2-configuration：ConfigFile→ConfigurationRepository，YamlTree→Configurati
 B3-transport：BattleServerClient保留公开Java入口，状态机和帧收发迁至RemoteBattleConnection，标量读取迁至MessageFields。16项既有测试通过；网络2项验证握手/压缩/普通发送门控/Unicode/非对象忽略/手动断线原因/非法长度。尚未覆盖真实远端服务、超时重连压力和所有并发交错。新增AccountContractTest初次2项因测试运行类路径缺Minecraft Component失败，已补测试类路径后重跑，不能归为业务回归。
 
 B3-account：AuthService→AccountSessions+AuthenticationMessages，保留公开入口和Outcome/Signed记录。21项测试通过，含原认证会话2项以及新增三项消息字段/空白边界。代码保持Java isBlank与trim规则、绑定输入不裁剪、验证码请求不携带player、先写pending后发送及失败撤回。真实玩家提交和远端服务联调仍待验证。
+
+B-vendor差分验证：删除前用同一组16个有效YAML和2个非法/不安全标签文档，对比原内嵌解析器与Maven org.yaml:snakeyaml:2.6，全部结果/异常接受性一致（YamlDependencyContractTest，build/gradle-yaml-comparison.log，22项测试全通过）。随后移除123个复制库文件及Java9 Logger源码，使用锁定依赖并隔离打包。最终保留配置契约测试，原差分测试只用于这次替换验证。
+
+B-chat：ChatLog→ChatHistory，ChatState→ConversationState，保留公开入口/Channel/Line。原聊天3项测试通过，保留40条上限、不可变快照、战斗退出恢复频道、注销清空、负滚动归零、reset不改enabled。B-artifact：最终shadowJar在仅含Gson和Kotlin标准库的隔离加载器中解析配置成功，未误打包Minecraft/Cobblemon。
