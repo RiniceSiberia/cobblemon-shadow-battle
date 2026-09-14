@@ -13,7 +13,7 @@ class QueueReferenceBookTest {
     fun `waiting entries and references are independently reclaimable`() {
         val book = QueueReferenceBook()
         val participant = UUID.fromString("00000000-0000-0000-0000-000000000001")
-        book.putWaiting(QueueReferenceBook.WaitingTeam(participant, listOf("a"), "packed", "ranked"))
+        book.putWaiting(QueueReferenceBook.WaitingTeam(participant, emptyList(), "packed", "ranked"))
         book.bindOwner(7, participant)
         book.bindLookup(8, participant)
 
@@ -29,7 +29,7 @@ class QueueReferenceBookTest {
     fun `clear removes all pending state`() {
         val book = QueueReferenceBook()
         val participant = UUID.randomUUID()
-        book.putWaiting(QueueReferenceBook.WaitingTeam(participant, Unit, "", ""))
+        book.putWaiting(QueueReferenceBook.WaitingTeam(participant, emptyList(), "", ""))
         book.bindOwner(1, participant)
         book.bindLookup(2, participant)
         book.clear()

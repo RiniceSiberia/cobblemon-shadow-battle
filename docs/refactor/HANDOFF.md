@@ -20,4 +20,4 @@ B4-projection已提交状态组件及30项测试。建立了Java语义符号初�
 
 B5命名批次已完成并通过Gradle build，见build/gradle-b5-rename.log。当前工作区含419项语义改名；需先提交并重新生成符号清单，再推进BattleQueue/CrossServerBattleService剩余业务迁移。
 
-B6-queue-state（2026-09-14）：新增 Kotlin `QueueReferenceBook`，集中管理等待队伍、房间查询引用和房主引用的绑定、领取、清理；新增2项状态契约测试。当前 Java `BattleQueue` 尚未接入该组件，下一步按加入/退出/失败清理链路逐段委托并补测试。最近提交 `e7e4097`，验证日志位于 `D:/workspace/gradle-b6-queue-test.log`。
+B6-queue-state（2026-09-14）：新增 Kotlin `QueueReferenceBook`，并已接入 Java `BattleQueue`，集中管理等待队伍、房间查询引用和房主引用的绑定、领取、清理；加入、查询、启动发送失败时回收对应状态，退出、断线、房间关闭和队列响应继续使用兼容入口。新增2项状态契约测试，JDK21 下全量32项测试通过，日志位于 `D:/workspace/gradle-b6-queue-integration.log`。最近代码提交仍待落库；下一步审查 `CrossServerBattleService` 的队列响应、远端拒绝和断线清理链路。

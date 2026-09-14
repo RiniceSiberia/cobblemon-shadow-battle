@@ -33,3 +33,5 @@ B-chat：ChatLog→ChatHistory，ChatState→ConversationState，保留公开入
 B4-projection：新增迁移前对战契约5项通过，再提取BattleProjectionIndex和SequencedOutputBuffer，新增序号精确交付/先限容量/两分钟边界3项通过。全量30项通过。注入ThreadLocal清理、权威仅中继强制结束、非权威吞掉选择、双本地座位路由保留。未覆盖真实Showdown解释和NPC实体生命周期。
 
 B5-symbol-batch：419项内部参数/局部/字段/方法名改写，Gradle build通过，现有行为契约全部通过。改名工具先做Javac语义分析，未产生分析错误；尚未进行游戏内启动。
+
+B6-queue-state：`BattleQueue` 的等待队伍、房间查询引用、房主引用已委托给 Kotlin `QueueReferenceBook`。加入请求发送失败时同时回收等待队伍和请求引用；房间查询/房间启动发送失败时回收对应引用；退出、断线、房间关闭及队列响应仍按原顺序清理。新增2项状态契约测试，并以全量32项测试验证编译、打包和既有行为。真实远端匹配、游戏内玩家断线及服务重连仍未实测。

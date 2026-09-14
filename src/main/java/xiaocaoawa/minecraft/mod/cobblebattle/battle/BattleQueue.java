@@ -11,9 +11,7 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -24,41 +22,39 @@ import net.minecraft.server.level.ServerPlayer;
 import xiaocaoawa.minecraft.mod.cobblebattle.dex.RemoteDex;
 import xiaocaoawa.minecraft.mod.cobblebattle.lang.Msg;
 import xiaocaoawa.minecraft.mod.cobblebattle.net.BattleServerClient;
+import io.github.rinicesiberia.shadowbattle.battle.QueueReferenceBook;
 
 final class BattleQueue {
    private final CrossServerBattleService service;
-   private final Map<UUID, BattleQueue.QueuedTeam> waitingTeams = new ConcurrentHashMap<>();
-   private final Map<Integer, UUID> refOwners = new ConcurrentHashMap<>();
-   private final Map<Integer, UUID> lookupRefs = new ConcurrentHashMap<>();
+   private final QueueReferenceBook references = new QueueReferenceBook();
 
    BattleQueue(CrossServerBattleService service) {
       this.service = service;
    }
 
    boolean contains(UUID participantUuid) {
-      return this.waitingTeams.containsKey(participantUuid);
+      return this.references.contains(participantUuid);
    }
 
    BattleQueue.QueuedTeam claim(UUID participantUuid) {
-      return this.waitingTeams.remove(participantUuid);
+      QueueReferenceBook.WaitingTeam entry = this.references.claim(participantUuid);
+      return entry == null ? null : new BattleQueue.QueuedTeam(participantUuid, entry.getTeam(), entry.getPacked(), entry.getRankedId());
    }
 
    void drop(UUID participantUuid) {
-      this.waitingTeams.remove(participantUuid);
+      this.references.drop(participantUuid);
    }
 
    void clear() {
-      this.waitingTeams.clear();
-      this.refOwners.clear();
-      this.lookupRefs.clear();
+      this.references.clear();
    }
 
    UUID claimLookupRef(JsonElement ref) {
-      return ref != null && !ref.isJsonNull() ? this.lookupRefs.remove(ref.getAsInt()) : null;
+      return ref != null && !ref.isJsonNull() ? this.references.lookup(ref.getAsInt()) : null;
    }
 
    UUID claimRefOwner(JsonElement ref) {
-      return ref != null && !ref.isJsonNull() ? this.refOwners.remove(ref.getAsInt()) : null;
+      return ref != null && !ref.isJsonNull() ? this.references.owner(ref.getAsInt()) : null;
    }
 
    private BattleQueue.Prepared prepare(ServerPlayer participant) throws BattleQueue.Refused {
@@ -73,7 +69,7 @@ final class BattleQueue {
          throw new BattleQueue.Refused(Msg.of(ChatFormatting.RED, "queue.not_signed_in"));
       } else if (!dex.isReady()) {
          throw new BattleQueue.Refused(Msg.of(ChatFormatting.RED, "queue.dex_not_ready"));
-      } else if (this.waitingTeams.containsKey(participant.getUUID())) {
+      } else if (this.references.contains(participant.getUUID())) {
          throw new BattleQueue.Refused(Msg.of(ChatFormatting.YELLOW, "queue.already_queued"));
       } else if (BattleRegistry.getBattleByParticipatingPlayer(participant) != null) {
          throw new BattleQueue.Refused(Msg.of(ChatFormatting.RED, "queue.already_in_battle"));
@@ -211,9 +207,9 @@ final class BattleQueue {
          lookup.addProperty("ref", ref);
          lookup.add("player", participantObject(participant));
          lookup.addProperty("inviteCode", code);
-         this.lookupRefs.put(ref, participant.getUUID());
+         this.references.bindLookup(ref, participant.getUUID());
          if (!client.send(lookup)) {
-            this.lookupRefs.remove(ref);
+            this.references.removeLookup(ref);
             return Msg.of(ChatFormatting.RED, "queue.send_failed");
          } else {
             return null;
@@ -253,9 +249,9 @@ final class BattleQueue {
       JsonObject start = BattleServerClient.msg("room_start");
       start.addProperty("ref", ref);
       start.add("player", participantObject(participant));
-      this.refOwners.put(ref, participant.getUUID());
+      this.references.bindOwner(ref, participant.getUUID());
       if (!client.send(start)) {
-         this.refOwners.remove(ref);
+         this.references.removeOwner(ref);
          return Msg.of(ChatFormatting.RED, "queue.send_failed");
       } else {
          return null;
@@ -265,7 +261,7 @@ final class BattleQueue {
    void onRoomClosed(JsonObject document) {
       this.claimRefOwner(document.get("ref"));
       UUID participantUuid = UUID.fromString(BattleServerClient.str(document, "player", ""));
-      this.waitingTeams.remove(participantUuid);
+      this.references.drop(participantUuid);
       String why = BattleServerClient.str(document, "why", "");
 
       String key = switch (why) {
@@ -288,11 +284,11 @@ final class BattleQueue {
       request.add("player", participantObject(participant));
       request.addProperty("team", preparedTeam.packed());
       request.add("teamMeta", preparedTeam.meta());
-      this.waitingTeams.put(participant.getUUID(), new BattleQueue.QueuedTeam(participant.getUUID(), preparedTeam.team(), preparedTeam.packed(), rankedId));
-      this.refOwners.put(ref, participant.getUUID());
+      this.references.putWaiting(new QueueReferenceBook.WaitingTeam(participant.getUUID(), preparedTeam.team(), preparedTeam.packed(), rankedId));
+      this.references.bindOwner(ref, participant.getUUID());
       if (!client.send(request)) {
-         this.waitingTeams.remove(participant.getUUID());
-         this.refOwners.remove(ref);
+         this.references.drop(participant.getUUID());
+         this.references.removeOwner(ref);
          return Msg.of(ChatFormatting.RED, "queue.send_failed");
       } else {
          return null;
@@ -319,7 +315,7 @@ final class BattleQueue {
    }
 
    Component leave(ServerPlayer participant) {
-      if (!this.waitingTeams.containsKey(participant.getUUID())) {
+      if (!this.references.contains(participant.getUUID())) {
          return Msg.of(ChatFormatting.YELLOW, "queue.not_in_queue");
       } else {
          BattleServerClient client = this.service.client();
@@ -332,7 +328,7 @@ final class BattleQueue {
    }
 
    void onParticipantDisconnect(ServerPlayer participant) {
-      if (this.waitingTeams.remove(participant.getUUID()) != null) {
+      if (this.references.claim(participant.getUUID()) != null) {
          BattleServerClient client = this.service.client();
          if (client != null) {
             JsonObject leave = BattleServerClient.msg("queue_leave");
@@ -376,7 +372,7 @@ final class BattleQueue {
 
    void onQueueLeft(JsonObject document) {
       UUID participantUuid = UUID.fromString(BattleServerClient.str(document, "player", ""));
-      this.waitingTeams.remove(participantUuid);
+      this.references.drop(participantUuid);
       if (BattleServerClient.bool(document, "wasQueued", false)) {
          String why = BattleServerClient.str(document, "why", "");
 
