@@ -4,9 +4,7 @@ import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import io.github.rinicesiberia.shadowbattle.battle.MirrorOwnershipIndex;
 import net.minecraft.world.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +12,7 @@ import org.slf4j.LoggerFactory;
 public final class MirrorPokemon {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle/Mirror");
    static final String TAG = "cobblebattle_mirror";
-   private static final Map<UUID, MirrorBattle> LIVE = new ConcurrentHashMap<>();
+   private static final MirrorOwnershipIndex<MirrorBattle> OWNERS = new MirrorOwnershipIndex<>();
 
    private MirrorPokemon() {
    }
@@ -23,7 +21,7 @@ public final class MirrorPokemon {
       for (BattlePokemon battleCreature : roster) {
          Pokemon creature = battleCreature.getEffectedPokemon();
          if (creature != null) {
-            LIVE.put(creature.getUuid(), mirror);
+            OWNERS.assign(creature.getUuid(), mirror);
          }
       }
    }
@@ -32,7 +30,7 @@ public final class MirrorPokemon {
       for (BattlePokemon battleCreature : roster) {
          Pokemon creature = battleCreature.getEffectedPokemon();
          if (creature != null) {
-            LIVE.remove(creature.getUuid());
+            OWNERS.release(creature.getUuid());
          }
       }
    }
@@ -40,7 +38,7 @@ public final class MirrorPokemon {
    public static boolean onEntityAdded(Entity entity) {
       if (entity instanceof PokemonEntity creatureEntity) {
          Pokemon creature = creatureEntity.getPokemon();
-         MirrorBattle mirror = creature == null ? null : LIVE.get(creature.getUuid());
+         MirrorBattle mirror = creature == null ? null : OWNERS.find(creature.getUuid());
          if (mirror != null) {
             entity.addTag("cobblebattle_mirror");
             mirror.attachProp(creatureEntity);
