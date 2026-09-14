@@ -4,9 +4,8 @@ import com.cobblemon.mod.common.api.battles.model.PokemonBattle;
 import com.cobblemon.mod.common.battles.ShowdownInterpreter;
 import com.cobblemon.mod.common.entity.npc.NPCEntity;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
-import java.util.HashMap;
+import io.github.rinicesiberia.shadowbattle.battle.SequencedOutputBuffer;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,8 +16,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.api.BattleInfo;
 
 public final class MirrorBattle {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle/Mirror");
-   private static final int MAX_PENDING = 64;
-   private static final int MAX_PENDING_REPLAY = 8192;
+   private final SequencedOutputBuffer outputBuffer;
    private final String remoteBattleId;
    private final String seat;
    private final String opponentSeat;
@@ -32,11 +30,6 @@ public final class MirrorBattle {
    private final Set<UUID> watchers = ConcurrentHashMap.newKeySet();
    private volatile UUID localBattleId;
    private volatile PokemonBattle battle;
-   private volatile boolean released;
-   private volatile boolean finished;
-   private final Object streamLock = new Object();
-   private long nextSeq = 1L;
-   private final Map<Long, String> pending = new HashMap<>();
    private final List<MirrorBattle.Body> bodies = new CopyOnWriteArrayList<>();
    private final List<PokemonEntity> props = new CopyOnWriteArrayList<>();
    private volatile BattleInfo info;
@@ -85,6 +78,7 @@ public final class MirrorBattle {
       boolean debug,
       boolean spectator
    ) {
+      this.outputBuffer = new SequencedOutputBuffer(remoteBattleId, spectator, this::apply);
       this.spectator = spectator;
       this.remoteBattleId = remoteBattleId;
       this.seat = seat;
@@ -244,7 +238,7 @@ public final class MirrorBattle {
    }
 
    public boolean isFinished() {
-      return this.finished;
+      return this.outputBuffer.isTerminated();
    }
 
    void bindLocalId(UUID id) {
@@ -255,44 +249,9 @@ public final class MirrorBattle {
       this.battle = battle;
    }
 
-   public void release() {
-      synchronized (this.streamLock) {
-         this.released = true;
-         this.drain();
-      }
-   }
+   public void release() { this.outputBuffer.enableDelivery(); }
 
-   public void accept(long seq, String chunk) {
-      synchronized (this.streamLock) {
-         if (!this.finished) {
-            if (seq < this.nextSeq) {
-               LOGGER.debug("Battle {} ignoring duplicate chunk seq {}", this.remoteBattleId, seq);
-            } else {
-               this.pending.put(seq, chunk);
-               if (this.pending.size() > (this.spectator ? 8192 : 64)) {
-                  LOGGER.error(
-                     "Battle {} has {} out-of-order chunks waiting on seq {} - the stream is broken",
-                     new Object[]{this.remoteBattleId, this.pending.size(), this.nextSeq}
-                  );
-                  this.finished = true;
-                  this.pending.clear();
-               } else {
-                  this.drain();
-               }
-            }
-         }
-      }
-   }
-
-   private void drain() {
-      if (this.released) {
-         String chunk;
-         while ((chunk = this.pending.remove(this.nextSeq)) != null) {
-            this.nextSeq++;
-            this.apply(chunk);
-         }
-      }
-   }
+   public void accept(long seq, String chunk) { this.outputBuffer.enqueue(seq, chunk); }
 
    private void apply(String chunk) {
       UUID id = this.localBattleId;
@@ -307,18 +266,9 @@ public final class MirrorBattle {
       }
    }
 
-   public void markFinished() {
-      synchronized (this.streamLock) {
-         this.finished = true;
-         this.pending.clear();
-      }
-   }
+   public void markFinished() { this.outputBuffer.terminate(); }
 
-   public boolean hasStalledChunks() {
-      synchronized (this.streamLock) {
-         return !this.pending.isEmpty();
-      }
-   }
+   public boolean hasStalledChunks() { return this.outputBuffer.hasPendingOutput(); }
 
    public record Body(NPCEntity npc, RemoteBattleActor actor) {
    }
@@ -326,3 +276,4 @@ public final class MirrorBattle {
    public record Routing(boolean sendOn, boolean interpretOn) {
    }
 }
+
