@@ -8,10 +8,8 @@ import com.cobblemon.mod.common.battles.BattleSide;
 import com.cobblemon.mod.common.battles.actor.PlayerBattleActor;
 import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
 import com.cobblemon.mod.common.entity.npc.NPCEntity;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +23,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.api.BattleInfo;
 import xiaocaoawa.minecraft.mod.cobblebattle.config.ServerIdentity;
 import xiaocaoawa.minecraft.mod.cobblebattle.lang.Msg;
 import xiaocaoawa.minecraft.mod.cobblebattle.net.BattleServerClient;
+import io.github.rinicesiberia.shadowbattle.battle.TeamSelection;
 
 final class MirrorFactory {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle");
@@ -68,41 +67,6 @@ final class MirrorFactory {
 
    MirrorFactory(CrossServerBattleService service) {
       this.service = service;
-   }
-
-   private static List<BattlePokemon> pickedFrom(List<BattlePokemon> roster, JsonObject document, String mySeat) {
-      JsonObject picks = document.getAsJsonObject("picks");
-      JsonElement mine = picks == null ? null : picks.get(mySeat);
-      if (mine != null && mine.isJsonArray()) {
-         JsonArray array = mine.getAsJsonArray();
-         if (array.isEmpty()) {
-            return roster;
-         } else {
-            List<BattlePokemon> outputStream = new ArrayList<>(array.size());
-            Set<Integer> seen = new LinkedHashSet<>();
-
-            for (JsonElement element : array) {
-               int index;
-               try {
-                  index = element.getAsInt();
-               } catch (RuntimeException failure) {
-                  LOGGER.warn("A pick for seat {} was not a slot number; using the whole team", mySeat);
-                  return roster;
-               }
-
-               if (index < 0 || index >= roster.size() || !seen.add(index)) {
-                  LOGGER.warn("Pick {} for seat {} is not a slot in a team of {}; using the whole team", new Object[]{index, mySeat, roster.size()});
-                  return roster;
-               }
-
-               outputStream.add(roster.get(index));
-            }
-
-            return outputStream;
-         }
-      } else {
-         return roster;
-      }
    }
 
    void build(JsonObject document) {
@@ -175,7 +139,7 @@ final class MirrorFactory {
                         this.service
                            .sendAbort(remoteBattleId, "this server knows only " + opponentRoster.size() + " of the " + expected + " Pokemon on the opposing team");
                      } else {
-                        List<BattlePokemon> myRoster = pickedFrom(mine.team(), document, mySeat);
+                        List<BattlePokemon> myRoster = TeamSelection.choose(mine.team(), document, mySeat);
                         if (myRoster.isEmpty()) {
                            LOGGER.error("Battle {}: none of this player's team was picked", remoteBattleId);
                            this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
@@ -280,8 +244,8 @@ final class MirrorFactory {
       BattleQueue.QueuedTeam mine = queue.claim(myParticipantUuid);
       BattleQueue.QueuedTeam theirs = queue.claim(opponentUuid);
       if (mine != null && theirs != null) {
-         List<BattlePokemon> myRoster = pickedFrom(mine.team(), document, mySeat);
-         List<BattlePokemon> theirRoster = pickedFrom(theirs.team(), document, opponentSeatId);
+         List<BattlePokemon> myRoster = TeamSelection.choose(mine.team(), document, mySeat);
+         List<BattlePokemon> theirRoster = TeamSelection.choose(theirs.team(), document, opponentSeatId);
          if (!myRoster.isEmpty() && !theirRoster.isEmpty()) {
             MinecraftServer server = this.service.server();
             ServerPlayer me = server == null ? null : server.getPlayerList().getPlayer(myParticipantUuid);
