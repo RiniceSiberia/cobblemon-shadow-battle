@@ -8,11 +8,8 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.ProfileLookupCallback;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.yggdrasil.ProfileResult;
+import io.github.rinicesiberia.shadowbattle.battle.MirrorNpcState;
 import java.net.URI;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import net.minecraft.network.chat.Component;
@@ -29,12 +26,11 @@ import org.slf4j.LoggerFactory;
 public final class MirrorNpc {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle/NPC");
    private static final double DISTANCE = 4.0;
-   private static final Set<UUID> LIVE = ConcurrentHashMap.newKeySet();
+   private static final MirrorNpcState<MirrorNpc.Skin> STATE = new MirrorNpcState<>();
    private static final ResourceLocation MIRROR_CLASS = ResourceLocation.fromNamespaceAndPath("cobblebattle", "mirror");
    private static final double STAGE_DISTANCE = 7.0;
    private static final double STAGE_WIDTH = 4.0;
    private static final MirrorNpc.Skin NO_SKIN = new MirrorNpc.Skin(null, null);
-   private static final Map<String, MirrorNpc.Skin> SKINS = new ConcurrentHashMap<>();
    private static final ExecutorService SKIN_LOOKUP = Executors.newSingleThreadExecutor(runnable -> {
       Thread thread = new Thread(runnable, "CobbleBattle-Skins");
       thread.setDaemon(true);
@@ -49,7 +45,7 @@ public final class MirrorNpc {
          return false;
       } else {
          NPCClass npcClass = npc.getNpc();
-         return npcClass != null && MIRROR_CLASS.equals(npcClass.getResourceIdentifier()) && !LIVE.contains(npc.getUUID());
+         return npcClass != null && MIRROR_CLASS.equals(npcClass.getResourceIdentifier()) && !STATE.isLive(npc.getUUID());
       }
    }
 
@@ -93,9 +89,9 @@ public final class MirrorNpc {
             npc.setNoAi(true);
             npc.setPersistenceRequired();
             npc.finalizeSpawn(level, level.getCurrentDifficultyAt(npc.blockPosition()), MobSpawnType.EVENT, null);
-            LIVE.add(npc.getUUID());
+            STATE.markLive(npc.getUUID());
             if (!level.addFreshEntity(npc)) {
-               LIVE.remove(npc.getUUID());
+               STATE.markGone(npc.getUUID());
                LOGGER.warn("The level refused the mirror NPC for {}", opponentName);
                return null;
             } else {
@@ -111,16 +107,15 @@ public final class MirrorNpc {
 
    private static void applySkin(MinecraftServer server, NPCEntity npc, String displayName) {
       if (server != null && displayName != null) {
-         int hash = displayName.indexOf(35);
-         String name = (hash < 0 ? displayName : displayName.substring(0, hash)).trim();
-         if (!name.isEmpty()) {
-            MirrorNpc.Skin known = SKINS.get(name);
+         String name = STATE.profileName(displayName);
+         if (name != null) {
+            MirrorNpc.Skin known = STATE.cachedSkin(name);
             if (known != null) {
                known.applyTo(npc);
             } else {
                SKIN_LOOKUP.execute(() -> {
                   MirrorNpc.Skin found = lookUpSkin(server, name);
-                  SKINS.put(name, found);
+                  STATE.rememberSkin(name, found);
                   if (found.url() != null) {
                      server.execute(() -> {
                         if (!npc.isRemoved()) {
@@ -169,7 +164,7 @@ public final class MirrorNpc {
 
    public static void despawn(NPCEntity npc) {
       if (npc != null) {
-         LIVE.remove(npc.getUUID());
+         STATE.markGone(npc.getUUID());
          if (!npc.isRemoved()) {
             try {
                npc.discard();

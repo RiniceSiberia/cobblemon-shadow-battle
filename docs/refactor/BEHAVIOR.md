@@ -55,3 +55,5 @@ B4-battle-result：结束帧的胜负和分数解析已迁移到 Kotlin `BattleR
 B4-pokemon-ownership：`MirrorPokemon` 的 Pokémon UUID 到镜像对战归属表已委托给 Kotlin `MirrorOwnershipIndex`。重复登记由最新镜像接管，释放未知 UUID 无副作用，释放后查询为空。新增2项状态契约，全量56项测试通过；`MirrorPokemon` 公开 `javap` 签名与原始 JAR 一致。实体加入世界、标签写入和残留实体销毁待游戏内验证。
 
 B4-clean-build-56：在提交 `a415554` 后使用 JDK 21 执行 `./gradlew.bat --offline clean build --console=plain`，9个任务全部实际执行，56项测试、0失败，thin JAR 与发布 JAR 均生成。扫描 `src/main/kotlin` 未发现空断言或 `@Suppress`。日志位于 `D:/workspace/gradle-b4-clean-build-56-20260915.log`。
+
+B4-npc-state：`MirrorNpc` 的活跃实体 UUID、皮肤缓存和显示名规范化已委托给 Kotlin `MirrorNpcState`。显示名裁剪空白并去除首个 `#` 后的编号，空结果不查询；活跃登记/移除幂等；缓存由最后一次结果覆盖。新增3项状态契约，全量59项测试通过；`MirrorNpc` 公开 `javap` 签名与原始 JAR 一致。Mojang 皮肤查询、主线程应用和 NPC 世界生命周期待验证。

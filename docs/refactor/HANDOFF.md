@@ -1,6 +1,6 @@
 # 恢复入口
 
-当前批次 B4：排队、匹配与跨服服务状态。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-15 使用 JDK 21 执行 `--offline clean build` 成功，56 项测试全部通过，9个构建任务全部执行。IDEA使用相同Gradle模型，实际界面导入尚未测试。
+当前批次 B4：排队、匹配与跨服服务状态。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-15 使用 JDK 21 执行 `--offline test` 成功，59 项测试全部通过；最近一次空目录构建对应56项测试。IDEA使用相同Gradle模型，实际界面导入尚未测试。
 
 业务源码基线为本地提交 2b4ea8d；本批次提交包含测试和构建。首次 Modrinth 下载 TLS 中断，通过缓存相同版本原件重试成功，项目不依赖 .deps 绝对路径。此前 tests 缺 Gson 依赖已修复。
 
@@ -41,3 +41,5 @@ B4-battle-result（2026-09-15）：新增 Kotlin `BattleResultProjection` 并接
 B4-pokemon-ownership（2026-09-15）：新增 Kotlin `MirrorOwnershipIndex` 并接入 `MirrorPokemon`。新增2项契约覆盖重复登记接管和幂等释放，全量56项测试通过，公开 `javap` 签名与原始 JAR 一致，提交 `a415554`，日志位于 `D:/workspace/gradle-b4-pokemon-ownership.log`。
 
 B4-clean-build-56（2026-09-15）：JDK21 下离线空目录构建成功，9个任务全部执行，56项测试、0失败，发布 JAR 已生成；Kotlin 源码无 `!!` 和 `@Suppress`。日志位于 `D:/workspace/gradle-b4-clean-build-56-20260915.log`。下一步处理镜像构造启动确认与失败回收；游戏客户端、专用服务端和真实远端服务仍未验证。
+
+B4-npc-state（2026-09-15）：新增 Kotlin `MirrorNpcState` 并接入活跃 NPC、皮肤缓存和显示名规范化。新增3项状态契约，全量59项测试通过，`MirrorNpc` 公开 `javap` 签名与原始 JAR 一致，日志位于 `D:/workspace/gradle-b4-npc-state.log`。当前代码和台账待提交；下一步处理镜像构造启动确认、失败回收及 NPC 几何/生命周期。
