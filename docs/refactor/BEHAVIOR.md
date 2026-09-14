@@ -41,3 +41,5 @@ B4-request-ledger：`CrossServerBattleService` 的菜单、排行榜和聊天请
 B4-room-directory：房间列表缓存、等待请求、在途标记和客户端刷新摘要已委托给 Kotlin `RoomDirectoryState`。普通打开在缓存不足1秒时复用，主动刷新在缓存不足4.5秒时复用，边界时刻重新查询；同一玩家的合并请求保留较弱的刷新要求；服务错误清空全部等待请求，发送失败只撤回当前玩家；只有成功发送客户端包后才记录摘要。新增4项状态契约测试，全量39项测试通过。房间协议解析和玩家发送仍在 Java 入口，真实客户端/服务端联调待验证。
 
 B4-team-selection：`MirrorFactory` 的远端队伍预选已迁移到 Kotlin `TeamSelection`，远端单玩家镜像和本地双玩家对战共用同一入口。有效序号按远端顺序选取；缺少或空选择沿用原队伍；非数字、负数、越界和重复序号回退完整队伍。新增4项分支契约测试，全量43项测试通过。实体生成、BattleRegistry 启动及 Mixin 绑定仍未集成验证。
+
+B4-mirror-participants：`MirrorBattle` 的参与者、座位、观战者和双方 `BattleInfo` 已委托给 Kotlin `MirrorParticipantState`。Java 公开构造器、方法和嵌套 record 保持；双本地玩家顺序、座位映射、未知玩家空结果、观战者最后离开判断及双方描述分别验证。新增3项状态契约，原投影/路由8项继续通过，全量46项测试通过；原始 JAR 与当前 class 的 `javap -public` 输出一致。实体引用、Showdown 输出解释和游戏内结束流程待验证。
