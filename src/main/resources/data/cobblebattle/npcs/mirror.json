@@ -1,0 +1,11 @@
+{
+  "name": "CobbleBattle Mirror",
+  "resourceIdentifier": "cobblemon:standard",
+
+  "isMovable": false,
+  "isInvulnerable": true,
+  "isLeashable": false,
+  "allowProjectileHits": false,
+  "canDespawn": false,
+  "hideNameTag": false
+}

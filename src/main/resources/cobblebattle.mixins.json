@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "package": "xiaocaoawa.minecraft.mod.cobblebattle.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "client": [
+    "BattleMessagePaneMixin",
+    "PokedexGUIMixin",
+    "CobblemonClientMixin",
+    "ClientPokedexSyncMixin"
+  ],
+  "mixins": [
+    "BattleActorMixin",
+    "GraalShowdownServiceMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

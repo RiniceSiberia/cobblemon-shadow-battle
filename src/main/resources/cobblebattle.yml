@@ -1,0 +1,32 @@
+# 排障模式，打印每一条进出的 showdown 协议行，非常吵
+debug: false
+
+# 对战服务端地址
+serverHost: "150.138.79.9"
+# 对战服务端端口
+serverPort: 18470
+# 接入凭证，由对战服务端的管理者发给你[必须修改]
+authToken: "CJWDNBKLSDZDHT"
+
+# 连接超时[单位: 毫秒]
+connectTimeoutMs: 8000
+# 断线重连的起始退避时长[单位: 毫秒]
+reconnectBaseDelayMs: 3000
+# 断线重连的最大退避时长[单位: 毫秒]
+reconnectMaxDelayMs: 60000
+# 单帧大小上限[单位: 字节]
+maxFrameBytes: 33554432
+
+# 没有玩家在线时是否保持与对战服务端的连接
+# false = 第一个玩家进服时才连接，最后一个玩家离开 idleDisconnectSeconds 秒后断开
+keepConnectedWhenEmpty: false
+# 服务器空了多久之后断开[单位: 秒]。keepConnectedWhenEmpty 为 true 时无效
+idleDisconnectSeconds: 120
+
+# 提示文字的语言，内置 zh_cn / en_us
+# 想改文案：把 config/lang/<语言>.properties 放好，只写要改的键即可
+language: "zh_cn"
+
+# /cbattle join 不带参数时加入的比赛
+# 填对战服务端 ranked/ 文件夹里的文件名（不含 .yml）
+defaultRanked: "example"

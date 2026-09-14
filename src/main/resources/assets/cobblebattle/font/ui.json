@@ -1,0 +1,12 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "cobblebattle:font.ttf",
+      "shift": [0, 1.0],
+      "size": 8,
+      "oversample": 6,
+      "skip": ""
+    }
+  ]
+}
