@@ -49,6 +49,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomActionPayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomListPayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomStatePayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.ServerDexPayload;
+import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
 
 public final class CrossServerBattleService {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle");
@@ -61,25 +62,13 @@ public final class CrossServerBattleService {
    private final TeamPreviews previews = new TeamPreviews(this);
    private final AuthService auth = new AuthService();
    private final Map<String, CrossServerBattleService.Ranked> ranked = new LinkedHashMap<>();
-   private final Map<Integer, UUID> boardRefs = new LinkedHashMap<Integer, UUID>() {
-      @Override
-      protected boolean removeEldestEntry(Entry<Integer, UUID> eldest) {
-         return this.size() > 64;
-      }
-   };
-   private final Map<Integer, UUID> chatRefs = new LinkedHashMap<Integer, UUID>() {
-      @Override
-      protected boolean removeEldestEntry(Entry<Integer, UUID> eldest) {
-         return this.size() > 64;
-      }
-   };
+   private final ServiceRequestLedger requestLedger = new ServiceRequestLedger();
    private BattleServerClient client;
    private MinecraftServer minecraftServer;
    private final Set<UUID> waitingChunksAuthOpens = ConcurrentHashMap.newKeySet();
    private ScheduledExecutorService idleTimer;
    private ScheduledFuture<?> idleDisconnect;
    private static final int IDLE_DISCONNECT_MIN_SECONDS = 5;
-   private final Map<Integer, UUID> menuRefs = new LinkedHashMap<>();
    private CrossServerBattleService.RoomBoard roomCache;
    private final Map<UUID, Boolean> roomWaiters = new LinkedHashMap<>();
    private boolean roomFetchInFlight;
@@ -527,11 +516,11 @@ public final class CrossServerBattleService {
             if (talker != null) {
                this.tellParticipant(talker, describeChatFailure(document, code, text));
             } else {
-               UUID forMenu = claimRef(this.menuRefs, document.get("ref"));
+               UUID forMenu = this.claimMenuRef(document.get("ref"));
                if (forMenu != null) {
                   this.withParticipant(forMenu, player -> this.sendMainMenu(player, ""));
                } else {
-                  UUID asker = claimRef(this.boardRefs, document.get("ref"));
+                  UUID asker = this.claimLeaderboardRef(document.get("ref"));
                   if (asker != null) {
                      this.tellParticipant(asker, Component.literal(text).withStyle(ChatFormatting.RED));
                   } else {
@@ -853,9 +842,9 @@ public final class CrossServerBattleService {
             who.addProperty("uuid", participant.getUUID().toString());
             who.addProperty("name", participant.getGameProfile().getName());
             request.add("player", who);
-            this.menuRefs.put(ref, participant.getUUID());
+            this.requestLedger.bindMenu(ref, participant.getUUID());
             if (!this.client.send(request)) {
-               this.menuRefs.remove(ref);
+               this.requestLedger.removeMenu(ref);
                return this.sendMainMenu(participant, "");
             } else {
                return null;
@@ -1263,11 +1252,15 @@ public final class CrossServerBattleService {
    }
 
    private UUID claimChatRef(JsonElement ref) {
-      return claimRef(this.chatRefs, ref);
+      return ref != null && !ref.isJsonNull() ? this.requestLedger.claimChat(ref.getAsInt()) : null;
    }
 
-   private static UUID claimRef(Map<Integer, UUID> refs, JsonElement ref) {
-      return ref != null && !ref.isJsonNull() ? refs.remove(ref.getAsInt()) : null;
+   private UUID claimMenuRef(JsonElement ref) {
+      return ref != null && !ref.isJsonNull() ? this.requestLedger.claimMenu(ref.getAsInt()) : null;
+   }
+
+   private UUID claimLeaderboardRef(JsonElement ref) {
+      return ref != null && !ref.isJsonNull() ? this.requestLedger.claimLeaderboard(ref.getAsInt()) : null;
    }
 
    public Component requestLeaderboard(ServerPlayer participant, String rankedId) {
@@ -1282,9 +1275,9 @@ public final class CrossServerBattleService {
          who.addProperty("uuid", participant.getUUID().toString());
          who.addProperty("name", participant.getGameProfile().getName());
          request.add("player", who);
-         this.boardRefs.put(ref, participant.getUUID());
+         this.requestLedger.bindLeaderboard(ref, participant.getUUID());
          if (!this.client.send(request)) {
-            this.boardRefs.remove(ref);
+            this.requestLedger.removeLeaderboard(ref);
             return Msg.of(ChatFormatting.RED, "auth.send_failed");
          } else {
             return null;
@@ -1293,7 +1286,7 @@ public final class CrossServerBattleService {
    }
 
    private void onLeaderboard(JsonObject document) {
-      UUID forMenu = claimRef(this.menuRefs, document.get("ref"));
+      UUID forMenu = this.claimMenuRef(document.get("ref"));
       if (forMenu != null) {
          String favourite = document.has("you") && document.get("you").isJsonObject()
             ? BattleServerClient.str(document.getAsJsonObject("you"), "favourite", "")
@@ -1305,7 +1298,7 @@ public final class CrossServerBattleService {
             }
          });
       } else {
-         UUID asker = claimRef(this.boardRefs, document.get("ref"));
+         UUID asker = this.claimLeaderboardRef(document.get("ref"));
          if (asker != null) {
             List<LeaderboardPayload.Entry> top = new ArrayList<>();
 
@@ -1436,7 +1429,7 @@ public final class CrossServerBattleService {
             who.addProperty("uuid", participant.getUUID().toString());
             who.addProperty("name", participant.getGameProfile().getName());
             request.add("player", who);
-            this.chatRefs.put(ref, participant.getUUID());
+            this.requestLedger.bindChat(ref, participant.getUUID());
             this.client.send(request);
          }
       }

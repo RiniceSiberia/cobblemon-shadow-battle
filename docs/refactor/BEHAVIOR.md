@@ -4,13 +4,13 @@
 
 | 链路 | 原实现 | 正常、异常及副作用约束 | 新实现/证据 | 状态 |
 | --- | --- | --- | --- | --- |
-| 配置 | CobbleBattleConfig / ConfigFile / YamlTree | 首次写模板；空映射默认值；非法端口回退18470；帧上限至少1MiB；读取失败回退；reload 失败抛异常并保留原值；区分连接参数 | 待实现对照测试 | 待重构 |
-| 服务器身份 | ServerIdentity | 复用非空文件；空/不可读时生成；保存失败仍返回；并发缓存；mc-前缀 | 待验证 | 待审查 |
-| TCP 传输 | BattleServerClient | 压缩流、四字节长度、引用序号、握手、按需连接、拒绝、重连及回调 | 待审查完整分支 | 待审查 |
-| 认证 | AuthService / AuthMode | 枚举顺序及越界LOGIN；登录注册绑定邮箱验证码；事件及清理 | 待审查 | 待审查 |
+| 配置 | CobbleBattleConfig / ConfigFile / YamlTree | 首次写模板；空映射默认值；非法端口回退18470；帧上限至少1MiB；读取失败回退；reload 失败抛异常并保留原值；区分连接参数 | Kotlin 实现；配置5项契约通过 | 已验证 |
+| 服务器身份 | ServerIdentity | 复用非空文件；空/不可读时生成；保存失败仍返回；并发缓存；mc-前缀 | Kotlin 实现；身份3项契约通过 | 已验证 |
+| TCP 传输 | BattleServerClient | 压缩流、四字节长度、引用序号、握手、按需连接、拒绝、重连及回调 | Kotlin 状态机；Socket契约2项通过，重连交错待验证 | 待验证 |
+| 认证 | AuthService / AuthMode | 枚举顺序及越界LOGIN；登录注册绑定邮箱验证码；事件及清理 | Kotlin 会话与消息；5项契约通过，远端联调待验证 | 待验证 |
 | 游戏包 | network/* | 17个文件；包ID、字段顺序、线程调度、客户端/服务器路由 | 待提取契约 | 待审查 |
-| 排队及对战 | BattleQueue / CrossServerBattleService | 加入退出、远端匹配、选择与回合中继、断线、结束清理、事件顺序 | 1575行服务需细分方法审查 | 待审查 |
-| 镜像及观战 | MirrorBattle / MirrorFactory / SpectatorFactory | 实体、队伍、座位、回合、退出及错误回收 | 待审查 | 待审查 |
+| 排队及对战 | BattleQueue / CrossServerBattleService | 加入退出、远端匹配、选择与回合中继、断线、结束清理、事件顺序 | 队列与服务请求状态已提取；状态契约5项通过，游戏链路继续实施 | 进行中 |
+| 镜像及观战 | MirrorBattle / MirrorFactory / SpectatorFactory | 实体、队伍、座位、回合、退出及错误回收 | 索引与序号缓存8项契约通过；实体生命周期待验证 | 待验证 |
 | 图鉴 | RemoteDex / ServerDex | 远端数据、同步、缓存及错误处理 | 待审查 | 待审查 |
 | UI及命令 | client/* / command/* / lang/* | 权限、显示、输入、翻译、数据请求、副作用 | 待审查 | 待审查 |
 | 公开API | api/* | 类名、record访问器、事件类型、静态字段及JVM签名 | 保留ABI，待验证 | 待审查 |
@@ -35,3 +35,5 @@ B4-projection：新增迁移前对战契约5项通过，再提取BattleProjectio
 B5-symbol-batch：419项内部参数/局部/字段/方法名改写，Gradle build通过，现有行为契约全部通过。改名工具先做Javac语义分析，未产生分析错误；尚未进行游戏内启动。
 
 B6-queue-state：`BattleQueue` 的等待队伍、房间查询引用、房主引用已委托给 Kotlin `QueueReferenceBook`。加入请求发送失败时同时回收等待队伍和请求引用；房间查询/房间启动发送失败时回收对应引用；退出、断线、房间关闭及队列响应仍按原顺序清理。新增2项状态契约测试，并以全量32项测试验证编译、打包和既有行为。真实远端匹配、游戏内玩家断线及服务重连仍未实测。
+
+B4-request-ledger：`CrossServerBattleService` 的菜单、排行榜和聊天请求引用已委托给 Kotlin `ServiceRequestLedger`。三类引用独立领取；排行榜和聊天仍按插入顺序最多保留64项；菜单保留原有无上限行为；菜单及排行榜发送失败仍立即撤回引用。新增3项状态契约测试，全量35项测试通过。正常/错误远端响应已接入，真实服务交互尚未验证。

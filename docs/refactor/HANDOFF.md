@@ -1,6 +1,6 @@
 # 恢复入口
 
-当前批次 B4/B5：队列状态与内部命名持续整理。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-14 使用 JDK 21 执行 `--offline test` 成功，32 项测试全部通过；IDEA使用相同Gradle模型，实际界面导入尚未测试。
+当前批次 B4：排队、匹配与跨服服务状态。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-15 使用 JDK 21 执行 `--offline test` 成功，35 项测试全部通过；IDEA使用相同Gradle模型，实际界面导入尚未测试。
 
 业务源码基线为本地提交 2b4ea8d；本批次提交包含测试和构建。首次 Modrinth 下载 TLS 中断，通过缓存相同版本原件重试成功，项目不依赖 .deps 绝对路径。此前 tests 缺 Gson 依赖已修复。
 
@@ -20,4 +20,6 @@ B4-projection已提交状态组件及30项测试。建立了Java语义符号初�
 
 B5命名批次已完成并通过Gradle build，见build/gradle-b5-rename.log。当前工作区含419项语义改名；需先提交并重新生成符号清单，再推进BattleQueue/CrossServerBattleService剩余业务迁移。
 
-B6-queue-state（2026-09-14）：新增 Kotlin `QueueReferenceBook`，并已接入 Java `BattleQueue`，集中管理等待队伍、房间查询引用和房主引用的绑定、领取、清理；加入、查询、启动发送失败时回收对应状态，退出、断线、房间关闭和队列响应继续使用兼容入口。新增2项状态契约测试，JDK21 下全量32项测试通过，日志位于 `D:/workspace/gradle-b6-queue-integration.log`。最近代码提交仍待落库；下一步审查 `CrossServerBattleService` 的队列响应、远端拒绝和断线清理链路。
+B6-queue-state（2026-09-14）：新增 Kotlin `QueueReferenceBook`，并已接入 Java `BattleQueue`，集中管理等待队伍、房间查询引用和房主引用的绑定、领取、清理；加入、查询、启动发送失败时回收对应状态，退出、断线、房间关闭和队列响应继续使用兼容入口。新增2项状态契约测试，JDK21 下全量32项测试通过，提交 `0b68c60`，日志位于 `D:/workspace/gradle-b6-queue-integration.log`。
+
+B4-request-ledger（2026-09-15）：新增 Kotlin `ServiceRequestLedger` 并接入 `CrossServerBattleService` 的菜单、排行榜和聊天正常/错误响应。保留排行榜/聊天64项上限、菜单无上限和发送失败撤回行为。新增3项状态契约测试，全量35项测试通过，日志位于 `D:/workspace/gradle-b6-request-ledger.log`。当前代码和台账待提交；下一步处理房间列表缓存/等待者状态，之后进入匹配创建和失败回收。
