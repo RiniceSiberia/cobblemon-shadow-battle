@@ -48,6 +48,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 tasks.test {
     useJUnitPlatform()
+    classpath += sourceSets.main.get().compileClasspath
     workingDir(layout.buildDirectory.dir("test-workspace"))
     doFirst { workingDir.mkdirs() }
 }
