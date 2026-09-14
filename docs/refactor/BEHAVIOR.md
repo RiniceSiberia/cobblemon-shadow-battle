@@ -53,3 +53,5 @@ B4-clean-build：在 JDK 21 下执行 `./gradlew.bat --offline clean build --con
 B4-battle-result：结束帧的胜负和分数解析已迁移到 Kotlin `BattleResultProjection`。`win` 只在获胜座位非空时映射胜负，`tie` 映射平局，其余原因映射中止；分数按远端顺序投影，非法 UUID 忽略，缺失数值沿用0。指定玩家查找保持遇到首个匹配立即返回，不解析后续坏数据。新增3项契约测试，全量54项测试通过。事件触发和玩家消息副作用仍由 Java 服务入口执行。
 
 B4-pokemon-ownership：`MirrorPokemon` 的 Pokémon UUID 到镜像对战归属表已委托给 Kotlin `MirrorOwnershipIndex`。重复登记由最新镜像接管，释放未知 UUID 无副作用，释放后查询为空。新增2项状态契约，全量56项测试通过；`MirrorPokemon` 公开 `javap` 签名与原始 JAR 一致。实体加入世界、标签写入和残留实体销毁待游戏内验证。
+
+B4-clean-build-56：在提交 `a415554` 后使用 JDK 21 执行 `./gradlew.bat --offline clean build --console=plain`，9个任务全部实际执行，56项测试、0失败，thin JAR 与发布 JAR 均生成。扫描 `src/main/kotlin` 未发现空断言或 `@Suppress`。日志位于 `D:/workspace/gradle-b4-clean-build-56-20260915.log`。
