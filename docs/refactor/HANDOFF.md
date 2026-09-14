@@ -1,6 +1,6 @@
 # 恢复入口
 
-当前批次 B4：排队、匹配与跨服服务状态。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-15 使用 JDK 21 执行 `--offline test` 成功，48 项测试全部通过；IDEA使用相同Gradle模型，实际界面导入尚未测试。
+当前批次 B4：排队、匹配与跨服服务状态。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-15 使用 JDK 21 执行 `--offline test` 成功，51 项测试全部通过；IDEA使用相同Gradle模型，实际界面导入尚未测试。
 
 业务源码基线为本地提交 2b4ea8d；本批次提交包含测试和构建。首次 Modrinth 下载 TLS 中断，通过缓存相同版本原件重试成功，项目不依赖 .deps 绝对路径。此前 tests 缺 Gson 依赖已修复。
 
@@ -30,4 +30,6 @@ B4-team-selection（2026-09-15）：新增 Kotlin `TeamSelection` 并接入 `Mir
 
 B4-mirror-participants（2026-09-15）：新增 Kotlin `MirrorParticipantState` 并接入 `MirrorBattle` 的参与者、座位、观战者和双方业务描述。Java 兼容入口及嵌套 record 保留，原始 JAR 与当前 class 的 `javap -public` 输出一致。新增3项状态契约，原投影/路由8项继续通过，全量46项测试通过，提交 `366e259`，日志位于 `D:/workspace/gradle-b4-mirror-participants.log`。
 
-B4-mirror-entities（2026-09-15）：新增 Kotlin `MirrorEntityRegistry` 并接入 `MirrorBattle` 的 NPC/actor 组合和临时 Pokémon 实体引用。新增2项契约验证快照与一次性转移，全量48项测试通过，公开 `javap` 签名仍与原始 JAR 一致，日志位于 `D:/workspace/gradle-b4-mirror-entities.log`。当前代码和台账待提交；下一步处理镜像构造启动和失败回收。
+B4-mirror-entities（2026-09-15）：新增 Kotlin `MirrorEntityRegistry` 并接入 `MirrorBattle` 的 NPC/actor 组合和临时 Pokémon 实体引用。新增2项契约验证快照与一次性转移，全量48项测试通过，公开 `javap` 签名仍与原始 JAR 一致，提交 `b454bff`，日志位于 `D:/workspace/gradle-b4-mirror-entities.log`。
+
+B4-format-resolution（2026-09-15）：新增 Kotlin `BattleFormatResolver` 并接入 `MirrorFactory` 两条创建路径。新增3项契约验证默认格式、规则覆盖/去重、空规则回退和等级调整，全量51项测试通过，日志位于 `D:/workspace/gradle-b4-format-resolver.log`。当前代码和台账待提交；下一步处理镜像构造启动确认、失败回收和结束结果投影。

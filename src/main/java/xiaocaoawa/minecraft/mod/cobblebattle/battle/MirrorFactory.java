@@ -10,9 +10,7 @@ import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
 import com.cobblemon.mod.common.entity.npc.NPCEntity;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import net.minecraft.ChatFormatting;
 import net.minecraft.server.MinecraftServer;
@@ -23,47 +21,12 @@ import xiaocaoawa.minecraft.mod.cobblebattle.api.BattleInfo;
 import xiaocaoawa.minecraft.mod.cobblebattle.config.ServerIdentity;
 import xiaocaoawa.minecraft.mod.cobblebattle.lang.Msg;
 import xiaocaoawa.minecraft.mod.cobblebattle.net.BattleServerClient;
+import io.github.rinicesiberia.shadowbattle.battle.BattleFormatResolver;
 import io.github.rinicesiberia.shadowbattle.battle.TeamSelection;
 
 final class MirrorFactory {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle");
    private final CrossServerBattleService service;
-
-   private BattleFormat readFormat(JsonObject document) {
-      JsonObject described = document.getAsJsonObject("formatJson");
-      String battleType = "singles";
-      if (described != null) {
-         JsonObject type = described.getAsJsonObject("battleType");
-         if (type != null) {
-            battleType = BattleServerClient.str(type, "name", battleType);
-         }
-      } else {
-         battleType = BattleServerClient.str(document, "format", battleType);
-      }
-
-      BattleFormat base = BattleFormat.Companion.fromFormatIdentifier(battleType);
-      if (described == null) {
-         LOGGER.warn("The battle server sent no rulebook for this battle; falling back to plain {}", battleType);
-         return base;
-      } else {
-         Set<String> rules = new LinkedHashSet<>();
-         JsonElement ruleSet = described.get("ruleSet");
-         if (ruleSet != null && ruleSet.isJsonArray()) {
-            for (JsonElement rule : ruleSet.getAsJsonArray()) {
-               if (rule.isJsonPrimitive()) {
-                  rules.add(rule.getAsString());
-               }
-            }
-         }
-
-         if (rules.isEmpty()) {
-            rules = base.getRuleSet();
-         }
-
-         int adjustLevel = BattleServerClient.integer(described, "adjustLevel", base.getAdjustLevel());
-         return base.copy(base.getMod(), base.getBattleType(), rules, base.getGen(), adjustLevel);
-      }
-   }
 
    MirrorFactory(CrossServerBattleService service) {
       this.service = service;
@@ -155,7 +118,7 @@ final class MirrorFactory {
                            boolean iAmP1 = "p1".equals(mySeat);
                            BattleSide side1 = new BattleSide(new BattleActor[]{(BattleActor)(iAmP1 ? localActor : remoteActor)});
                            BattleSide side2 = new BattleSide(new BattleActor[]{(BattleActor)(iAmP1 ? remoteActor : localActor)});
-                           BattleFormat format = this.readFormat(document);
+                           BattleFormat format = BattleFormatResolver.resolve(document);
                            MirrorBattle mirror = new MirrorBattle(
                               remoteBattleId, mySeat, opponentSeatId, myParticipantUuid, opponentName, opponentServerId, sourceOfTruth, this.service.config().debug
                            );
@@ -256,7 +219,7 @@ final class MirrorFactory {
             boolean iAmP1 = "p1".equals(mySeat);
             BattleSide side1 = new BattleSide(new BattleActor[]{iAmP1 ? myActor : theirActor});
             BattleSide side2 = new BattleSide(new BattleActor[]{iAmP1 ? theirActor : myActor});
-            BattleFormat format = this.readFormat(document);
+            BattleFormat format = BattleFormatResolver.resolve(document);
             String here = ServerIdentity.get();
             MirrorBattle mirror = new MirrorBattle(
                remoteBattleId, mySeat, opponentSeatId, myParticipantUuid, opponentUuid, opponentName, here, sourceOfTruth, this.service.config().debug
