@@ -4,12 +4,12 @@ import com.cobblemon.mod.common.api.battles.model.PokemonBattle;
 import com.cobblemon.mod.common.battles.ShowdownInterpreter;
 import com.cobblemon.mod.common.entity.npc.NPCEntity;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
+import io.github.rinicesiberia.shadowbattle.battle.MirrorEntityRegistry;
 import io.github.rinicesiberia.shadowbattle.battle.MirrorParticipantState;
 import io.github.rinicesiberia.shadowbattle.battle.SequencedOutputBuffer;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xiaocaoawa.minecraft.mod.cobblebattle.api.BattleInfo;
@@ -21,8 +21,7 @@ public final class MirrorBattle {
    private final boolean debug;
    private volatile UUID localBattleId;
    private volatile PokemonBattle battle;
-   private final List<MirrorBattle.Body> bodies = new CopyOnWriteArrayList<>();
-   private final List<PokemonEntity> props = new CopyOnWriteArrayList<>();
+   private final MirrorEntityRegistry<MirrorBattle.Body, PokemonEntity> entities = new MirrorEntityRegistry<>();
 
    public static MirrorBattle spectator(String remoteBattleId, boolean debug) {
       return new MirrorBattle(remoteBattleId, null, null, null, null, "", "", false, debug, true);
@@ -125,24 +124,20 @@ public final class MirrorBattle {
 
    public void attachBody(NPCEntity npc, RemoteBattleActor actor) {
       if (npc != null || actor != null) {
-         this.bodies.add(new MirrorBattle.Body(npc, actor));
+         this.entities.addBody(new MirrorBattle.Body(npc, actor));
       }
    }
 
    public List<MirrorBattle.Body> bodies() {
-      return List.copyOf(this.bodies);
+      return this.entities.bodySnapshot();
    }
 
    void attachProp(PokemonEntity entity) {
-      if (entity != null) {
-         this.props.add(entity);
-      }
+      this.entities.addProp(entity);
    }
 
    List<PokemonEntity> takeProps() {
-      List<PokemonEntity> taken = List.copyOf(this.props);
-      this.props.clear();
-      return taken;
+      return this.entities.takeProps();
    }
 
    public void describe(BattleInfo battleDetails) {
@@ -154,9 +149,7 @@ public final class MirrorBattle {
    }
 
    public List<MirrorBattle.Body> takeBodies() {
-      List<MirrorBattle.Body> taken = List.copyOf(this.bodies);
-      this.bodies.clear();
-      return taken;
+      return this.entities.takeBodies();
    }
 
    public UUID localPlayerUuid() {

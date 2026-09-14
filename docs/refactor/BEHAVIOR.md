@@ -43,3 +43,5 @@ B4-room-directory：房间列表缓存、等待请求、在途标记和客户端
 B4-team-selection：`MirrorFactory` 的远端队伍预选已迁移到 Kotlin `TeamSelection`，远端单玩家镜像和本地双玩家对战共用同一入口。有效序号按远端顺序选取；缺少或空选择沿用原队伍；非数字、负数、越界和重复序号回退完整队伍。新增4项分支契约测试，全量43项测试通过。实体生成、BattleRegistry 启动及 Mixin 绑定仍未集成验证。
 
 B4-mirror-participants：`MirrorBattle` 的参与者、座位、观战者和双方 `BattleInfo` 已委托给 Kotlin `MirrorParticipantState`。Java 公开构造器、方法和嵌套 record 保持；双本地玩家顺序、座位映射、未知玩家空结果、观战者最后离开判断及双方描述分别验证。新增3项状态契约，原投影/路由8项继续通过，全量46项测试通过；原始 JAR 与当前 class 的 `javap -public` 输出一致。实体引用、Showdown 输出解释和游戏内结束流程待验证。
+
+B4-mirror-entities：`MirrorBattle` 创建的 NPC/远端 actor 组合及临时 Pokémon 实体引用已委托给 Kotlin `MirrorEntityRegistry`。快照不转移清理责任，`take` 返回当前不可变副本后清空，空引用不登记。新增2项容器契约，全量48项测试通过；`MirrorBattle` 公开 `javap` 签名继续与原始 JAR 一致。真实实体生成、延迟清理和异常回收仍待游戏内验证。
