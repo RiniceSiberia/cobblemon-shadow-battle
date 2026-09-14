@@ -1,11 +1,9 @@
 # 恢复入口
 
-当前批次 B1：建立标准 Gradle/Kotlin 构建。B0 已完成快照和初步盘点，所有业务文件仍待逐文件审查。
+当前批次 B2：配置与身份业务 Kotlin 迁移。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。Gradle build 成功，13个测试全部通过（Configuration 5，Value 3，Transport 2，Chat 3）。IDEA使用相同Gradle模型，实际界面导入尚未测试。
 
-最近验证：2026-09-14 build.ps1 成功，日志 build/run-20260914-130217-919；基线只有编译证据，无测试。远程基线 main=1a14f5caf1c92bf01fcd18051833a53dc4472586。用户确认 Kotlin/JVM + Gradle Kotlin DSL + NeoForge 1.21.1 方案及安全重命名口径。
+业务源码基线为本地提交 2b4ea8d；本批次提交包含测试和构建。首次 Modrinth 下载 TLS 中断，通过缓存相同版本原件重试成功，项目不依赖 .deps 绝对路径。此前 tests 缺 Gson 依赖已修复。
 
-正在修改：构建配置、docs/refactor、AGENTS.md。尚未迁移业务类、未推送、未清理。备份位于 PLAN.md 指定的项目外目录。
+恢复时先读 PLAN.md、FILES.csv、BEHAVIOR.md，再核对 git status/diff/log 和验证版本。构建命令：JDK21 下 ./gradlew.bat build。当前网络需要代理可在命令行临时传 -Dhttps.proxyHost=localhost -Dhttps.proxyPort=7897，不写入项目配置。
 
-恢复步骤：先读 PLAN.md、FILES.csv、BEHAVIOR.md，再 git status / git diff / git log；核对验证对应版本与实际文件哈希，纠正过期状态。检查未完成批次的源码与日志，不把中断前的计划当成已完成。
-
-下一步：建立 Wrapper 和可移植依赖解析，运行 clean build；补齐配置及传输的基线行为测试，再按完整链路迁移。发布和清理在所有可完成批次审计后进行；未验证游戏集成必须明确保留风险。
+下一步：将配置解析、文件读写和身份缓存迁移至 Kotlin，保持原配置键/错误规则，重跑配置与完整测试后立刻更新记录；之后处理传输与认证。尚未推送，也未清理。用户要求暂保留部署地址和凭证；公开发布前仍需处理这部分，禁止把当前带凭证的本地历史直接推送。

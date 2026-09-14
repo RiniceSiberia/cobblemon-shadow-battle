@@ -11,3 +11,4 @@ javac.*.args
 imports.txt
 src/main/java/summary.txt
 local.properties
+.kotlin/
