@@ -42,8 +42,8 @@ final class MirrorTeardown {
                for (MirrorBattle.Body bodyx : bodies) {
                   RemoteBattleActor actor = bodyx.actor();
                   if (actor != null) {
-                     for (BattlePokemon battlePokemon : actor.mirrorTeam()) {
-                        PokemonEntity entityx = battlePokemon.getEntity();
+                     for (BattlePokemon battleCreature : actor.mirrorTeam()) {
+                        PokemonEntity entityx = battleCreature.getEntity();
                         if (entityx != null && !entityx.isRemoved()) {
                            entityx.discard();
                         }
@@ -86,7 +86,7 @@ final class MirrorTeardown {
       this.sweepEntities(mirror, 0L);
 
       for (UUID seated : mirror.localPlayers()) {
-         this.service.tellPlayer(seated, reason);
+         this.service.tellParticipant(seated, reason);
       }
    }
 }

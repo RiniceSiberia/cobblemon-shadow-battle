@@ -28,9 +28,9 @@ public final class PlayerPortrait {
       return this.skin;
    }
 
-   public static PlayerPortrait of(AbstractClientPlayer player) {
-      PlayerPortrait portrait = new PlayerPortrait(player.getSkin());
-      portrait.entity = player;
+   public static PlayerPortrait of(AbstractClientPlayer participant) {
+      PlayerPortrait portrait = new PlayerPortrait(participant.getSkin());
+      portrait.entity = participant;
       return portrait;
    }
 
@@ -39,10 +39,10 @@ public final class PlayerPortrait {
       return hash < 0 ? displayName : displayName.substring(0, hash);
    }
 
-   public static PlayerPortrait lookup(String displayName, long uid) {
+   public static PlayerPortrait lookup(String displayName, long accountNumber) {
       Minecraft minecraft = Minecraft.getInstance();
       String name = mojangName(displayName);
-      UUID standIn = new UUID(0L, uid);
+      UUID standIn = new UUID(0L, accountNumber);
       final PlayerPortrait portrait = new PlayerPortrait(DefaultPlayerSkin.get(standIn));
       if (minecraft.level != null && !name.isEmpty()) {
          portrait.entity = new RemotePlayer(minecraft.level, new GameProfile(standIn, name)) {

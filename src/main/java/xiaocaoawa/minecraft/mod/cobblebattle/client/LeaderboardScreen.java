@@ -91,14 +91,14 @@ public final class LeaderboardScreen extends Screen {
    private static final int SHADOW_H = 10;
    private static final int UNKNOWN_W = 26;
    private static final int UNKNOWN_H = 30;
-   private static final int PLAYER_X = 40;
-   private static final int PLAYER_SIZE = 34;
+   private static final int PARTICIPANT_X = 40;
+   private static final int PARTICIPANT_SIZE = 34;
    public static final float PLAYER_YAW = -35.0F;
    public static final float PLAYER_PITCH = -10.0F;
-   private static final int POKEMON_X = 60;
-   private static final int POKEMON_Y = 37;
-   private static final int POKEMON_W = 46;
-   private static final int POKEMON_H = 84;
+   private static final int CREATURE_X = 60;
+   private static final int CREATURE_Y = 37;
+   private static final int CREATURE_W = 46;
+   private static final int CREATURE_H = 84;
    public static final float FACING = (float)(Math.atan(-0.875) * 40.0);
    public static final float POKEMON_PITCH = 5.0F;
    private final LeaderboardPayload board;
@@ -107,8 +107,8 @@ public final class LeaderboardScreen extends Screen {
    private PlayerPortrait portrait;
    private final Map<Long, PlayerPortrait> portraits = new HashMap<>();
    private RenderablePokemon favourite;
-   private FloatingState pokemonState = new FloatingState();
-   private float pokemonScale = 34.0F;
+   private FloatingState creatureState = new FloatingState();
+   private float creatureScale = 34.0F;
    private int offset;
    private int originX;
    private int originY;
@@ -129,15 +129,15 @@ public final class LeaderboardScreen extends Screen {
       this.selected = entry;
       this.portrait = this.portraitOf(entry);
       this.favourite = null;
-      this.pokemonState = new FloatingState();
-      this.pokemonScale = 34.0F;
-      String speciesId = entry.favourite();
-      if (!speciesId.isEmpty()) {
-         Species species = PokemonSpecies.getByName(speciesId);
-         if (species != null) {
-            this.favourite = new RenderablePokemon(species, Set.of(), ItemStack.EMPTY);
+      this.creatureState = new FloatingState();
+      this.creatureScale = 34.0F;
+      String speciesTemplateId = entry.favourite();
+      if (!speciesTemplateId.isEmpty()) {
+         Species speciesTemplate = PokemonSpecies.getByName(speciesTemplateId);
+         if (speciesTemplate != null) {
+            this.favourite = new RenderablePokemon(speciesTemplate, Set.of(), ItemStack.EMPTY);
             float blocks = Math.max(0.1F, this.favourite.getForm().getHitbox().height());
-            this.pokemonScale = Math.min(34.0F, 78.0F / blocks);
+            this.creatureScale = Math.min(34.0F, 78.0F / blocks);
          }
       }
    }
@@ -151,7 +151,7 @@ public final class LeaderboardScreen extends Screen {
          }
       }
 
-      return this.portraits.computeIfAbsent(entry.uid(), uid -> PlayerPortrait.lookup(entry.name(), uid));
+      return this.portraits.computeIfAbsent(entry.uid(), accountNumber -> PlayerPortrait.lookup(entry.name(), accountNumber));
    }
 
    private boolean isMine(LeaderboardPayload.Entry entry) {
@@ -217,9 +217,9 @@ public final class LeaderboardScreen extends Screen {
             graphics.pose(),
             rotation,
             PoseType.PROFILE,
-            this.pokemonState,
+            this.creatureState,
             partialTick,
-            this.pokemonScale,
+            this.creatureScale,
             true,
             1.0F,
             1.0F,

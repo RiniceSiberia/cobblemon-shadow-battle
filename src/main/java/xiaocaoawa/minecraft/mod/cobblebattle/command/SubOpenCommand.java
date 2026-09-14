@@ -33,13 +33,13 @@ public final class SubOpenCommand extends AbstractSubCommand {
    }
 
    private int run(CommandSourceStack source, String ranked) {
-      ServerPlayer player = requirePlayer(source, "cmd.only_players.open");
-      if (player == null) {
+      ServerPlayer participant = requirePlayer(source, "cmd.only_players.open");
+      if (participant == null) {
          return 0;
       } else {
-         Component refusal = !service().auth().isSignedIn(player.getUUID())
-            ? service().openAuthScreen(player)
-            : (ranked == null ? service().openMainMenu(player) : openLeaderboard(player, ranked));
+         Component refusal = !service().auth().isSignedIn(participant.getUUID())
+            ? service().openAuthScreen(participant)
+            : (ranked == null ? service().openMainMenu(participant) : openLeaderboard(participant, ranked));
          if (refusal != null) {
             source.sendFailure(refusal);
             return 0;
@@ -49,7 +49,7 @@ public final class SubOpenCommand extends AbstractSubCommand {
       }
    }
 
-   private static Component openLeaderboard(ServerPlayer player, String ranked) {
+   private static Component openLeaderboard(ServerPlayer participant, String ranked) {
       String chosen = ranked != null ? ranked : service().config().defaultRanked;
       return (Component)(!service().ranked().isEmpty() && !service().hasRanked(chosen)
          ? Msg.of(
@@ -58,6 +58,6 @@ public final class SubOpenCommand extends AbstractSubCommand {
             chosen,
             String.join(", ", service().ranked().stream().map(CrossServerBattleService.Ranked::id).toList())
          )
-         : service().requestLeaderboard(player, chosen));
+         : service().requestLeaderboard(participant, chosen));
    }
 }

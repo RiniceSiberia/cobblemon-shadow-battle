@@ -51,7 +51,7 @@ public final class ChatRoomScreen extends Screen {
    private EditBox input;
    private int originX;
    private int originY;
-   private int scroll;
+   private int scrollOffsets;
 
    public ChatRoomScreen() {
       super(Component.translatable("cobblebattle.chatroom.title"));
@@ -139,12 +139,12 @@ public final class ChatRoomScreen extends Screen {
             total += bubble.height() + 4;
          }
 
-         int maxScroll = Math.max(0, total - 150);
-         if (this.scroll > maxScroll) {
-            this.scroll = maxScroll;
+         int maxScrollOffsets = Math.max(0, total - 150);
+         if (this.scrollOffsets > maxScrollOffsets) {
+            this.scrollOffsets = maxScrollOffsets;
          }
 
-         int y = bottom - 4 + this.scroll - total;
+         int y = bottom - 4 + this.scrollOffsets - total;
 
          for (ChatRoomScreen.Bubble bubble : bubbles) {
             if (y + bubble.height() >= top && y <= bottom) {
@@ -213,7 +213,7 @@ public final class ChatRoomScreen extends Screen {
       if (!text.isEmpty() && ChatState.enabled()) {
          ChatScreenHandler.send(ChatState.channel(), text);
          this.input.setValue("");
-         this.scroll = 0;
+         this.scrollOffsets = 0;
       }
    }
 
@@ -229,7 +229,7 @@ public final class ChatRoomScreen extends Screen {
             int y = this.originY + 14;
             if (mouseX >= x && mouseX < x + 40 && mouseY >= y && mouseY < y + 10) {
                ChatState.select(i == 0 ? ChatLog.Channel.GLOBAL : ChatLog.Channel.BATTLE);
-               this.scroll = 0;
+               this.scrollOffsets = 0;
                return true;
             }
          }
@@ -239,7 +239,7 @@ public final class ChatRoomScreen extends Screen {
    }
 
    public boolean mouseScrolled(double mouseX, double mouseY, double amountX, double amountY) {
-      this.scroll = Math.max(0, this.scroll + (int)Math.signum(amountY) * 10 * 2);
+      this.scrollOffsets = Math.max(0, this.scrollOffsets + (int)Math.signum(amountY) * 10 * 2);
       return true;
    }
 

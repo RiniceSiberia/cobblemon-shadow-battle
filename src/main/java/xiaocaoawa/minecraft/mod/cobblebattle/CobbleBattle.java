@@ -41,7 +41,7 @@ public final class CobbleBattle {
       });
       LifecycleEvent.SERVER_STOPPING.register((ServerState)server -> service.onServerStopping());
       CommandRegistrationEvent.EVENT.register((CommandRegistrationEvent)(dispatcher, registry, selection) -> MainCommand.register(dispatcher));
-      PlayerEvent.PLAYER_QUIT.register((PlayerQuit)player -> service.onPlayerDisconnect(player));
+      PlayerEvent.PLAYER_QUIT.register((PlayerQuit)participant -> service.onPlayerDisconnect(participant));
       PlayerEvent.PLAYER_JOIN.register((PlayerJoin)player -> service.onPlayerJoin(player));
       EntityEvent.ADD.register((Add)(entity, level) -> {
          if (level.isClientSide()) {

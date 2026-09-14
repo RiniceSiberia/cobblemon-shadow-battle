@@ -10,11 +10,11 @@ public final class LeaderboardScreenHandler {
    }
 
    public static void init() {
-      NetworkManager.registerReceiver(Side.S2C, LeaderboardPayload.TYPE, LeaderboardPayload.CODEC, (payload, context) -> context.queue(() -> {
+      NetworkManager.registerReceiver(Side.S2C, LeaderboardPayload.TYPE, LeaderboardPayload.CODEC, (body, context) -> context.queue(() -> {
          Minecraft minecraft = Minecraft.getInstance();
          if (minecraft.player != null) {
-            ServerDex.rememberRanked(payload.rankedId());
-            minecraft.setScreen(new LeaderboardScreen(payload, minecraft.player.getUUID()));
+            ServerDex.rememberRanked(body.rankedId());
+            minecraft.setScreen(new LeaderboardScreen(body, minecraft.player.getUUID()));
          }
       }));
    }

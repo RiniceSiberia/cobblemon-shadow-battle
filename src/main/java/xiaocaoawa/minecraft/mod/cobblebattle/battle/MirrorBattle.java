@@ -20,20 +20,20 @@ public final class MirrorBattle {
    private final String remoteBattleId;
    private final String seat;
    private final String opponentSeat;
-   private final UUID localPlayerUuid;
-   private final UUID secondLocalPlayerUuid;
+   private final UUID localParticipantUuid;
+   private final UUID secondLocalParticipantUuid;
    private final String opponentName;
    private final String opponentServerId;
    private final boolean debug;
-   private final boolean authoritative;
-   private final boolean spectator;
-   private final Set<UUID> watchers = ConcurrentHashMap.newKeySet();
+   private final boolean sourceOfTruth;
+   private final boolean replayView;
+   private final Set<UUID> observers = ConcurrentHashMap.newKeySet();
    private volatile UUID localBattleId;
    private volatile PokemonBattle battle;
    private final List<MirrorBattle.Body> bodies = new CopyOnWriteArrayList<>();
    private final List<PokemonEntity> props = new CopyOnWriteArrayList<>();
-   private volatile BattleInfo info;
-   private volatile BattleInfo secondInfo;
+   private volatile BattleInfo battleDetails;
+   private volatile BattleInfo secondBattleDetails;
 
    public static MirrorBattle spectator(String remoteBattleId, boolean debug) {
       return new MirrorBattle(remoteBattleId, null, null, null, null, "", "", false, debug, true);
@@ -43,51 +43,51 @@ public final class MirrorBattle {
       String remoteBattleId,
       String seat,
       String opponentSeat,
-      UUID localPlayerUuid,
+      UUID localParticipantUuid,
       String opponentName,
       String opponentServerId,
-      boolean authoritative,
+      boolean sourceOfTruth,
       boolean debug
    ) {
-      this(remoteBattleId, seat, opponentSeat, localPlayerUuid, null, opponentName, opponentServerId, authoritative, debug, false);
+      this(remoteBattleId, seat, opponentSeat, localParticipantUuid, null, opponentName, opponentServerId, sourceOfTruth, debug, false);
    }
 
    public MirrorBattle(
       String remoteBattleId,
       String seat,
       String opponentSeat,
-      UUID localPlayerUuid,
-      UUID secondLocalPlayerUuid,
+      UUID localParticipantUuid,
+      UUID secondLocalParticipantUuid,
       String opponentName,
       String opponentServerId,
-      boolean authoritative,
+      boolean sourceOfTruth,
       boolean debug
    ) {
-      this(remoteBattleId, seat, opponentSeat, localPlayerUuid, secondLocalPlayerUuid, opponentName, opponentServerId, authoritative, debug, false);
+      this(remoteBattleId, seat, opponentSeat, localParticipantUuid, secondLocalParticipantUuid, opponentName, opponentServerId, sourceOfTruth, debug, false);
    }
 
    private MirrorBattle(
       String remoteBattleId,
       String seat,
       String opponentSeat,
-      UUID localPlayerUuid,
-      UUID secondLocalPlayerUuid,
+      UUID localParticipantUuid,
+      UUID secondLocalParticipantUuid,
       String opponentName,
       String opponentServerId,
-      boolean authoritative,
+      boolean sourceOfTruth,
       boolean debug,
-      boolean spectator
+      boolean replayView
    ) {
-      this.outputBuffer = new SequencedOutputBuffer(remoteBattleId, spectator, this::apply);
-      this.spectator = spectator;
+      this.outputBuffer = new SequencedOutputBuffer(remoteBattleId, replayView, this::apply);
+      this.replayView = replayView;
       this.remoteBattleId = remoteBattleId;
       this.seat = seat;
       this.opponentSeat = opponentSeat;
-      this.localPlayerUuid = localPlayerUuid;
-      this.secondLocalPlayerUuid = secondLocalPlayerUuid;
+      this.localParticipantUuid = localParticipantUuid;
+      this.secondLocalParticipantUuid = secondLocalParticipantUuid;
       this.opponentName = opponentName;
       this.opponentServerId = opponentServerId;
-      this.authoritative = authoritative;
+      this.sourceOfTruth = sourceOfTruth;
       this.debug = debug;
    }
 
@@ -104,36 +104,36 @@ public final class MirrorBattle {
    }
 
    public boolean isAuthoritative() {
-      return this.authoritative;
+      return this.sourceOfTruth;
    }
 
    public boolean isSpectator() {
-      return this.spectator;
+      return this.replayView;
    }
 
-   public void addWatcher(UUID playerUuid) {
-      this.watchers.add(playerUuid);
+   public void addWatcher(UUID participantUuid) {
+      this.observers.add(participantUuid);
    }
 
-   public boolean removeWatcher(UUID playerUuid) {
-      this.watchers.remove(playerUuid);
-      return this.watchers.isEmpty();
+   public boolean removeWatcher(UUID participantUuid) {
+      this.observers.remove(participantUuid);
+      return this.observers.isEmpty();
    }
 
    public Set<UUID> watchers() {
-      return Set.copyOf(this.watchers);
+      return Set.copyOf(this.observers);
    }
 
-   public MirrorBattle.Routing route(String chunk) {
+   public MirrorBattle.Routing route(String content) {
       if (this.bothLocal()) {
          return new MirrorBattle.Routing(true, true);
       } else {
-         int nl = chunk.indexOf(10);
-         String kind = nl == -1 ? chunk : chunk.substring(0, nl);
+         int nl = content.indexOf(10);
+         String kind = nl == -1 ? content : content.substring(0, nl);
          if (!"sideupdate".equals(kind)) {
             return new MirrorBattle.Routing(true, true);
          } else {
-            String rest = chunk.substring(nl + 1);
+            String rest = content.substring(nl + 1);
             int rnl = rest.indexOf(10);
             String target = (rnl == -1 ? rest : rest.substring(0, rnl)).trim();
             return target.equals(this.opponentSeat) ? new MirrorBattle.Routing(true, false) : new MirrorBattle.Routing(false, true);
@@ -163,12 +163,12 @@ public final class MirrorBattle {
       return taken;
    }
 
-   public void describe(BattleInfo info) {
-      this.info = info;
+   public void describe(BattleInfo battleDetails) {
+      this.battleDetails = battleDetails;
    }
 
    public BattleInfo info() {
-      return this.info;
+      return this.battleDetails;
    }
 
    public List<MirrorBattle.Body> takeBodies() {
@@ -178,46 +178,46 @@ public final class MirrorBattle {
    }
 
    public UUID localPlayerUuid() {
-      return this.localPlayerUuid;
+      return this.localParticipantUuid;
    }
 
    public boolean bothLocal() {
-      return this.secondLocalPlayerUuid != null;
+      return this.secondLocalParticipantUuid != null;
    }
 
    public List<UUID> localPlayers() {
-      if (this.localPlayerUuid == null) {
+      if (this.localParticipantUuid == null) {
          return List.of();
       } else {
-         return this.secondLocalPlayerUuid == null ? List.of(this.localPlayerUuid) : List.of(this.localPlayerUuid, this.secondLocalPlayerUuid);
+         return this.secondLocalParticipantUuid == null ? List.of(this.localParticipantUuid) : List.of(this.localParticipantUuid, this.secondLocalParticipantUuid);
       }
    }
 
-   public boolean hasLocalPlayer(UUID playerUuid) {
-      return playerUuid != null && (playerUuid.equals(this.localPlayerUuid) || playerUuid.equals(this.secondLocalPlayerUuid));
+   public boolean hasLocalPlayer(UUID participantUuid) {
+      return participantUuid != null && (participantUuid.equals(this.localParticipantUuid) || participantUuid.equals(this.secondLocalParticipantUuid));
    }
 
-   public String seatOf(UUID playerUuid) {
-      if (playerUuid == null) {
+   public String seatOf(UUID participantUuid) {
+      if (participantUuid == null) {
          return null;
-      } else if (playerUuid.equals(this.localPlayerUuid)) {
+      } else if (participantUuid.equals(this.localParticipantUuid)) {
          return this.seat;
       } else {
-         return playerUuid.equals(this.secondLocalPlayerUuid) ? this.opponentSeat : null;
+         return participantUuid.equals(this.secondLocalParticipantUuid) ? this.opponentSeat : null;
       }
    }
 
-   public void describeSecond(BattleInfo info) {
-      this.secondInfo = info;
+   public void describeSecond(BattleInfo battleDetails) {
+      this.secondBattleDetails = battleDetails;
    }
 
-   public BattleInfo infoFor(UUID playerUuid) {
-      if (playerUuid == null) {
+   public BattleInfo infoFor(UUID participantUuid) {
+      if (participantUuid == null) {
          return null;
-      } else if (playerUuid.equals(this.localPlayerUuid)) {
+      } else if (participantUuid.equals(this.localParticipantUuid)) {
          return this.info();
       } else {
-         return playerUuid.equals(this.secondLocalPlayerUuid) ? this.secondInfo : null;
+         return participantUuid.equals(this.secondLocalParticipantUuid) ? this.secondBattleDetails : null;
       }
    }
 
@@ -251,18 +251,18 @@ public final class MirrorBattle {
 
    public void release() { this.outputBuffer.enableDelivery(); }
 
-   public void accept(long seq, String chunk) { this.outputBuffer.enqueue(seq, chunk); }
+   public void accept(long sequence, String content) { this.outputBuffer.enqueue(sequence, content); }
 
-   private void apply(String chunk) {
+   private void apply(String content) {
       UUID id = this.localBattleId;
       if (id == null) {
          LOGGER.error("Battle {} received output before the local battle existed", this.remoteBattleId);
       } else {
          if (this.debug) {
-            LOGGER.info("[{}] << {}", this.remoteBattleId, chunk.replace("\n", " \\n "));
+            LOGGER.info("[{}] << {}", this.remoteBattleId, content.replace("\n", " \\n "));
          }
 
-         ShowdownInterpreter.INSTANCE.interpretMessage(id, chunk);
+         ShowdownInterpreter.INSTANCE.interpretMessage(id, content);
       }
    }
 

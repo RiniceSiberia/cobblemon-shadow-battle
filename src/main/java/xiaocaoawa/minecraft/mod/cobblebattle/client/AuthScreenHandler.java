@@ -17,8 +17,8 @@ public final class AuthScreenHandler {
          Side.S2C,
          OpenAuthScreenPayload.TYPE,
          OpenAuthScreenPayload.CODEC,
-         (payload, context) -> context.queue(
-            () -> Minecraft.getInstance().setScreen(new AuthScreen(payload.authMode(), payload.suggestedId(), payload.emailEnabled()))
+         (body, context) -> context.queue(
+            () -> Minecraft.getInstance().setScreen(new AuthScreen(body.authMode(), body.suggestedId(), body.emailEnabled()))
          )
       );
       NetworkManager.registerReceiver(Side.S2C, AuthResultPayload.TYPE, AuthResultPayload.CODEC, (payload, context) -> context.queue(() -> {

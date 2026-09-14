@@ -25,8 +25,8 @@ public final class BattleServerClient {
     public String refusedReason() { return connection.refusalCause(); }
     public boolean isWanted() { return connection.hasConnectionDemand(); }
     public void reconnect(String why) { connection.restartConnection(why); }
-    public boolean send(JsonObject message) { return connection.sendMessage(message); }
-    public boolean sendHandshake(JsonObject message) { return connection.sendGreeting(message); }
+    public boolean send(JsonObject document) { return connection.sendMessage(document); }
+    public boolean sendHandshake(JsonObject document) { return connection.sendGreeting(document); }
     public static JsonObject msg(String type) { return MessageFields.envelope(type); }
     public static String str(JsonObject object, String key, String fallback) { return MessageFields.text(object, key, fallback); }
     public static int integer(JsonObject object, String key, int fallback) { return MessageFields.number(object, key, fallback); }

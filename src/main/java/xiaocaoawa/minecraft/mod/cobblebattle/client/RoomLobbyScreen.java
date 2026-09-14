@@ -52,8 +52,8 @@ public final class RoomLobbyScreen extends Screen {
    private static final int UNKNOWN_H = 26;
    private static final int GAP_X = 8;
    private static final int GAP_Y = 5;
-   private static final int SCROLL_X = 320;
-   private static final int SCROLL_W = 3;
+   private static final int SCROLLOFFSETS_X = 320;
+   private static final int SCROLLOFFSETS_W = 3;
    private static final int CARD_FILL = 1728053247;
    private static final int CARD_FILL_HOVER = -1996488705;
    private static final int CARD_EDGE = -1426063361;
@@ -357,8 +357,8 @@ public final class RoomLobbyScreen extends Screen {
 
    private RenderablePokemon leadOf(RoomListPayload.Room room) {
       return room.lead().isEmpty() ? null : this.leads.computeIfAbsent(room.id(), id -> {
-         Species species = PokemonSpecies.getByName(room.lead());
-         return species == null ? null : new RenderablePokemon(species, Set.of(), ItemStack.EMPTY);
+         Species speciesTemplate = PokemonSpecies.getByName(room.lead());
+         return speciesTemplate == null ? null : new RenderablePokemon(speciesTemplate, Set.of(), ItemStack.EMPTY);
       });
    }
 

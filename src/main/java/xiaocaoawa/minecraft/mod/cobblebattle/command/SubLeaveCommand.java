@@ -17,11 +17,11 @@ public final class SubLeaveCommand extends AbstractSubCommand {
    }
 
    private int run(CommandSourceStack source) {
-      ServerPlayer player = requirePlayer(source, "cmd.only_players.leave");
-      if (player == null) {
+      ServerPlayer participant = requirePlayer(source, "cmd.only_players.leave");
+      if (participant == null) {
          return 0;
       } else {
-         Component refusal = service().leaveQueue(player);
+         Component refusal = service().leaveQueue(participant);
          if (refusal != null) {
             source.sendFailure(refusal);
             return 0;

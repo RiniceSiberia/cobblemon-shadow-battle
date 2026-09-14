@@ -84,19 +84,19 @@ public final class ServerDex {
       }
    }
 
-   public static void open(ServerDexPayload payload) {
+   public static void open(ServerDexPayload body) {
       Minecraft minecraft = Minecraft.getInstance();
       if (minecraft.player != null) {
          close();
-         if (payload.unchanged()) {
-            if (stats.isEmpty() || !cachedDigest.equals(payload.digest())) {
+         if (body.unchanged()) {
+            if (stats.isEmpty() || !cachedDigest.equals(body.digest())) {
                cachedDigest = "";
                requestDex();
                return;
             }
          } else {
-            stats = index(payload);
-            cachedDigest = payload.digest();
+            stats = index(body);
+            cachedDigest = body.digest();
          }
 
          List<PokedexEntry> entries = approvedEntries();
@@ -140,18 +140,18 @@ public final class ServerDex {
       if (entry == null) {
          return null;
       } else {
-         Species species = PokemonSpecies.getByIdentifier(entry.getSpeciesId());
-         if (species == null) {
+         Species speciesTemplate = PokemonSpecies.getByIdentifier(entry.getSpeciesId());
+         if (speciesTemplate == null) {
             return null;
          } else {
-            FormData data = form == null ? null : species.getFormByName(form.getDisplayForm());
+            FormData data = form == null ? null : speciesTemplate.getFormByName(form.getDisplayForm());
             if (data == null) {
-               data = species.getStandardForm();
+               data = speciesTemplate.getStandardForm();
             }
 
             Map<Stat, Integer> found = stats.get(data.showdownId());
             if (found == null) {
-               found = stats.get(species.showdownId());
+               found = stats.get(speciesTemplate.showdownId());
             }
 
             return found;
@@ -159,10 +159,10 @@ public final class ServerDex {
       }
    }
 
-   private static Map<String, Map<Stat, Integer>> index(ServerDexPayload payload) {
-      Map<String, Map<Stat, Integer>> out = new HashMap<>(payload.entries().size() * 2);
+   private static Map<String, Map<Stat, Integer>> index(ServerDexPayload body) {
+      Map<String, Map<Stat, Integer>> outputStream = new HashMap<>(body.entries().size() * 2);
 
-      for (ServerDexPayload.Entry e : payload.entries()) {
+      for (ServerDexPayload.Entry e : body.entries()) {
          Map<Stat, Integer> base = new HashMap<>(8);
          base.put(Stats.HP, e.hp());
          base.put(Stats.ATTACK, e.atk());
@@ -170,10 +170,10 @@ public final class ServerDex {
          base.put(Stats.SPECIAL_ATTACK, e.spa());
          base.put(Stats.SPECIAL_DEFENCE, e.spd());
          base.put(Stats.SPEED, e.spe());
-         out.put(e.id(), base);
+         outputStream.put(e.id(), base);
       }
 
-      return out;
+      return outputStream;
    }
 
    private static List<PokedexEntry> approvedEntries() {
@@ -195,23 +195,23 @@ public final class ServerDex {
          }
       }
 
-      List<PokedexEntry> out = new ArrayList<>();
+      List<PokedexEntry> outputStream = new ArrayList<>();
 
       for (PokedexEntry entryx : source) {
-         Species species = PokemonSpecies.getByIdentifier(entryx.getSpeciesId());
-         if (species != null && approved(species)) {
-            out.add(entryx);
+         Species speciesTemplate = PokemonSpecies.getByIdentifier(entryx.getSpeciesId());
+         if (speciesTemplate != null && approved(speciesTemplate)) {
+            outputStream.add(entryx);
          }
       }
 
-      return out;
+      return outputStream;
    }
 
-   private static boolean approved(Species species) {
-      if (stats.containsKey(species.showdownId())) {
+   private static boolean approved(Species speciesTemplate) {
+      if (stats.containsKey(speciesTemplate.showdownId())) {
          return true;
       } else {
-         for (FormData form : species.getForms()) {
+         for (FormData form : speciesTemplate.getForms()) {
             if (stats.containsKey(form.showdownId())) {
                return true;
             }
@@ -226,7 +226,7 @@ public final class ServerDex {
       ClientPokedexManager manager = new ClientPokedexManager(records);
 
       for (PokedexEntry entry : entries) {
-         Species species = PokemonSpecies.getByIdentifier(entry.getSpeciesId());
+         Species speciesTemplate = PokemonSpecies.getByIdentifier(entry.getSpeciesId());
          SpeciesDexRecord record = records.computeIfAbsent(entry.getSpeciesId(), id -> new SpeciesDexRecord());
          Set<String> aspects = new LinkedHashSet<>(entry.getConditionAspects());
          aspects.addAll(entry.getDisplayAspects());
@@ -238,8 +238,8 @@ public final class ServerDex {
             formNames.addAll(form.getUnlockForms());
          }
 
-         if (species != null) {
-            for (FormData form : species.getForms()) {
+         if (speciesTemplate != null) {
+            for (FormData form : speciesTemplate.getForms()) {
                formNames.add(form.getName());
             }
          }
@@ -253,7 +253,7 @@ public final class ServerDex {
          for (String name : formNames) {
             if (!forms.containsKey(name)) {
                FormDexRecord form = new FormDexRecord();
-               FormData data = species == null ? null : species.getFormByName(name);
+               FormData data = speciesTemplate == null ? null : speciesTemplate.getFormByName(name);
                Set<Gender> genders = ServerDex.Records.genders(form);
                if (data != null && !data.getPossibleGenders().isEmpty()) {
                   genders.addAll(data.getPossibleGenders());
@@ -287,8 +287,8 @@ public final class ServerDex {
             Field field = owner.getDeclaredField(name);
             field.setAccessible(true);
             return field;
-         } catch (NoSuchFieldException var3) {
-            throw new IllegalStateException("Cobblemon's " + owner.getSimpleName() + " no longer has a field named '" + name + "'", var3);
+         } catch (NoSuchFieldException failure) {
+            throw new IllegalStateException("Cobblemon's " + owner.getSimpleName() + " no longer has a field named '" + name + "'", failure);
          }
       }
 
@@ -311,16 +311,16 @@ public final class ServerDex {
       static void setKnowledge(FormDexRecord form, PokedexEntryProgress knowledge) {
          try {
             KNOWLEDGE.set(form, knowledge);
-         } catch (IllegalAccessException var3) {
-            throw new IllegalStateException(var3);
+         } catch (IllegalAccessException failure) {
+            throw new IllegalStateException(failure);
          }
       }
 
       private static Object read(Field field, Object owner) {
          try {
             return field.get(owner);
-         } catch (IllegalAccessException var3) {
-            throw new IllegalStateException(var3);
+         } catch (IllegalAccessException failure) {
+            throw new IllegalStateException(failure);
          }
       }
    }

@@ -19,64 +19,64 @@ public final class ApiEvents {
    private ApiEvents() {
    }
 
-   public static void battleStarted(ServerPlayer player, BattleInfo battle) {
+   public static void battleStarted(ServerPlayer participant, BattleInfo battle) {
       fire(
          "BATTLE_STARTED",
-         () -> ((CobbleBattleApi.BattleStarted)CobbleBattleApi.BATTLE_STARTED.invoker()).onBattleStarted(new BattleStartedEvent(player, battle))
+         () -> ((CobbleBattleApi.BattleStarted)CobbleBattleApi.BATTLE_STARTED.invoker()).onBattleStarted(new BattleStartedEvent(participant, battle))
       );
    }
 
-   public static void battleEnded(ServerPlayer player, BattleInfo battle, BattleOutcome outcome, String reason, ScoreChange score) {
+   public static void battleEnded(ServerPlayer participant, BattleInfo battle, BattleOutcome outcome, String reason, ScoreChange score) {
       fire(
          "BATTLE_ENDED",
          () -> ((CobbleBattleApi.BattleEnded)CobbleBattleApi.BATTLE_ENDED.invoker())
-            .onBattleEnded(new BattleEndedEvent(player, battle, outcome, reason, score))
+            .onBattleEnded(new BattleEndedEvent(participant, battle, outcome, reason, score))
       );
    }
 
-   public static void queueJoined(ServerPlayer player, String rankedId, String rankedName, int waiting) {
+   public static void queueJoined(ServerPlayer participant, String rankedId, String rankedName, int waiting) {
       fire(
          "QUEUE_JOINED",
-         () -> ((CobbleBattleApi.QueueJoined)CobbleBattleApi.QUEUE_JOINED.invoker()).onQueueJoined(new QueueEvent(player, rankedId, rankedName, waiting, ""))
+         () -> ((CobbleBattleApi.QueueJoined)CobbleBattleApi.QUEUE_JOINED.invoker()).onQueueJoined(new QueueEvent(participant, rankedId, rankedName, waiting, ""))
       );
    }
 
-   public static void queueLeft(ServerPlayer player, String reason) {
-      fire("QUEUE_LEFT", () -> ((CobbleBattleApi.QueueLeft)CobbleBattleApi.QUEUE_LEFT.invoker()).onQueueLeft(new QueueEvent(player, "", "", 0, reason)));
+   public static void queueLeft(ServerPlayer participant, String reason) {
+      fire("QUEUE_LEFT", () -> ((CobbleBattleApi.QueueLeft)CobbleBattleApi.QUEUE_LEFT.invoker()).onQueueLeft(new QueueEvent(participant, "", "", 0, reason)));
    }
 
-   public static void signedIn(ServerPlayer player, String accountId, String nickname, long uid, boolean registered) {
+   public static void signedIn(ServerPlayer participant, String accountId, String displayLabel, long accountNumber, boolean registered) {
       fire(
          "SIGNED_IN",
-         () -> ((CobbleBattleApi.SignedIn)CobbleBattleApi.SIGNED_IN.invoker()).onSignedIn(new AccountEvent(player, accountId, nickname, uid, registered))
+         () -> ((CobbleBattleApi.SignedIn)CobbleBattleApi.SIGNED_IN.invoker()).onSignedIn(new AccountEvent(participant, accountId, displayLabel, accountNumber, registered))
       );
    }
 
-   public static void signedOut(ServerPlayer player, String accountId, String nickname, long uid) {
+   public static void signedOut(ServerPlayer participant, String accountId, String displayLabel, long accountNumber) {
       fire(
          "SIGNED_OUT",
-         () -> ((CobbleBattleApi.SignedOut)CobbleBattleApi.SIGNED_OUT.invoker()).onSignedOut(new AccountEvent(player, accountId, nickname, uid, false))
+         () -> ((CobbleBattleApi.SignedOut)CobbleBattleApi.SIGNED_OUT.invoker()).onSignedOut(new AccountEvent(participant, accountId, displayLabel, accountNumber, false))
       );
    }
 
-   public static void spectateStarted(ServerPlayer player, String battleId) {
+   public static void spectateStarted(ServerPlayer participant, String battleId) {
       fire(
          "SPECTATE_STARTED",
-         () -> ((CobbleBattleApi.SpectateStarted)CobbleBattleApi.SPECTATE_STARTED.invoker()).onSpectateStarted(new SpectateEvent(player, battleId))
+         () -> ((CobbleBattleApi.SpectateStarted)CobbleBattleApi.SPECTATE_STARTED.invoker()).onSpectateStarted(new SpectateEvent(participant, battleId))
       );
    }
 
-   public static void spectateEnded(ServerPlayer player, String battleId) {
+   public static void spectateEnded(ServerPlayer participant, String battleId) {
       fire(
-         "SPECTATE_ENDED", () -> ((CobbleBattleApi.SpectateEnded)CobbleBattleApi.SPECTATE_ENDED.invoker()).onSpectateEnded(new SpectateEvent(player, battleId))
+         "SPECTATE_ENDED", () -> ((CobbleBattleApi.SpectateEnded)CobbleBattleApi.SPECTATE_ENDED.invoker()).onSpectateEnded(new SpectateEvent(participant, battleId))
       );
    }
 
    private static void fire(String event, Runnable invoke) {
       try {
          invoke.run();
-      } catch (Throwable var3) {
-         LOGGER.error("A listener on CobbleBattleApi.{} threw. The battle is unaffected, but the listeners registered after it were not called.", event, var3);
+      } catch (Throwable failure) {
+         LOGGER.error("A listener on CobbleBattleApi.{} threw. The battle is unaffected, but the listeners registered after it were not called.", event, failure);
       }
    }
 }

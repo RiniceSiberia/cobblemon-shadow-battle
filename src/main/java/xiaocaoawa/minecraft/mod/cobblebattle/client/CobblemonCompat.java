@@ -28,7 +28,7 @@ public final class CobblemonCompat {
    }
 
    public static void drawProfile(
-      RenderablePokemon pokemon,
+      RenderablePokemon creature,
       PoseStack pose,
       Quaternionf rotation,
       PoseType poseType,
@@ -47,7 +47,7 @@ public final class CobblemonCompat {
       if (DRAW_PROFILE != null) {
          try {
             DRAW_PROFILE.invokeExact(
-               (RenderablePokemon)pokemon,
+               (RenderablePokemon)creature,
                (PoseStack)pose,
                (Quaternionf)rotation,
                (PoseType)poseType,
@@ -63,8 +63,8 @@ public final class CobblemonCompat {
                (float)headPitch,
                (int)blockLight
             );
-         } catch (Error | RuntimeException var16) {
-            throw var16;
+         } catch (Error | RuntimeException failure) {
+            throw failure;
          } catch (Throwable var17) {
             throw new IllegalStateException(var17);
          }
@@ -75,7 +75,7 @@ public final class CobblemonCompat {
       for (String name : new String[]{"OWNED", "CAUGHT"}) {
          try {
             return PokedexEntryProgress.valueOf(name);
-         } catch (IllegalArgumentException var5) {
+         } catch (IllegalArgumentException failure) {
          }
       }
 
@@ -115,7 +115,7 @@ public final class CobblemonCompat {
             )
          );
          draw = MethodHandles.insertArguments(draw, 7, none);
-      } catch (ReflectiveOperationException var6) {
+      } catch (ReflectiveOperationException failure) {
          try {
             draw = lookup.findStatic(
                PokemonGuiUtilsKt.class,

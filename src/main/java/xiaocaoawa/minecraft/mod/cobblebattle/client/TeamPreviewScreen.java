@@ -63,7 +63,7 @@ public final class TeamPreviewScreen extends Screen {
    private static final int PLATFORM_H = 18;
    private static final int PLATFORM_Y = 120;
    private static final int FLOOR_Y = 127;
-   private static final int PLAYER_SIZE = 34;
+   private static final int PARTICIPANT_SIZE = 34;
    private static final int SHADOW_W = 40;
    private static final int SHADOW_H = 9;
    private static final int STATUS_Y = 148;
@@ -176,11 +176,11 @@ public final class TeamPreviewScreen extends Screen {
       return Component.literal(String.format("%d:%02d", seconds / 60L, seconds % 60L));
    }
 
-   private void drawColumn(GuiGraphics graphics, int x, List<TeamPreviewPayload.Slot> team, boolean mine, int mouseX, int mouseY, float partialTick) {
+   private void drawColumn(GuiGraphics graphics, int x, List<TeamPreviewPayload.Slot> roster, boolean mine, int mouseX, int mouseY, float partialTick) {
       for (int i = 0; i < 6; i++) {
          int px = this.originX + x;
          int py = this.originY + 30 + i * 24;
-         TeamPreviewPayload.Slot slot = i < team.size() ? team.get(i) : null;
+         TeamPreviewPayload.Slot slot = i < roster.size() ? roster.get(i) : null;
          int order = mine ? this.picks.indexOf(i) : -1;
          boolean hover = slot != null && mine && !this.locked() && mouseX >= px && mouseX < px + 72 && mouseY >= py && mouseY < py + 22;
          int fill;
@@ -202,13 +202,13 @@ public final class TeamPreviewScreen extends Screen {
          graphics.fill(px + 72 - 1, py, px + 72, py + 22, edge);
          if (slot != null) {
             int iconX = mine ? px : px + 72 - 24;
-            this.drawPokemon(graphics, slot, iconX, py, partialTick);
+            this.drawCreature(graphics, slot, iconX, py, partialTick);
             int textLeft = mine ? px + 24 + 2 : px + 3;
             int textRight = mine ? px + 72 - 3 : px + 72 - 24 - 2;
             graphics.enableScissor(textLeft, py, textRight, py + 22);
 
             try {
-               Component name = speciesName(slot);
+               Component name = speciesTemplateName(slot);
                Ui.draw(graphics, this.font, name, textLeft, py + 3, -1, false);
                Component sub = Component.translatable("cobblebattle.preview.level", new Object[]{slot.level()}).copy().append(gender(slot));
                Ui.draw(graphics, this.font, sub, textLeft, py + 12, -6303010, false);
@@ -226,7 +226,7 @@ public final class TeamPreviewScreen extends Screen {
       }
    }
 
-   private void drawPokemon(GuiGraphics graphics, TeamPreviewPayload.Slot slot, int x, int y, float partialTick) {
+   private void drawCreature(GuiGraphics graphics, TeamPreviewPayload.Slot slot, int x, int y, float partialTick) {
       RenderablePokemon model = this.modelOf(slot);
       int centreX = x + 12;
       int floor = y + 22 - 2;
@@ -363,7 +363,7 @@ public final class TeamPreviewScreen extends Screen {
       TeamPreviewPayload.Slot slot = this.slotAt(mouseX, mouseY);
       if (slot != null) {
          List<Component> lines = new ArrayList<>(3);
-         lines.add(speciesName(slot));
+         lines.add(speciesTemplateName(slot));
          lines.add(Component.translatable("cobblebattle.preview.level", new Object[]{slot.level()}).copy().append(gender(slot)));
          if (slot.shiny()) {
             lines.add(Component.translatable("cobblebattle.preview.shiny"));
@@ -448,9 +448,9 @@ public final class TeamPreviewScreen extends Screen {
       return slot.species() + "/" + slot.shiny() + "/" + slot.gender();
    }
 
-   private static Component speciesName(TeamPreviewPayload.Slot slot) {
-      Species species = PokemonSpecies.getByName(slot.species());
-      return species == null ? Component.literal(slot.species()) : species.getTranslatedName();
+   private static Component speciesTemplateName(TeamPreviewPayload.Slot slot) {
+      Species speciesTemplate = PokemonSpecies.getByName(slot.species());
+      return speciesTemplate == null ? Component.literal(slot.species()) : speciesTemplate.getTranslatedName();
    }
 
    private static Component gender(TeamPreviewPayload.Slot slot) {
@@ -476,8 +476,8 @@ public final class TeamPreviewScreen extends Screen {
 
    private RenderablePokemon modelOf(TeamPreviewPayload.Slot slot) {
       return this.models.computeIfAbsent(key(slot), k -> {
-         Species species = PokemonSpecies.getByName(slot.species());
-         if (species == null) {
+         Species speciesTemplate = PokemonSpecies.getByName(slot.species());
+         if (speciesTemplate == null) {
             return null;
          } else {
             Set<String> aspects = new LinkedHashSet<>();
@@ -493,7 +493,7 @@ public final class TeamPreviewScreen extends Screen {
                aspects.add("female");
             }
 
-            return new RenderablePokemon(species, aspects, ItemStack.EMPTY);
+            return new RenderablePokemon(speciesTemplate, aspects, ItemStack.EMPTY);
          }
       });
    }

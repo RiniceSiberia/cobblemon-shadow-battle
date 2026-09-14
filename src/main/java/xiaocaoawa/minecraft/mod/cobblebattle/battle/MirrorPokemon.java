@@ -19,36 +19,36 @@ public final class MirrorPokemon {
    private MirrorPokemon() {
    }
 
-   static void claim(MirrorBattle mirror, List<BattlePokemon> team) {
-      for (BattlePokemon battlePokemon : team) {
-         Pokemon pokemon = battlePokemon.getEffectedPokemon();
-         if (pokemon != null) {
-            LIVE.put(pokemon.getUuid(), mirror);
+   static void claim(MirrorBattle mirror, List<BattlePokemon> roster) {
+      for (BattlePokemon battleCreature : roster) {
+         Pokemon creature = battleCreature.getEffectedPokemon();
+         if (creature != null) {
+            LIVE.put(creature.getUuid(), mirror);
          }
       }
    }
 
-   static void release(List<BattlePokemon> team) {
-      for (BattlePokemon battlePokemon : team) {
-         Pokemon pokemon = battlePokemon.getEffectedPokemon();
-         if (pokemon != null) {
-            LIVE.remove(pokemon.getUuid());
+   static void release(List<BattlePokemon> roster) {
+      for (BattlePokemon battleCreature : roster) {
+         Pokemon creature = battleCreature.getEffectedPokemon();
+         if (creature != null) {
+            LIVE.remove(creature.getUuid());
          }
       }
    }
 
    public static boolean onEntityAdded(Entity entity) {
-      if (entity instanceof PokemonEntity pokemonEntity) {
-         Pokemon pokemon = pokemonEntity.getPokemon();
-         MirrorBattle mirror = pokemon == null ? null : LIVE.get(pokemon.getUuid());
+      if (entity instanceof PokemonEntity creatureEntity) {
+         Pokemon creature = creatureEntity.getPokemon();
+         MirrorBattle mirror = creature == null ? null : LIVE.get(creature.getUuid());
          if (mirror != null) {
             entity.addTag("cobblebattle_mirror");
-            mirror.attachProp(pokemonEntity);
+            mirror.attachProp(creatureEntity);
             return false;
          } else if (!entity.getTags().contains("cobblebattle_mirror")) {
             return false;
          } else {
-            LOGGER.info("Removed a leftover mirror Pokemon ({}) at {}", pokemon == null ? "?" : pokemon.getSpecies().getName(), entity.blockPosition());
+            LOGGER.info("Removed a leftover mirror Pokemon ({}) at {}", creature == null ? "?" : creature.getSpecies().getName(), entity.blockPosition());
             entity.discard();
             return true;
          }

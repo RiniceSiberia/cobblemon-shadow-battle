@@ -17,3 +17,5 @@ B3-account已完成Kotlin实现及21项测试，证据b3-tests.json。接下来�
 B-vendor-chat完成：复制SnakeYAML源码已通过Git可恢复删除，Maven 2.6隔离打包；聊天状态Kotlin迁移完成；全量22项测试（含产物隔离加载）通过。下一步处理对战镜像索引/状态链路，并建立剩余符号审查。
 
 B4-projection已提交状态组件及30项测试。建立了Java语义符号初始清单SYMBOLS.csv（5033条，含需排除的编译器生成record成员，尚未用于最终比例）。下一步先校正符号统计/审查安全改名，再继续大型服务与UI批次。
+
+B5命名批次已完成并通过Gradle build，见build/gradle-b5-rename.log。当前工作区含419项语义改名；需先提交并重新生成符号清单，再推进BattleQueue/CrossServerBattleService剩余业务迁移。

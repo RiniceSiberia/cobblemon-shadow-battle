@@ -15,10 +15,10 @@ public final class MainMenuHandler {
 
    public static void init() {
       KeyMappingRegistry.register(MenuKeys.OPEN);
-      NetworkManager.registerReceiver(Side.S2C, OpenMainMenuPayload.TYPE, OpenMainMenuPayload.CODEC, (payload, context) -> context.queue(() -> {
+      NetworkManager.registerReceiver(Side.S2C, OpenMainMenuPayload.TYPE, OpenMainMenuPayload.CODEC, (body, context) -> context.queue(() -> {
          Minecraft minecraft = Minecraft.getInstance();
          if (minecraft.player != null) {
-            minecraft.setScreen(new MainMenuScreen(payload));
+            minecraft.setScreen(new MainMenuScreen(body));
          }
       }));
       ClientRawInputEvent.KEY_PRESSED.register((KeyPressed)(minecraft, keyCode, scanCode, action, modifiers) -> {

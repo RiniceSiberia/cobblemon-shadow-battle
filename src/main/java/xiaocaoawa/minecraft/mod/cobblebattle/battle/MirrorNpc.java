@@ -103,8 +103,8 @@ public final class MirrorNpc {
                return npc;
             }
          }
-      } catch (Exception var7) {
-         LOGGER.error("Could not spawn the mirror NPC for {}", opponentName, var7);
+      } catch (Exception failure) {
+         LOGGER.error("Could not spawn the mirror NPC for {}", opponentName, failure);
          return null;
       }
    }
@@ -161,8 +161,8 @@ public final class MirrorNpc {
                }
             }
          }
-      } catch (Exception var6) {
-         LOGGER.debug("Could not look up the skin for {}: {}", name, var6.toString());
+      } catch (Exception failure) {
+         LOGGER.debug("Could not look up the skin for {}: {}", name, failure.toString());
          return NO_SKIN;
       }
    }
@@ -173,8 +173,8 @@ public final class MirrorNpc {
          if (!npc.isRemoved()) {
             try {
                npc.discard();
-            } catch (RuntimeException var2) {
-               LOGGER.warn("Could not remove a mirror NPC: {}", var2.toString());
+            } catch (RuntimeException failure) {
+               LOGGER.warn("Could not remove a mirror NPC: {}", failure.toString());
             }
          }
       }
@@ -185,8 +185,8 @@ public final class MirrorNpc {
          if (this.url != null) {
             try {
                npc.loadTexture(this.url, this.model);
-            } catch (RuntimeException var3) {
-               MirrorNpc.LOGGER.debug("Could not apply a mirror NPC skin: {}", var3.toString());
+            } catch (RuntimeException failure) {
+               MirrorNpc.LOGGER.debug("Could not apply a mirror NPC skin: {}", failure.toString());
             }
          }
       }

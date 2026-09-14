@@ -13,9 +13,9 @@ public final class ChatState {
     public static long uid() { return ConversationState.currentAccountNumber(); }
     public static String name() { return ConversationState.currentDisplayLabel(); }
     public static ChatLog.Channel channel() { return ConversationState.currentConversation(); }
-    public static void select(ChatLog.Channel wanted) { ConversationState.selectConversation(wanted); }
-    public static void accept(boolean nowSignedIn, boolean nowInBattle, long nowUid, String nowName) {
-        ConversationState.updateSession(nowSignedIn, nowInBattle, nowUid, nowName);
+    public static void select(ChatLog.Channel connectionRequested) { ConversationState.selectConversation(connectionRequested); }
+    public static void accept(boolean nowSignedIn, boolean nowInBattle, long nowAccountNumber, String nowName) {
+        ConversationState.updateSession(nowSignedIn, nowInBattle, nowAccountNumber, nowName);
     }
     public static void reset() { ConversationState.clearSession(); }
 }

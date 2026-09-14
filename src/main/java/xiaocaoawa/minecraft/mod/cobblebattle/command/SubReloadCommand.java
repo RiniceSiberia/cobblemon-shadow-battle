@@ -28,8 +28,8 @@ public final class SubReloadCommand extends AbstractSubCommand {
       CobbleBattleConfig.Reloaded result;
       try {
          result = config.reload();
-      } catch (RuntimeException var5) {
-         source.sendFailure(Msg.of(ChatFormatting.RED, "cmd.reload.failed", var5.getMessage()));
+      } catch (RuntimeException failure) {
+         source.sendFailure(Msg.of(ChatFormatting.RED, "cmd.reload.failed", failure.getMessage()));
          return 0;
       }
 

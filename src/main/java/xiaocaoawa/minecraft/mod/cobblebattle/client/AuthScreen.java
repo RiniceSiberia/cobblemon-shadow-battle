@@ -23,7 +23,7 @@ public final class AuthScreen extends Screen {
    private static final int TITLE_H = 12;
    private static final int AVATAR_SIZE = 48;
    private static final int AVATAR_Y = 37;
-   private static final int PLAYER_Y = 88;
+   private static final int PARTICIPANT_Y = 88;
    private static final int FIELD_H = 14;
    private static final int FIELD_X = 39;
    private static final int FIELD_W = 112;
@@ -50,7 +50,7 @@ public final class AuthScreen extends Screen {
    private static final int BUTTON_HOVER = -12674087;
    private static final int BUTTON_OFF = -12947828;
    private static final int BUTTON_TEXT_OFF = -7362380;
-   private static final int PLAYER_TEXT = -4330766;
+   private static final int PARTICIPANT_TEXT = -4330766;
    private static final int LINK_IDLE = -7350556;
    private static final int LINK_HOVER = -1376769;
    private static final int BACKDROP = -1609559016;
@@ -81,8 +81,8 @@ public final class AuthScreen extends Screen {
    public AuthScreen(AuthMode mode, String suggestedId, boolean emailEnabled) {
       super(titleOf(mode));
       this.emailEnabled = emailEnabled;
-      AuthMode wanted = mode == AuthMode.CODE_REQUEST ? AuthMode.REGISTER : mode;
-      this.mode = !emailEnabled && wanted.isBindEmail() ? AuthMode.LOGIN : wanted;
+      AuthMode connectionRequested = mode == AuthMode.CODE_REQUEST ? AuthMode.REGISTER : mode;
+      this.mode = !emailEnabled && connectionRequested.isBindEmail() ? AuthMode.LOGIN : connectionRequested;
       this.suggestedId = suggestedId == null ? "" : suggestedId;
    }
 
@@ -278,7 +278,7 @@ public final class AuthScreen extends Screen {
       }
    }
 
-   void onResult(boolean ok, String message) {
+   void onResult(boolean ok, String document) {
       this.waiting = false;
       if (this.requestingCode) {
          this.requestingCode = false;
@@ -286,7 +286,7 @@ public final class AuthScreen extends Screen {
             this.codeCooldown = 0;
          }
 
-         this.error = Component.literal(message);
+         this.error = Component.literal(document);
          if (ok && this.codeBox != null) {
             this.setFocused(this.codeBox);
          }
@@ -296,7 +296,7 @@ public final class AuthScreen extends Screen {
       } else if (ok) {
          this.onClose();
       } else {
-         this.error = Component.literal(message);
+         this.error = Component.literal(document);
          this.passwordBox.setValue("");
          if (this.confirmBox != null) {
             this.confirmBox.setValue("");
@@ -316,7 +316,7 @@ public final class AuthScreen extends Screen {
       graphics.blit(BACKGROUND, this.originX, this.originY, 0.0F, 0.0F, 191, 207, 191, 207);
       this.drawTitle(graphics);
       this.drawAvatar(graphics);
-      this.drawPlayerName(graphics);
+      this.drawParticipantName(graphics);
       this.drawField(graphics, this.idY, this.idBox, 112);
       this.drawField(graphics, this.emailY, this.emailBox, 112);
       this.drawField(graphics, this.codeY, this.codeBox, 60);
@@ -344,7 +344,7 @@ public final class AuthScreen extends Screen {
       }
    }
 
-   private void drawPlayerName(GuiGraphics graphics) {
+   private void drawParticipantName(GuiGraphics graphics) {
       if (this.minecraft != null && this.minecraft.player != null) {
          Ui.drawCentered(graphics, this.font, this.minecraft.player.getGameProfile().getName(), this.originX + 95, this.originY + 88, -4330766);
       }

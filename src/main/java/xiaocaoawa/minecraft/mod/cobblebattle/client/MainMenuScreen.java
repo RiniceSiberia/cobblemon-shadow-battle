@@ -43,10 +43,10 @@ public final class MainMenuScreen extends Screen {
    private static final int VIEWER_W = 126;
    private static final int VIEWER_TOP = 30;
    private static final int FLOOR_Y = 162;
-   private static final int PLAYER_X = 62;
-   private static final int PLAYER_SIZE = 40;
-   private static final int POKEMON_X = 92;
-   private static final int POKEMON_W = 56;
+   private static final int PARTICIPANT_X = 62;
+   private static final int PARTICIPANT_SIZE = 40;
+   private static final int CREATURE_X = 92;
+   private static final int CREATURE_W = 56;
    private static final int PLATFORM_H = 33;
    private static final int PLATFORM_Y = 150;
    private static final int SHADOW_W = 50;
@@ -72,8 +72,8 @@ public final class MainMenuScreen extends Screen {
    private final List<MainMenuScreen.Tile> menu = new ArrayList<>();
    private PlayerPortrait portrait;
    private RenderablePokemon favourite;
-   private final FloatingState pokemonState = new FloatingState();
-   private float pokemonScale = 40.0F;
+   private final FloatingState creatureState = new FloatingState();
+   private float creatureScale = 40.0F;
    private int originX;
    private int originY;
 
@@ -130,13 +130,13 @@ public final class MainMenuScreen extends Screen {
       }
 
       this.favourite = null;
-      this.pokemonScale = 40.0F;
+      this.creatureScale = 40.0F;
       if (!this.data.favourite().isEmpty()) {
-         Species species = PokemonSpecies.getByName(this.data.favourite());
-         if (species != null) {
-            this.favourite = new RenderablePokemon(species, Set.of(), ItemStack.EMPTY);
+         Species speciesTemplate = PokemonSpecies.getByName(this.data.favourite());
+         if (speciesTemplate != null) {
+            this.favourite = new RenderablePokemon(speciesTemplate, Set.of(), ItemStack.EMPTY);
             float blocksx = Math.max(0.1F, this.favourite.getForm().getHitbox().height());
-            this.pokemonScale = Math.min(40.0F, 126.0F / blocksx);
+            this.creatureScale = Math.min(40.0F, 126.0F / blocksx);
          }
       }
    }
@@ -201,9 +201,9 @@ public final class MainMenuScreen extends Screen {
                graphics.pose(),
                rotation,
                PoseType.PROFILE,
-               this.pokemonState,
+               this.creatureState,
                partialTick,
-               this.pokemonScale,
+               this.creatureScale,
                true,
                1.0F,
                1.0F,

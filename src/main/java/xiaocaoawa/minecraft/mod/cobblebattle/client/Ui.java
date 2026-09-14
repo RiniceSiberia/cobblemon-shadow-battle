@@ -27,17 +27,17 @@ public final class Ui {
    }
 
    public static Component join(Component... parts) {
-      MutableComponent out = Component.empty();
+      MutableComponent outputStream = Component.empty();
 
       for (int i = 0; i < parts.length; i++) {
          if (i > 0) {
-            out.append(plain(" · "));
+            outputStream.append(plain(" · "));
          }
 
-         out.append(parts[i]);
+         outputStream.append(parts[i]);
       }
 
-      return out;
+      return outputStream;
    }
 
    public static int draw(GuiGraphics graphics, Font font, String text, int x, int y, int colour) {

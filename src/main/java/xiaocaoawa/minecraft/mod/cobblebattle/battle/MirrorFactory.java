@@ -30,8 +30,8 @@ final class MirrorFactory {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle");
    private final CrossServerBattleService service;
 
-   private BattleFormat readFormat(JsonObject message) {
-      JsonObject described = message.getAsJsonObject("formatJson");
+   private BattleFormat readFormat(JsonObject document) {
+      JsonObject described = document.getAsJsonObject("formatJson");
       String battleType = "singles";
       if (described != null) {
          JsonObject type = described.getAsJsonObject("battleType");
@@ -39,7 +39,7 @@ final class MirrorFactory {
             battleType = BattleServerClient.str(type, "name", battleType);
          }
       } else {
-         battleType = BattleServerClient.str(message, "format", battleType);
+         battleType = BattleServerClient.str(document, "format", battleType);
       }
 
       BattleFormat base = BattleFormat.Companion.fromFormatIdentifier(battleType);
@@ -70,70 +70,70 @@ final class MirrorFactory {
       this.service = service;
    }
 
-   private static List<BattlePokemon> pickedFrom(List<BattlePokemon> team, JsonObject message, String mySeat) {
-      JsonObject picks = message.getAsJsonObject("picks");
+   private static List<BattlePokemon> pickedFrom(List<BattlePokemon> roster, JsonObject document, String mySeat) {
+      JsonObject picks = document.getAsJsonObject("picks");
       JsonElement mine = picks == null ? null : picks.get(mySeat);
       if (mine != null && mine.isJsonArray()) {
          JsonArray array = mine.getAsJsonArray();
          if (array.isEmpty()) {
-            return team;
+            return roster;
          } else {
-            List<BattlePokemon> out = new ArrayList<>(array.size());
+            List<BattlePokemon> outputStream = new ArrayList<>(array.size());
             Set<Integer> seen = new LinkedHashSet<>();
 
             for (JsonElement element : array) {
                int index;
                try {
                   index = element.getAsInt();
-               } catch (RuntimeException var12) {
+               } catch (RuntimeException failure) {
                   LOGGER.warn("A pick for seat {} was not a slot number; using the whole team", mySeat);
-                  return team;
+                  return roster;
                }
 
-               if (index < 0 || index >= team.size() || !seen.add(index)) {
-                  LOGGER.warn("Pick {} for seat {} is not a slot in a team of {}; using the whole team", new Object[]{index, mySeat, team.size()});
-                  return team;
+               if (index < 0 || index >= roster.size() || !seen.add(index)) {
+                  LOGGER.warn("Pick {} for seat {} is not a slot in a team of {}; using the whole team", new Object[]{index, mySeat, roster.size()});
+                  return roster;
                }
 
-               out.add(team.get(index));
+               outputStream.add(roster.get(index));
             }
 
-            return out;
+            return outputStream;
          }
       } else {
-         return team;
+         return roster;
       }
    }
 
-   void build(JsonObject message) {
-      String remoteBattleId = BattleServerClient.str(message, "battleId", null);
-      String myPlayerRaw = BattleServerClient.str(message, "yourPlayer", null);
+   void build(JsonObject document) {
+      String remoteBattleId = BattleServerClient.str(document, "battleId", null);
+      String myParticipantRaw = BattleServerClient.str(document, "yourPlayer", null);
 
       try {
-         this.buildOrThrow(message, remoteBattleId);
-      } catch (Throwable var7) {
-         LOGGER.error("Building the mirror for battle {} threw", remoteBattleId, var7);
-         if (myPlayerRaw != null) {
+         this.buildOrThrow(document, remoteBattleId);
+      } catch (Throwable failure) {
+         LOGGER.error("Building the mirror for battle {} threw", remoteBattleId, failure);
+         if (myParticipantRaw != null) {
             try {
-               this.service.tellPlayer(UUID.fromString(myPlayerRaw), Msg.of(ChatFormatting.RED, "battle.setup_failed"));
+               this.service.tellParticipant(UUID.fromString(myParticipantRaw), Msg.of(ChatFormatting.RED, "battle.setup_failed"));
             } catch (RuntimeException var6) {
             }
          }
 
          if (remoteBattleId != null) {
-            this.service.sendAbort(remoteBattleId, "mirror build threw: " + var7.getClass().getSimpleName() + ": " + var7.getMessage());
+            this.service.sendAbort(remoteBattleId, "mirror build threw: " + failure.getClass().getSimpleName() + ": " + failure.getMessage());
          }
       }
    }
 
-   private void buildOrThrow(JsonObject message, String remoteBattleId) {
-      String mySeat = BattleServerClient.str(message, "yourSeat", null);
-      String myPlayerRaw = BattleServerClient.str(message, "yourPlayer", null);
-      if (remoteBattleId != null && mySeat != null && myPlayerRaw != null) {
-         UUID myPlayerUuid = UUID.fromString(myPlayerRaw);
+   private void buildOrThrow(JsonObject document, String remoteBattleId) {
+      String mySeat = BattleServerClient.str(document, "yourSeat", null);
+      String myParticipantRaw = BattleServerClient.str(document, "yourPlayer", null);
+      if (remoteBattleId != null && mySeat != null && myParticipantRaw != null) {
+         UUID myParticipantUuid = UUID.fromString(myParticipantRaw);
          JsonObject opponentSeat = null;
 
-         for (JsonElement element : message.getAsJsonArray("seats")) {
+         for (JsonElement element : document.getAsJsonArray("seats")) {
             JsonObject seat = element.getAsJsonObject();
             if (!mySeat.equals(seat.get("showdownId").getAsString())) {
                opponentSeat = seat;
@@ -142,73 +142,73 @@ final class MirrorFactory {
 
          if (opponentSeat == null) {
             LOGGER.error("match_found did not describe an opponent seat");
-            this.service.tellPlayer(myPlayerUuid, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
+            this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
             this.service.sendAbort(remoteBattleId, "no opponent seat");
          } else {
             String opponentSeatId = opponentSeat.get("showdownId").getAsString();
-            JsonObject opponentPlayer = opponentSeat.getAsJsonObject("player");
-            UUID opponentUuid = UUID.fromString(opponentPlayer.get("uuid").getAsString());
-            String opponentName = opponentPlayer.get("name").getAsString();
+            JsonObject opponentParticipant = opponentSeat.getAsJsonObject("player");
+            UUID opponentUuid = UUID.fromString(opponentParticipant.get("uuid").getAsString());
+            String opponentName = opponentParticipant.get("name").getAsString();
             String opponentServerId = opponentSeat.get("serverId").getAsString();
-            boolean authoritative = message.has("authoritative") && !message.get("authoritative").isJsonNull() && message.get("authoritative").getAsBoolean();
+            boolean sourceOfTruth = document.has("authoritative") && !document.get("authoritative").isJsonNull() && document.get("authoritative").getAsBoolean();
             if (!opponentServerId.equals(ServerIdentity.get())) {
-               BattleQueue.QueuedTeam mine = this.service.battleQueue().claim(myPlayerUuid);
+               BattleQueue.QueuedTeam mine = this.service.battleQueue().claim(myParticipantUuid);
                if (mine == null) {
-                  LOGGER.error("match_found for {} but we have no queued team for them", myPlayerUuid);
-                  this.service.tellPlayer(myPlayerUuid, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
+                  LOGGER.error("match_found for {} but we have no queued team for them", myParticipantUuid);
+                  this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
                   this.service.sendAbort(remoteBattleId, "no queued team on this server");
                } else {
-                  String opponentPacked = message.getAsJsonObject("teams").get(opponentSeatId).getAsString();
-                  List<BattlePokemon> opponentTeam = RemoteTeamCodec.decode(opponentPacked);
-                  if (opponentTeam.isEmpty()) {
+                  String opponentPacked = document.getAsJsonObject("teams").get(opponentSeatId).getAsString();
+                  List<BattlePokemon> opponentRoster = RemoteTeamCodec.decode(opponentPacked);
+                  if (opponentRoster.isEmpty()) {
                      LOGGER.error("Could not rebuild the opposing team for battle {}", remoteBattleId);
-                     this.service.tellPlayer(myPlayerUuid, Msg.of(ChatFormatting.RED, "battle.team_rebuild_failed"));
+                     this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.RED, "battle.team_rebuild_failed"));
                      this.service.sendAbort(remoteBattleId, "opposing team could not be rebuilt");
                   } else {
-                     int expected = BattleServerClient.integer(opponentSeat, "teamSize", opponentTeam.size());
-                     if (authoritative && opponentTeam.size() < expected) {
+                     int expected = BattleServerClient.integer(opponentSeat, "teamSize", opponentRoster.size());
+                     if (sourceOfTruth && opponentRoster.size() < expected) {
                         LOGGER.error(
                            "Battle {}: rebuilt only {} of {} opposing Pokemon - this server's data cannot run this battle",
-                           new Object[]{remoteBattleId, opponentTeam.size(), expected}
+                           new Object[]{remoteBattleId, opponentRoster.size(), expected}
                         );
-                        this.service.tellPlayer(myPlayerUuid, Msg.of(ChatFormatting.RED, "battle.team_rebuild_failed"));
+                        this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.RED, "battle.team_rebuild_failed"));
                         this.service
-                           .sendAbort(remoteBattleId, "this server knows only " + opponentTeam.size() + " of the " + expected + " Pokemon on the opposing team");
+                           .sendAbort(remoteBattleId, "this server knows only " + opponentRoster.size() + " of the " + expected + " Pokemon on the opposing team");
                      } else {
-                        List<BattlePokemon> myTeam = pickedFrom(mine.team(), message, mySeat);
-                        if (myTeam.isEmpty()) {
+                        List<BattlePokemon> myRoster = pickedFrom(mine.team(), document, mySeat);
+                        if (myRoster.isEmpty()) {
                            LOGGER.error("Battle {}: none of this player's team was picked", remoteBattleId);
-                           this.service.tellPlayer(myPlayerUuid, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
+                           this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
                            this.service.sendAbort(remoteBattleId, "no Pokemon left after the team preview");
                         } else {
-                           PlayerBattleActor localActor = new PlayerBattleActor(myPlayerUuid, myTeam);
+                           PlayerBattleActor localActor = new PlayerBattleActor(myParticipantUuid, myRoster);
                            MinecraftServer server = this.service.server();
-                           ServerPlayer localPlayer = server == null ? null : server.getPlayerList().getPlayer(myPlayerUuid);
-                           NPCEntity npc = localPlayer == null ? null : MirrorNpc.spawn(localPlayer, opponentName);
+                           ServerPlayer localParticipant = server == null ? null : server.getPlayerList().getPlayer(myParticipantUuid);
+                           NPCEntity npc = localParticipant == null ? null : MirrorNpc.spawn(localParticipant, opponentName);
                            RemoteBattleActor remoteActor = (RemoteBattleActor)(npc != null
-                              ? new EntityBackedRemoteBattleActor(opponentUuid, opponentName, opponentServerId, opponentSeatId, opponentTeam, npc)
-                              : new RemoteBattleActor(opponentUuid, opponentName, opponentServerId, opponentSeatId, opponentTeam));
+                              ? new EntityBackedRemoteBattleActor(opponentUuid, opponentName, opponentServerId, opponentSeatId, opponentRoster, npc)
+                              : new RemoteBattleActor(opponentUuid, opponentName, opponentServerId, opponentSeatId, opponentRoster));
                            boolean iAmP1 = "p1".equals(mySeat);
                            BattleSide side1 = new BattleSide(new BattleActor[]{(BattleActor)(iAmP1 ? localActor : remoteActor)});
                            BattleSide side2 = new BattleSide(new BattleActor[]{(BattleActor)(iAmP1 ? remoteActor : localActor)});
-                           BattleFormat format = this.readFormat(message);
+                           BattleFormat format = this.readFormat(document);
                            MirrorBattle mirror = new MirrorBattle(
-                              remoteBattleId, mySeat, opponentSeatId, myPlayerUuid, opponentName, opponentServerId, authoritative, this.service.config().debug
+                              remoteBattleId, mySeat, opponentSeatId, myParticipantUuid, opponentName, opponentServerId, sourceOfTruth, this.service.config().debug
                            );
                            mirror.attachBody(npc, remoteActor);
-                           MirrorPokemon.claim(mirror, opponentTeam);
+                           MirrorPokemon.claim(mirror, opponentRoster);
                            CrossServerBattles.beginConstruction(mirror);
 
                            label164: {
                               try {
                                  BattleRegistry.startBattle(format, side1, side2, false);
                                  break label164;
-                              } catch (RuntimeException var35) {
-                                 LOGGER.error("Failed to build the mirror battle for {}", remoteBattleId, var35);
+                              } catch (RuntimeException failure) {
+                                 LOGGER.error("Failed to build the mirror battle for {}", remoteBattleId, failure);
                                  MirrorNpc.despawn(npc);
-                                 MirrorPokemon.release(opponentTeam);
+                                 MirrorPokemon.release(opponentRoster);
                                  CrossServerBattles.forget(mirror.localBattleId() == null ? new UUID(0L, 0L) : mirror.localBattleId());
-                                 this.service.tellPlayer(myPlayerUuid, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
+                                 this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
                                  this.service.sendAbort(remoteBattleId, "mirror construction failed");
                               } finally {
                                  CrossServerBattles.endConstruction();
@@ -221,30 +221,30 @@ final class MirrorFactory {
                            if (localBattleId == null) {
                               LOGGER.error("Mirror battle for {} never reached the showdown hook - is the GraalShowdownService mixin applied?", remoteBattleId);
                               MirrorNpc.despawn(npc);
-                              MirrorPokemon.release(opponentTeam);
-                              this.service.tellPlayer(myPlayerUuid, Msg.of(ChatFormatting.RED, "battle.mixin_missing"));
+                              MirrorPokemon.release(opponentRoster);
+                              this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.RED, "battle.mixin_missing"));
                               this.service.sendAbort(remoteBattleId, "mixin did not fire - CobbleBattle is not hooked into Cobblemon on this server");
                            } else {
                               PokemonBattle localBattle = BattleRegistry.getBattle(localBattleId);
                               mirror.attach(localBattle);
                               LOGGER.info(
                                  "{} battle {} <-> local {} built: {} vs {}@{}",
-                                 new Object[]{authoritative ? "Host-run" : "Mirror", remoteBattleId, localBattleId, mySeat, opponentName, opponentServerId}
+                                 new Object[]{sourceOfTruth ? "Host-run" : "Mirror", remoteBattleId, localBattleId, mySeat, opponentName, opponentServerId}
                               );
-                              BattleInfo info = new BattleInfo(
+                              BattleInfo battleDetails = new BattleInfo(
                                  remoteBattleId,
-                                 BattleServerClient.str(message, "ranked", ""),
-                                 BattleServerClient.str(message, "rankedName", ""),
-                                 BattleServerClient.bool(message, "casual", false),
+                                 BattleServerClient.str(document, "ranked", ""),
+                                 BattleServerClient.str(document, "rankedName", ""),
+                                 BattleServerClient.bool(document, "casual", false),
                                  mySeat,
                                  opponentUuid,
                                  opponentName,
                                  opponentServerId
                               );
-                              mirror.describe(info);
-                              this.service.tellPlayer(myPlayerUuid, Msg.of(ChatFormatting.AQUA, "battle.found", opponentName, opponentServerId));
-                              if (localPlayer != null) {
-                                 ApiEvents.battleStarted(localPlayer, info);
+                              mirror.describe(battleDetails);
+                              this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.AQUA, "battle.found", opponentName, opponentServerId));
+                              if (localParticipant != null) {
+                                 ApiEvents.battleStarted(localParticipant, battleDetails);
                               }
 
                               JsonObject ack = BattleServerClient.msg("battle_ack");
@@ -256,9 +256,9 @@ final class MirrorFactory {
                   }
                }
             } else if (CrossServerBattles.byRemoteId(remoteBattleId) != null) {
-               LOGGER.debug("match_found for {} in battle {}: the other seat's frame already built it", myPlayerUuid, remoteBattleId);
+               LOGGER.debug("match_found for {} in battle {}: the other seat's frame already built it", myParticipantUuid, remoteBattleId);
             } else {
-               this.buildLocalPair(message, remoteBattleId, mySeat, myPlayerUuid, opponentSeatId, opponentUuid, opponentName, authoritative);
+               this.buildLocalPair(document, remoteBattleId, mySeat, myParticipantUuid, opponentSeatId, opponentUuid, opponentName, sourceOfTruth);
             }
          }
       } else {
@@ -267,35 +267,35 @@ final class MirrorFactory {
    }
 
    private void buildLocalPair(
-      JsonObject message,
+      JsonObject document,
       String remoteBattleId,
       String mySeat,
-      UUID myPlayerUuid,
+      UUID myParticipantUuid,
       String opponentSeatId,
       UUID opponentUuid,
       String opponentName,
-      boolean authoritative
+      boolean sourceOfTruth
    ) {
       BattleQueue queue = this.service.battleQueue();
-      BattleQueue.QueuedTeam mine = queue.claim(myPlayerUuid);
+      BattleQueue.QueuedTeam mine = queue.claim(myParticipantUuid);
       BattleQueue.QueuedTeam theirs = queue.claim(opponentUuid);
       if (mine != null && theirs != null) {
-         List<BattlePokemon> myTeam = pickedFrom(mine.team(), message, mySeat);
-         List<BattlePokemon> theirTeam = pickedFrom(theirs.team(), message, opponentSeatId);
-         if (!myTeam.isEmpty() && !theirTeam.isEmpty()) {
+         List<BattlePokemon> myRoster = pickedFrom(mine.team(), document, mySeat);
+         List<BattlePokemon> theirRoster = pickedFrom(theirs.team(), document, opponentSeatId);
+         if (!myRoster.isEmpty() && !theirRoster.isEmpty()) {
             MinecraftServer server = this.service.server();
-            ServerPlayer me = server == null ? null : server.getPlayerList().getPlayer(myPlayerUuid);
+            ServerPlayer me = server == null ? null : server.getPlayerList().getPlayer(myParticipantUuid);
             ServerPlayer them = server == null ? null : server.getPlayerList().getPlayer(opponentUuid);
-            String myName = me != null ? me.getGameProfile().getName() : BattleServerClient.str(message, "yourName", "?");
-            PlayerBattleActor myActor = new PlayerBattleActor(myPlayerUuid, myTeam);
-            PlayerBattleActor theirActor = new PlayerBattleActor(opponentUuid, theirTeam);
+            String myName = me != null ? me.getGameProfile().getName() : BattleServerClient.str(document, "yourName", "?");
+            PlayerBattleActor myActor = new PlayerBattleActor(myParticipantUuid, myRoster);
+            PlayerBattleActor theirActor = new PlayerBattleActor(opponentUuid, theirRoster);
             boolean iAmP1 = "p1".equals(mySeat);
             BattleSide side1 = new BattleSide(new BattleActor[]{iAmP1 ? myActor : theirActor});
             BattleSide side2 = new BattleSide(new BattleActor[]{iAmP1 ? theirActor : myActor});
-            BattleFormat format = this.readFormat(message);
+            BattleFormat format = this.readFormat(document);
             String here = ServerIdentity.get();
             MirrorBattle mirror = new MirrorBattle(
-               remoteBattleId, mySeat, opponentSeatId, myPlayerUuid, opponentUuid, opponentName, here, authoritative, this.service.config().debug
+               remoteBattleId, mySeat, opponentSeatId, myParticipantUuid, opponentUuid, opponentName, here, sourceOfTruth, this.service.config().debug
             );
             CrossServerBattles.beginConstruction(mirror);
 
@@ -303,12 +303,12 @@ final class MirrorFactory {
                try {
                   BattleRegistry.startBattle(format, side1, side2, false);
                   break label180;
-               } catch (RuntimeException var35) {
-                  LOGGER.error("Failed to build the two-player battle for {}", remoteBattleId, var35);
+               } catch (RuntimeException failure) {
+                  LOGGER.error("Failed to build the two-player battle for {}", remoteBattleId, failure);
                   CrossServerBattles.forget(mirror.localBattleId() == null ? new UUID(0L, 0L) : mirror.localBattleId());
 
-                  for (UUID who : List.of(myPlayerUuid, opponentUuid)) {
-                     this.service.tellPlayer(who, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
+                  for (UUID who : List.of(myParticipantUuid, opponentUuid)) {
+                     this.service.tellParticipant(who, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
                   }
 
                   this.service.sendAbort(remoteBattleId, "mirror construction failed");
@@ -324,23 +324,23 @@ final class MirrorFactory {
                mirror.attach(BattleRegistry.getBattle(localBattleId));
                LOGGER.info(
                   "{} battle {} <-> local {} built: {} ({}) vs {} ({}), both on this server",
-                  new Object[]{authoritative ? "Host-run" : "Mirror", remoteBattleId, localBattleId, mySeat, myName, opponentSeatId, opponentName}
+                  new Object[]{sourceOfTruth ? "Host-run" : "Mirror", remoteBattleId, localBattleId, mySeat, myName, opponentSeatId, opponentName}
                );
-               String ranked = BattleServerClient.str(message, "ranked", "");
-               String rankedName = BattleServerClient.str(message, "rankedName", "");
-               boolean casual = BattleServerClient.bool(message, "casual", false);
-               BattleInfo myInfo = new BattleInfo(remoteBattleId, ranked, rankedName, casual, mySeat, opponentUuid, opponentName, here);
-               BattleInfo theirInfo = new BattleInfo(remoteBattleId, ranked, rankedName, casual, opponentSeatId, myPlayerUuid, myName, here);
-               mirror.describe(myInfo);
-               mirror.describeSecond(theirInfo);
-               this.service.tellPlayer(myPlayerUuid, Msg.of(ChatFormatting.AQUA, "battle.found_local", opponentName));
-               this.service.tellPlayer(opponentUuid, Msg.of(ChatFormatting.AQUA, "battle.found_local", myName));
+               String ranked = BattleServerClient.str(document, "ranked", "");
+               String rankedName = BattleServerClient.str(document, "rankedName", "");
+               boolean casual = BattleServerClient.bool(document, "casual", false);
+               BattleInfo myBattleDetails = new BattleInfo(remoteBattleId, ranked, rankedName, casual, mySeat, opponentUuid, opponentName, here);
+               BattleInfo theirBattleDetails = new BattleInfo(remoteBattleId, ranked, rankedName, casual, opponentSeatId, myParticipantUuid, myName, here);
+               mirror.describe(myBattleDetails);
+               mirror.describeSecond(theirBattleDetails);
+               this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.AQUA, "battle.found_local", opponentName));
+               this.service.tellParticipant(opponentUuid, Msg.of(ChatFormatting.AQUA, "battle.found_local", myName));
                if (me != null) {
-                  ApiEvents.battleStarted(me, myInfo);
+                  ApiEvents.battleStarted(me, myBattleDetails);
                }
 
                if (them != null) {
-                  ApiEvents.battleStarted(them, theirInfo);
+                  ApiEvents.battleStarted(them, theirBattleDetails);
                }
 
                JsonObject ack = BattleServerClient.msg("battle_ack");
@@ -349,8 +349,8 @@ final class MirrorFactory {
             } else {
                LOGGER.error("Two-player battle for {} never reached the showdown hook - is the GraalShowdownService mixin applied?", remoteBattleId);
 
-               for (UUID who : List.of(myPlayerUuid, opponentUuid)) {
-                  this.service.tellPlayer(who, Msg.of(ChatFormatting.RED, "battle.mixin_missing"));
+               for (UUID who : List.of(myParticipantUuid, opponentUuid)) {
+                  this.service.tellParticipant(who, Msg.of(ChatFormatting.RED, "battle.mixin_missing"));
                }
 
                this.service.sendAbort(remoteBattleId, "mixin did not fire - CobbleBattle is not hooked into Cobblemon on this server");
@@ -358,8 +358,8 @@ final class MirrorFactory {
          } else {
             LOGGER.error("Battle {}: a side has nothing left after the team preview", remoteBattleId);
 
-            for (UUID who : List.of(myPlayerUuid, opponentUuid)) {
-               this.service.tellPlayer(who, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
+            for (UUID who : List.of(myParticipantUuid, opponentUuid)) {
+               this.service.tellParticipant(who, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
             }
 
             this.service.sendAbort(remoteBattleId, "no Pokemon left after the team preview");
@@ -367,11 +367,11 @@ final class MirrorFactory {
       } else {
          LOGGER.error(
             "match_found for {} and {} on this server, but a queued team is missing ({} / {})",
-            new Object[]{myPlayerUuid, opponentUuid, mine != null, theirs != null}
+            new Object[]{myParticipantUuid, opponentUuid, mine != null, theirs != null}
          );
 
-         for (UUID who : List.of(myPlayerUuid, opponentUuid)) {
-            this.service.tellPlayer(who, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
+         for (UUID who : List.of(myParticipantUuid, opponentUuid)) {
+            this.service.tellParticipant(who, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
          }
 
          this.service.sendAbort(remoteBattleId, "no queued team on this server");

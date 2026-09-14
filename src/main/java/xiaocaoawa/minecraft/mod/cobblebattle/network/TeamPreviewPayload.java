@@ -65,13 +65,13 @@ public record TeamPreviewPayload(
 
    private static List<TeamPreviewPayload.Slot> readSlots(RegistryFriendlyByteBuf buf) {
       int count = Math.min(buf.readVarInt(), 6);
-      List<TeamPreviewPayload.Slot> out = new ArrayList<>(count);
+      List<TeamPreviewPayload.Slot> outputStream = new ArrayList<>(count);
 
       for (int i = 0; i < count; i++) {
-         out.add((TeamPreviewPayload.Slot)TeamPreviewPayload.Slot.CODEC.decode(buf));
+         outputStream.add((TeamPreviewPayload.Slot)TeamPreviewPayload.Slot.CODEC.decode(buf));
       }
 
-      return out;
+      return outputStream;
    }
 
    public Type<? extends CustomPacketPayload> type() {

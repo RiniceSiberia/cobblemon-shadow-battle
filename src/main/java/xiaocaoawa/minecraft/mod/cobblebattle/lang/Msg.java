@@ -30,7 +30,7 @@ public final class Msg {
    }
 
    public static void init(String code) {
-      String wanted = code != null && !code.isBlank() ? code.trim().toLowerCase() : "zh_cn";
+      String connectionRequested = code != null && !code.isBlank() ? code.trim().toLowerCase() : "zh_cn";
       Properties fallback = loadBundled("zh_cn");
       if (fallback == null) {
          LOGGER.error("Bundled {} catalogue is missing; messages will show as keys", "zh_cn");
@@ -39,23 +39,23 @@ public final class Msg {
 
       Properties chosen = new Properties();
       chosen.putAll(fallback);
-      if (!"zh_cn".equals(wanted)) {
-         Properties bundled = loadBundled(wanted);
+      if (!"zh_cn".equals(connectionRequested)) {
+         Properties bundled = loadBundled(connectionRequested);
          if (bundled == null) {
-            LOGGER.warn("No message catalogue for '{}', using {}", wanted, "zh_cn");
-            wanted = "zh_cn";
+            LOGGER.warn("No message catalogue for '{}', using {}", connectionRequested, "zh_cn");
+            connectionRequested = "zh_cn";
          } else {
             chosen.putAll(bundled);
          }
       }
 
-      Properties external = loadExternal(wanted);
+      Properties external = loadExternal(connectionRequested);
       if (external != null) {
          chosen.putAll(external);
       }
 
       strings = chosen;
-      language = wanted;
+      language = connectionRequested;
    }
 
    private static Properties loadBundled(String code) {
@@ -74,8 +74,8 @@ public final class Msg {
          }
 
          return var4;
-      } catch (Exception var7) {
-         LOGGER.warn("Could not read the bundled {} catalogue: {}", code, var7.getMessage());
+      } catch (Exception failure) {
+         LOGGER.warn("Could not read the bundled {} catalogue: {}", code, failure.getMessage());
          return null;
       }
    }
@@ -95,8 +95,8 @@ public final class Msg {
             }
 
             return var4;
-         } catch (Exception var7) {
-            LOGGER.warn("Could not read {}: {} - using the bundled text", file, var7.getMessage());
+         } catch (Exception failure) {
+            LOGGER.warn("Could not read {}: {} - using the bundled text", file, failure.getMessage());
             return null;
          }
       }
@@ -108,13 +108,13 @@ public final class Msg {
          LOGGER.warn("Missing message key '{}'", key);
          return key;
       } else {
-         String out = template;
+         String outputStream = template;
 
          for (int i = 0; i < args.length; i++) {
-            out = out.replace("{" + i + "}", String.valueOf(args[i]));
+            outputStream = outputStream.replace("{" + i + "}", String.valueOf(args[i]));
          }
 
-         return out;
+         return outputStream;
       }
    }
 
@@ -132,7 +132,7 @@ public final class Msg {
          LOGGER.warn("Missing message key '{}'", key);
          return Component.literal(key);
       } else {
-         MutableComponent out = Component.empty();
+         MutableComponent outputStream = Component.empty();
          StringBuilder plain = new StringBuilder();
 
          for (int i = 0; i < template.length(); i++) {
@@ -142,18 +142,18 @@ public final class Msg {
             if (close > i) {
                try {
                   index = Integer.parseInt(template.substring(i + 1, close));
-               } catch (NumberFormatException var11) {
+               } catch (NumberFormatException failure) {
                }
             }
 
             if (index >= 0 && index < args.length) {
                if (!plain.isEmpty()) {
-                  out.append(Component.literal(plain.toString()));
+                  outputStream.append(Component.literal(plain.toString()));
                   plain.setLength(0);
                }
 
                Object arg = args[index];
-               out.append((Component)(arg instanceof Component component ? component : Component.literal(String.valueOf(arg))));
+               outputStream.append((Component)(arg instanceof Component component ? component : Component.literal(String.valueOf(arg))));
                i = close;
             } else {
                plain.append(c);
@@ -161,10 +161,10 @@ public final class Msg {
          }
 
          if (!plain.isEmpty()) {
-            out.append(Component.literal(plain.toString()));
+            outputStream.append(Component.literal(plain.toString()));
          }
 
-         return out;
+         return outputStream;
       }
    }
 

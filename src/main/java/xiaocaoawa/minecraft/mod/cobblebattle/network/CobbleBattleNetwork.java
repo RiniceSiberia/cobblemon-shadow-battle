@@ -18,11 +18,11 @@ public final class CobbleBattleNetwork {
          Side.C2S,
          SubmitAuthPayload.TYPE,
          SubmitAuthPayload.CODEC,
-         (payload, context) -> {
-            if (context.getPlayer() instanceof ServerPlayer player) {
+         (body, context) -> {
+            if (context.getPlayer() instanceof ServerPlayer participant) {
                context.queue(
                   () -> CobbleBattle.service()
-                     .onCredentialsSubmitted(player, payload.authMode(), payload.accountId(), payload.email(), payload.password(), payload.verificationCode())
+                     .onCredentialsSubmitted(participant, body.authMode(), body.accountId(), body.email(), body.password(), body.verificationCode())
                );
             }
          }
@@ -66,81 +66,81 @@ public final class CobbleBattleNetwork {
       }
    }
 
-   public static boolean sendTeamPreview(ServerPlayer player, TeamPreviewPayload preview) {
-      if (!NetworkManager.canPlayerReceive(player, TeamPreviewPayload.TYPE)) {
+   public static boolean sendTeamPreview(ServerPlayer participant, TeamPreviewPayload preview) {
+      if (!NetworkManager.canPlayerReceive(participant, TeamPreviewPayload.TYPE)) {
          return false;
       } else {
-         NetworkManager.sendToPlayer(player, preview);
+         NetworkManager.sendToPlayer(participant, preview);
          return true;
       }
    }
 
-   public static boolean sendMainMenu(ServerPlayer player, OpenMainMenuPayload menu) {
-      if (!NetworkManager.canPlayerReceive(player, OpenMainMenuPayload.TYPE)) {
+   public static boolean sendMainMenu(ServerPlayer participant, OpenMainMenuPayload menu) {
+      if (!NetworkManager.canPlayerReceive(participant, OpenMainMenuPayload.TYPE)) {
          return false;
       } else {
-         NetworkManager.sendToPlayer(player, menu);
+         NetworkManager.sendToPlayer(participant, menu);
          return true;
       }
    }
 
-   public static boolean sendRooms(ServerPlayer player, RoomListPayload rooms) {
-      if (!NetworkManager.canPlayerReceive(player, RoomListPayload.TYPE)) {
+   public static boolean sendRooms(ServerPlayer participant, RoomListPayload rooms) {
+      if (!NetworkManager.canPlayerReceive(participant, RoomListPayload.TYPE)) {
          return false;
       } else {
-         NetworkManager.sendToPlayer(player, rooms);
+         NetworkManager.sendToPlayer(participant, rooms);
          return true;
       }
    }
 
-   public static boolean sendRoomState(ServerPlayer player, RoomStatePayload state) {
-      if (!NetworkManager.canPlayerReceive(player, RoomStatePayload.TYPE)) {
+   public static boolean sendRoomState(ServerPlayer participant, RoomStatePayload state) {
+      if (!NetworkManager.canPlayerReceive(participant, RoomStatePayload.TYPE)) {
          return false;
       } else {
-         NetworkManager.sendToPlayer(player, state);
+         NetworkManager.sendToPlayer(participant, state);
          return true;
       }
    }
 
-   public static boolean sendServerDex(ServerPlayer player, ServerDexPayload dex) {
-      if (!NetworkManager.canPlayerReceive(player, ServerDexPayload.TYPE)) {
+   public static boolean sendServerDex(ServerPlayer participant, ServerDexPayload dex) {
+      if (!NetworkManager.canPlayerReceive(participant, ServerDexPayload.TYPE)) {
          return false;
       } else {
-         NetworkManager.sendToPlayer(player, dex);
+         NetworkManager.sendToPlayer(participant, dex);
          return true;
       }
    }
 
-   public static boolean openScreen(ServerPlayer player, AuthMode mode, String suggestedId, boolean emailEnabled) {
-      if (!NetworkManager.canPlayerReceive(player, OpenAuthScreenPayload.TYPE)) {
+   public static boolean openScreen(ServerPlayer participant, AuthMode mode, String suggestedId, boolean emailEnabled) {
+      if (!NetworkManager.canPlayerReceive(participant, OpenAuthScreenPayload.TYPE)) {
          return false;
       } else {
-         NetworkManager.sendToPlayer(player, OpenAuthScreenPayload.of(mode, suggestedId, emailEnabled));
+         NetworkManager.sendToPlayer(participant, OpenAuthScreenPayload.of(mode, suggestedId, emailEnabled));
          return true;
       }
    }
 
-   public static void sendResult(ServerPlayer player, boolean ok, Component message) {
-      if (NetworkManager.canPlayerReceive(player, AuthResultPayload.TYPE)) {
-         NetworkManager.sendToPlayer(player, new AuthResultPayload(ok, message.getString()));
+   public static void sendResult(ServerPlayer participant, boolean ok, Component document) {
+      if (NetworkManager.canPlayerReceive(participant, AuthResultPayload.TYPE)) {
+         NetworkManager.sendToPlayer(participant, new AuthResultPayload(ok, document.getString()));
       }
    }
 
-   public static void sendChatLine(ServerPlayer player, ChatLinePayload line) {
-      if (NetworkManager.canPlayerReceive(player, ChatLinePayload.TYPE)) {
-         NetworkManager.sendToPlayer(player, line);
+   public static void sendChatLine(ServerPlayer participant, ChatLinePayload line) {
+      if (NetworkManager.canPlayerReceive(participant, ChatLinePayload.TYPE)) {
+         NetworkManager.sendToPlayer(participant, line);
       }
    }
 
-   public static void sendLeaderboard(ServerPlayer player, LeaderboardPayload board) {
-      if (NetworkManager.canPlayerReceive(player, LeaderboardPayload.TYPE)) {
-         NetworkManager.sendToPlayer(player, board);
+   public static void sendLeaderboard(ServerPlayer participant, LeaderboardPayload board) {
+      if (NetworkManager.canPlayerReceive(participant, LeaderboardPayload.TYPE)) {
+         NetworkManager.sendToPlayer(participant, board);
       }
    }
 
-   public static void sendChatState(ServerPlayer player, ChatStatePayload state) {
-      if (NetworkManager.canPlayerReceive(player, ChatStatePayload.TYPE)) {
-         NetworkManager.sendToPlayer(player, state);
+   public static void sendChatState(ServerPlayer participant, ChatStatePayload state) {
+      if (NetworkManager.canPlayerReceive(participant, ChatStatePayload.TYPE)) {
+         NetworkManager.sendToPlayer(participant, state);
       }
    }
 }

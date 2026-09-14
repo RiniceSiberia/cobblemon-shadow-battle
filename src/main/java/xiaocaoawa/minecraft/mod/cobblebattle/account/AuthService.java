@@ -10,21 +10,21 @@ import xiaocaoawa.minecraft.mod.cobblebattle.net.BattleServerClient;
 
 public final class AuthService {
     private final AccountSessions sessions = new AccountSessions();
-    public String accountOf(UUID playerUuid) { return sessions.accountKey(playerUuid); }
-    public String nicknameOf(UUID playerUuid) { return sessions.displayLabel(playerUuid); }
-    public long uidOf(UUID playerUuid) { return sessions.numericIdentity(playerUuid); }
-    public boolean isSignedIn(UUID playerUuid) { return sessions.containsParticipant(playerUuid); }
+    public String accountOf(UUID participantUuid) { return sessions.accountKey(participantUuid); }
+    public String nicknameOf(UUID participantUuid) { return sessions.displayLabel(participantUuid); }
+    public long uidOf(UUID participantUuid) { return sessions.numericIdentity(participantUuid); }
+    public boolean isSignedIn(UUID participantUuid) { return sessions.containsParticipant(participantUuid); }
     public Set<UUID> signedInPlayers() { return sessions.participantSnapshot(); }
     public void clear() { sessions.resetSessions(); }
-    public void forget(UUID playerUuid) { sessions.discardParticipant(playerUuid); }
-    public Component submit(BattleServerClient client, ServerPlayer player, AuthMode mode, String accountId, String email, String password, String verificationCode, boolean emailEnabled) {
-        return sessions.submitCredentials(client, player, mode, accountId, email, password, verificationCode, emailEnabled);
+    public void forget(UUID participantUuid) { sessions.discardParticipant(participantUuid); }
+    public Component submit(BattleServerClient client, ServerPlayer participant, AuthMode mode, String accountId, String email, String password, String verificationCode, boolean emailEnabled) {
+        return sessions.submitCredentials(client, participant, mode, accountId, email, password, verificationCode, emailEnabled);
     }
-    public void signOut(BattleServerClient client, ServerPlayer player) { sessions.signOutParticipant(client, player); }
-    public UUID onAccountCodeOk(JsonObject message) { return sessions.acceptConfirmation(message); }
-    public Outcome onAccountOk(JsonObject message) { return sessions.acceptAuthentication(message); }
-    public UUID onAccountError(JsonObject message) { return sessions.rejectAuthentication(message); }
-    public boolean isAwaiting(JsonObject message) { return sessions.hasPendingReference(message); }
+    public void signOut(BattleServerClient client, ServerPlayer participant) { sessions.signOutParticipant(client, participant); }
+    public UUID onAccountCodeOk(JsonObject document) { return sessions.acceptConfirmation(document); }
+    public Outcome onAccountOk(JsonObject document) { return sessions.acceptAuthentication(document); }
+    public UUID onAccountError(JsonObject document) { return sessions.rejectAuthentication(document); }
+    public boolean isAwaiting(JsonObject document) { return sessions.hasPendingReference(document); }
     public record Outcome(UUID playerUuid, String accountId, String nickname, long uid, boolean registered) {}
     public record Signed(String accountId, String nickname, long uid) {}
 }

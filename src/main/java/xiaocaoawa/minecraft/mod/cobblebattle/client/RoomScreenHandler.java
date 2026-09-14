@@ -12,14 +12,14 @@ public final class RoomScreenHandler {
    }
 
    public static void init() {
-      NetworkManager.registerReceiver(Side.S2C, RoomListPayload.TYPE, RoomListPayload.CODEC, (payload, context) -> context.queue(() -> {
+      NetworkManager.registerReceiver(Side.S2C, RoomListPayload.TYPE, RoomListPayload.CODEC, (body, context) -> context.queue(() -> {
          Minecraft minecraft = Minecraft.getInstance();
          if (minecraft.player != null) {
             if (minecraft.screen instanceof RoomLobbyScreen lobby) {
-               lobby.update(payload);
-            } else if (!payload.refresh()) {
+               lobby.update(body);
+            } else if (!body.refresh()) {
                if (CobblemonClient.INSTANCE.getBattle() == null) {
-                  minecraft.setScreen(new RoomLobbyScreen(payload));
+                  minecraft.setScreen(new RoomLobbyScreen(body));
                }
             }
          }

@@ -34,8 +34,8 @@ public final class SubJoinCommand extends AbstractSubCommand {
    }
 
    private int run(CommandSourceStack source, String ranked) {
-      ServerPlayer player = requirePlayer(source, "cmd.only_players.join");
-      if (player == null) {
+      ServerPlayer participant = requirePlayer(source, "cmd.only_players.join");
+      if (participant == null) {
          return 0;
       } else {
          String chosen = ranked != null ? ranked : service().config().defaultRanked;
@@ -43,7 +43,7 @@ public final class SubJoinCommand extends AbstractSubCommand {
             source.sendFailure(Msg.of(ChatFormatting.RED, "cmd.join.unknown_ranked", chosen, offered()));
             return 0;
          } else {
-            Component refusal = service().queue(player, chosen);
+            Component refusal = service().queue(participant, chosen);
             if (refusal != null) {
                source.sendFailure(refusal);
                return 0;

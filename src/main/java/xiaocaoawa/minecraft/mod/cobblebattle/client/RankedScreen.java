@@ -104,8 +104,8 @@ public final class RankedScreen extends Screen {
             boolean on = index == this.chosen;
             boolean hover = mouseX >= x && mouseX < x + 100 && mouseY >= y && mouseY < y + 14;
             graphics.fill(x, y, x + 100, y + 14 - 1, on ? -1426063361 : (hover ? -1711276033 : 1728053247));
-            OpenMainMenuPayload.RankedInfo info = this.competitions.get(index);
-            String shown = info.name().isEmpty() ? info.id() : info.name();
+            OpenMainMenuPayload.RankedInfo battleDetails = this.competitions.get(index);
+            String shown = battleDetails.name().isEmpty() ? battleDetails.id() : battleDetails.name();
             graphics.enableScissor(x + 3, y, x + 100 - 3, y + 14);
             Ui.draw(graphics, this.font, shown, x + 4, y + 3, on ? -15451066 : -1, !on);
             graphics.disableScissor();
@@ -121,27 +121,27 @@ public final class RankedScreen extends Screen {
       graphics.fill(px, py + 138 - 1, px + 195, py + 138, -1426063361);
       graphics.fill(px, py, px + 1, py + 138, -1426063361);
       graphics.fill(px + 195 - 1, py, px + 195, py + 138, -1426063361);
-      OpenMainMenuPayload.RankedInfo info = this.current();
-      if (info != null) {
+      OpenMainMenuPayload.RankedInfo battleDetails = this.current();
+      if (battleDetails != null) {
          int x = px + 8;
          int y = py + 6;
-         Component name = Component.literal(info.name().isEmpty() ? info.id() : info.name())
+         Component name = Component.literal(battleDetails.name().isEmpty() ? battleDetails.id() : battleDetails.name())
             .withStyle(style -> style.withFont(CobblemonResources.INSTANCE.getDEFAULT_LARGE()).withBold(true));
          Ui.draw(graphics, this.font, name, x, y, -1, true);
          y += 14;
-         Ui.draw(graphics, this.font, Component.translatable("cobblebattle.ranked.id", new Object[]{info.id()}), x, y, -1770753, false);
+         Ui.draw(graphics, this.font, Component.translatable("cobblebattle.ranked.id", new Object[]{battleDetails.id()}), x, y, -1770753, false);
          y += 12;
-         Ui.draw(graphics, this.font, Component.translatable("cobblebattle.ranked.type", new Object[]{info.battleType(), info.slots()}), x, y, -1770753, false);
+         Ui.draw(graphics, this.font, Component.translatable("cobblebattle.ranked.type", new Object[]{battleDetails.battleType(), battleDetails.slots()}), x, y, -1770753, false);
          y += 10;
-         Component level = info.adjustLevel() > 0
-            ? Component.translatable("cobblebattle.ranked.level", new Object[]{info.adjustLevel()})
+         Component level = battleDetails.adjustLevel() > 0
+            ? Component.translatable("cobblebattle.ranked.level", new Object[]{battleDetails.adjustLevel()})
             : Component.translatable("cobblebattle.ranked.level_free");
          Ui.draw(graphics, this.font, level, x, y, -1770753, false);
          y += 10;
          Ui.draw(
             graphics,
             this.font,
-            Component.translatable(info.fullHeal() ? "cobblebattle.ranked.full_heal" : "cobblebattle.ranked.no_heal"),
+            Component.translatable(battleDetails.fullHeal() ? "cobblebattle.ranked.full_heal" : "cobblebattle.ranked.no_heal"),
             x,
             y,
             -1770753,
@@ -149,12 +149,12 @@ public final class RankedScreen extends Screen {
          );
          y += 10;
          Ui.draw(
-            graphics, this.font, Component.translatable("cobblebattle.ranked.score", new Object[]{info.winScore(), info.failScore()}), x, y, -1770753, false
+            graphics, this.font, Component.translatable("cobblebattle.ranked.score", new Object[]{battleDetails.winScore(), battleDetails.failScore()}), x, y, -1770753, false
          );
          y += 12;
          Ui.draw(graphics, this.font, Component.translatable("cobblebattle.ranked.rules"), x, y, -1, true);
          y += 10;
-         String rules = info.rules().isEmpty() ? Component.translatable("cobblebattle.ranked.no_rules").getString() : String.join(", ", info.rules());
+         String rules = battleDetails.rules().isEmpty() ? Component.translatable("cobblebattle.ranked.no_rules").getString() : String.join(", ", battleDetails.rules());
          graphics.enableScissor(px, y, px + 195, py + 138 - 2);
 
          for (String row : ChatPanel.wrap(this.font, rules, 179)) {
@@ -204,19 +204,19 @@ public final class RankedScreen extends Screen {
             }
          }
 
-         OpenMainMenuPayload.RankedInfo info = this.current();
-         if (info != null) {
+         OpenMainMenuPayload.RankedInfo battleDetails = this.current();
+         if (battleDetails != null) {
             int px = this.originX + 128;
             int by = this.originY + 174;
             if (mouseX >= px && mouseX < px + 90 && mouseY >= by && mouseY < by + 16) {
-               NetworkManager.sendToServer(new MenuActionPayload("queue", info.id()));
+               NetworkManager.sendToServer(new MenuActionPayload("queue", battleDetails.id()));
                Minecraft.getInstance().setScreen(null);
                return true;
             }
 
             int bx = px + 195 - 90;
             if (mouseX >= bx && mouseX < bx + 90 && mouseY >= by && mouseY < by + 16) {
-               ServerDex.rememberRanked(info.id());
+               ServerDex.rememberRanked(battleDetails.id());
                ServerDex.requestLeaderboard();
                return true;
             }

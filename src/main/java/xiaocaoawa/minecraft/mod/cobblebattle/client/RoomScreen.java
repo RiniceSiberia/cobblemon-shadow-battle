@@ -48,11 +48,11 @@ public final class RoomScreen extends Screen {
    private static final int FLOOR_Y = 138;
    private static final int PLATFORM_H = 36;
    private static final int PLATFORM_Y = 126;
-   private static final int PLAYER_SIZE = 34;
+   private static final int PARTICIPANT_SIZE = 34;
    private static final int SHADOW_W = 44;
    private static final int SHADOW_H = 10;
    private static final int UNKNOWN_H = 28;
-   private static final int POKEMON_OFFSET = 44;
+   private static final int CREATURE_OFFSET = 44;
    private static final int BENCH_X = 22;
    private static final int BENCH_Y = 160;
    private static final int BENCH_W = 302;
@@ -197,13 +197,13 @@ public final class RoomScreen extends Screen {
 
          try {
             graphics.blit(PLATFORM, px, this.originY + 126, 138, 36, 0.0F, 0.0F, 113, 30, 113, 30);
-            int playerX = px + 69 - 22 - 4;
-            int pokemonX = px + 69 + 22 + 4;
-            this.drawShadow(graphics, playerX);
-            this.drawShadow(graphics, pokemonX);
+            int participantX = px + 69 - 22 - 4;
+            int creatureX = px + 69 + 22 + 4;
+            this.drawShadow(graphics, participantX);
+            this.drawShadow(graphics, creatureX);
             PlayerPortrait portrait = this.portraitOf(member, host);
             if (portrait != null && portrait.entity() != null) {
-               LeaderboardScreen.drawEntity(graphics, playerX, this.originY + 138, 34, -35.0F, -10.0F, portrait.entity());
+               LeaderboardScreen.drawEntity(graphics, participantX, this.originY + 138, 34, -35.0F, -10.0F, portrait.entity());
             }
 
             RenderablePokemon lead = this.leadOf(member);
@@ -212,14 +212,14 @@ public final class RoomScreen extends Screen {
                float blocks = Math.max(0.1F, lead.getForm().getHitbox().height());
                float scale = Math.min(34.0F, 94.0F / blocks);
                graphics.pose().pushPose();
-               graphics.pose().translate(pokemonX, this.originY + 138, 0.0);
+               graphics.pose().translate(creatureX, this.originY + 138, 0.0);
                Quaternionf rotation = QuaternionUtilsKt.fromEulerXYZDegrees(new Quaternionf(), new Vector3f(5.0F, LeaderboardScreen.FACING, 0.0F));
                CobblemonCompat.drawProfile(
                   lead, graphics.pose(), rotation, PoseType.PROFILE, pose, partialTick, scale, true, 1.0F, 1.0F, 1.0F, 1.0F, 0.0F, 0.0F, 13
                );
                graphics.pose().popPose();
             } else {
-               UnknownMark.draw(graphics, pokemonX, this.originY + 138, 28);
+               UnknownMark.draw(graphics, creatureX, this.originY + 138, 28);
             }
          } finally {
             graphics.disableScissor();
@@ -246,13 +246,13 @@ public final class RoomScreen extends Screen {
       graphics.fill(x, y, x + 302, y + 20, 872415231);
       graphics.fill(x, y, x + 302, y + 1, -1426063361);
       graphics.fill(x, y + 20 - 1, x + 302, y + 20, -1426063361);
-      List<RoomStatePayload.Member> watchers = this.state.watchers();
-      Component label = Component.translatable("cobblebattle.room.watchers", new Object[]{watchers.size()});
+      List<RoomStatePayload.Member> observers = this.state.watchers();
+      Component label = Component.translatable("cobblebattle.room.watchers", new Object[]{observers.size()});
       Ui.draw(graphics, this.font, label, x + 5, y + 6, -1770753, false);
       int at = x + 8 + Ui.width(this.font, label);
       graphics.enableScissor(at, y, x + 302 - 4, y + 20);
 
-      for (RoomStatePayload.Member watcher : watchers) {
+      for (RoomStatePayload.Member watcher : observers) {
          String name = watcher.name();
          if (at > x + 302) {
             break;
@@ -262,7 +262,7 @@ public final class RoomScreen extends Screen {
          at += Ui.width(this.font, name) + 8;
       }
 
-      if (watchers.isEmpty()) {
+      if (observers.isEmpty()) {
          Ui.draw(graphics, this.font, Component.translatable("cobblebattle.room.no_watchers"), at, y + 6, -1770753, false);
       }
 
@@ -338,8 +338,8 @@ public final class RoomScreen extends Screen {
 
    private RenderablePokemon leadOf(RoomStatePayload.Member member) {
       return member.lead().isEmpty() ? null : this.leads.computeIfAbsent(key(member), k -> {
-         Species species = PokemonSpecies.getByName(member.lead());
-         return species == null ? null : new RenderablePokemon(species, Set.of(), ItemStack.EMPTY);
+         Species speciesTemplate = PokemonSpecies.getByName(member.lead());
+         return speciesTemplate == null ? null : new RenderablePokemon(speciesTemplate, Set.of(), ItemStack.EMPTY);
       });
    }
 

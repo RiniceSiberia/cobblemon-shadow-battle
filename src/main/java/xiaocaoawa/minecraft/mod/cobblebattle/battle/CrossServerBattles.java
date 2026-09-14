@@ -19,9 +19,9 @@ public final class CrossServerBattles {
     public static UUID localIdFor(String remoteBattleId) { return INDEX.resolveEngineId(remoteBattleId); }
     public static MirrorBattle byRemoteId(String remoteBattleId) { return INDEX.findByUpstream(remoteBattleId); }
     public static boolean relayChoices(UUID localBattleId, String[] messages) { return INDEX.forwardChoices(localBattleId, messages); }
-    public static boolean captureOutput(UUID localBattleId, String chunk) { return INDEX.forwardOutput(localBattleId, chunk); }
+    public static boolean captureOutput(UUID localBattleId, String content) { return INDEX.forwardOutput(localBattleId, content); }
     public static MirrorBattle forget(UUID localBattleId) { return INDEX.removeBattle(localBattleId); }
-    public static MirrorBattle byLocalPlayer(UUID playerUuid) { return INDEX.findByParticipant(playerUuid); }
+    public static MirrorBattle byLocalPlayer(UUID participantUuid) { return INDEX.findByParticipant(participantUuid); }
     public static Collection<MirrorBattle> all() { return INDEX.snapshot(); }
     public static void clear() { INDEX.clearSessions(); }
     public static int size() { return INDEX.activeCount(); }

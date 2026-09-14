@@ -33,39 +33,39 @@ final class TeamPreviews {
       this.open.clear();
    }
 
-   void forget(UUID playerUuid) {
-      this.open.remove(playerUuid);
+   void forget(UUID participantUuid) {
+      this.open.remove(participantUuid);
    }
 
-   void onOpen(JsonObject message) {
-      String battleId = BattleServerClient.str(message, "battleId", null);
-      String playerRaw = BattleServerClient.str(message, "yourPlayer", null);
-      String seat = BattleServerClient.str(message, "yourSeat", null);
-      if (battleId != null && playerRaw != null && seat != null) {
-         UUID playerUuid;
+   void onOpen(JsonObject document) {
+      String battleId = BattleServerClient.str(document, "battleId", null);
+      String participantRaw = BattleServerClient.str(document, "yourPlayer", null);
+      String seat = BattleServerClient.str(document, "yourSeat", null);
+      if (battleId != null && participantRaw != null && seat != null) {
+         UUID participantUuid;
          try {
-            playerUuid = UUID.fromString(playerRaw);
-         } catch (IllegalArgumentException var15) {
-            LOGGER.error("preview_open named a player that is not a uuid: {}", playerRaw);
+            participantUuid = UUID.fromString(participantRaw);
+         } catch (IllegalArgumentException failure) {
+            LOGGER.error("preview_open named a player that is not a uuid: {}", participantRaw);
             return;
          }
 
-         JsonObject rosters = message.getAsJsonObject("rosters");
+         JsonObject rosters = document.getAsJsonObject("rosters");
          List<TeamPreviewPayload.Slot> mine = readRoster(rosters, seat);
          List<TeamPreviewPayload.Slot> theirs = readRoster(rosters, otherSeat(rosters, seat));
-         int pick = BattleServerClient.integer(message, "pick", mine.size());
-         int lead = Math.max(1, BattleServerClient.integer(message, "lead", 1));
-         long deadline = deadlineOf(message);
-         ServerPlayer player = this.service.playerOf(playerUuid);
-         if (player == null) {
-            LOGGER.warn("preview_open for {} but they are not on this server", playerUuid);
-            this.send(battleId, playerUuid, frontOf(mine.size(), pick));
+         int pick = BattleServerClient.integer(document, "pick", mine.size());
+         int lead = Math.max(1, BattleServerClient.integer(document, "lead", 1));
+         long deadline = deadlineOf(document);
+         ServerPlayer participant = this.service.participantOf(participantUuid);
+         if (participant == null) {
+            LOGGER.warn("preview_open for {} but they are not on this server", participantUuid);
+            this.send(battleId, participantUuid, frontOf(mine.size(), pick));
          } else {
             TeamPreviewPayload shown = new TeamPreviewPayload(
                battleId,
-               player.getGameProfile().getName(),
-               BattleServerClient.str(message, "opponent", ""),
-               BattleServerClient.str(message, "opponentServer", ""),
+               participant.getGameProfile().getName(),
+               BattleServerClient.str(document, "opponent", ""),
+               BattleServerClient.str(document, "opponentServer", ""),
                pick,
                lead,
                deadline,
@@ -75,12 +75,12 @@ final class TeamPreviews {
                false,
                ""
             );
-            if (!CobbleBattleNetwork.sendTeamPreview(player, shown)) {
-               LOGGER.info("{} has no CobbleBattle client; picking the first {} of their team", playerUuid, pick);
-               this.service.tellPlayer(playerUuid, Msg.of(ChatFormatting.YELLOW, "preview.no_client", pick));
-               this.send(battleId, playerUuid, frontOf(mine.size(), pick));
+            if (!CobbleBattleNetwork.sendTeamPreview(participant, shown)) {
+               LOGGER.info("{} has no CobbleBattle client; picking the first {} of their team", participantUuid, pick);
+               this.service.tellParticipant(participantUuid, Msg.of(ChatFormatting.YELLOW, "preview.no_client", pick));
+               this.send(battleId, participantUuid, frontOf(mine.size(), pick));
             } else {
-               this.open.put(playerUuid, new TeamPreviews.Session(battleId, playerUuid, seat, pick, mine.size(), shown));
+               this.open.put(participantUuid, new TeamPreviews.Session(battleId, participantUuid, seat, pick, mine.size(), shown));
             }
          }
       } else {
@@ -88,15 +88,15 @@ final class TeamPreviews {
       }
    }
 
-   void onState(JsonObject message) {
-      String battleId = BattleServerClient.str(message, "battleId", null);
+   void onState(JsonObject document) {
+      String battleId = BattleServerClient.str(document, "battleId", null);
       if (battleId != null) {
-         JsonObject ready = message.getAsJsonObject("ready");
+         JsonObject ready = document.getAsJsonObject("ready");
          if (ready != null) {
             for (TeamPreviews.Session session : new ArrayList<>(this.open.values())) {
                if (session.battleId().equals(battleId)) {
-                  ServerPlayer player = this.service.playerOf(session.player());
-                  if (player != null) {
+                  ServerPlayer participant = this.service.participantOf(session.player());
+                  if (participant != null) {
                      boolean mineReady = false;
                      boolean theirsReady = false;
 
@@ -115,7 +115,7 @@ final class TeamPreviews {
                            session.player(),
                            new TeamPreviews.Session(session.battleId(), session.player(), session.seat(), session.pick(), session.teamSize(), shown)
                         );
-                     CobbleBattleNetwork.sendTeamPreview(player, shown);
+                     CobbleBattleNetwork.sendTeamPreview(participant, shown);
                   }
                }
             }
@@ -123,49 +123,49 @@ final class TeamPreviews {
       }
    }
 
-   void onClosed(JsonObject message) {
-      String battleId = BattleServerClient.str(message, "battleId", null);
-      String reason = BattleServerClient.str(message, "reason", "closed");
+   void onClosed(JsonObject document) {
+      String battleId = BattleServerClient.str(document, "battleId", null);
+      String reason = BattleServerClient.str(document, "reason", "closed");
       if (battleId != null) {
          for (TeamPreviews.Session session : new ArrayList<>(this.open.values())) {
             if (session.battleId().equals(battleId)) {
                this.open.remove(session.player());
-               ServerPlayer player = this.service.playerOf(session.player());
-               if (player != null) {
-                  CobbleBattleNetwork.sendTeamPreview(player, repaint(session.shown(), session.shown().mineReady(), session.shown().theirsReady(), reason));
+               ServerPlayer participant = this.service.participantOf(session.player());
+               if (participant != null) {
+                  CobbleBattleNetwork.sendTeamPreview(participant, repaint(session.shown(), session.shown().mineReady(), session.shown().theirsReady(), reason));
                }
 
-               this.service.tellPlayer(session.player(), Msg.of(ChatFormatting.YELLOW, "preview.closed"));
+               this.service.tellParticipant(session.player(), Msg.of(ChatFormatting.YELLOW, "preview.closed"));
                this.service.battleQueue().drop(session.player());
             }
          }
       }
    }
 
-   void onPicked(ServerPlayer player, String battleId, List<Integer> picks) {
-      UUID playerUuid = player.getUUID();
-      TeamPreviews.Session session = this.open.get(playerUuid);
+   void onPicked(ServerPlayer participant, String battleId, List<Integer> picks) {
+      UUID participantUuid = participant.getUUID();
+      TeamPreviews.Session session = this.open.get(participantUuid);
       if (session != null && session.battleId().equals(battleId)) {
          if (picks.size() != session.pick()) {
-            LOGGER.warn("{} picked {} Pokemon for a preview that wants {}", new Object[]{playerUuid, picks.size(), session.pick()});
+            LOGGER.warn("{} picked {} Pokemon for a preview that wants {}", new Object[]{participantUuid, picks.size(), session.pick()});
          } else {
             Set<Integer> seen = new LinkedHashSet<>();
 
             for (int pick : picks) {
                if (pick < 0 || pick >= session.teamSize() || !seen.add(pick)) {
-                  LOGGER.warn("{} sent a malformed team-preview pick: {}", playerUuid, picks);
+                  LOGGER.warn("{} sent a malformed team-preview pick: {}", participantUuid, picks);
                   return;
                }
             }
 
             TeamPreviewPayload shown = repaint(session.shown(), true, session.shown().theirsReady(), "");
-            this.open.put(playerUuid, new TeamPreviews.Session(session.battleId(), playerUuid, session.seat(), session.pick(), session.teamSize(), shown));
-            this.send(battleId, playerUuid, picks);
+            this.open.put(participantUuid, new TeamPreviews.Session(session.battleId(), participantUuid, session.seat(), session.pick(), session.teamSize(), shown));
+            this.send(battleId, participantUuid, picks);
          }
       }
    }
 
-   private void send(String battleId, UUID playerUuid, List<Integer> picks) {
+   private void send(String battleId, UUID participantUuid, List<Integer> picks) {
       JsonArray array = new JsonArray();
 
       for (int pick : picks) {
@@ -174,20 +174,20 @@ final class TeamPreviews {
 
       JsonObject msg = BattleServerClient.msg("preview_pick");
       msg.addProperty("battleId", battleId);
-      msg.addProperty("player", playerUuid.toString());
+      msg.addProperty("player", participantUuid.toString());
       msg.add("picks", array);
       this.service.client().send(msg);
    }
 
    private static List<TeamPreviewPayload.Slot> readRoster(JsonObject rosters, String seat) {
-      List<TeamPreviewPayload.Slot> out = new ArrayList<>();
+      List<TeamPreviewPayload.Slot> outputStream = new ArrayList<>();
       if (rosters != null && seat != null) {
          JsonElement element = rosters.get(seat);
          if (element != null && element.isJsonArray()) {
             for (JsonElement entry : element.getAsJsonArray()) {
                if (entry.isJsonObject()) {
                   JsonObject slot = entry.getAsJsonObject();
-                  out.add(
+                  outputStream.add(
                      new TeamPreviewPayload.Slot(
                         BattleServerClient.str(slot, "species", ""),
                         BattleServerClient.integer(slot, "level", 1),
@@ -199,12 +199,12 @@ final class TeamPreviews {
                }
             }
 
-            return out;
+            return outputStream;
          } else {
-            return out;
+            return outputStream;
          }
       } else {
-         return out;
+         return outputStream;
       }
    }
 
@@ -222,20 +222,20 @@ final class TeamPreviews {
       }
    }
 
-   private static long deadlineOf(JsonObject message) {
-      long deadline = BattleServerClient.longer(message, "deadline", 0L);
+   private static long deadlineOf(JsonObject document) {
+      long deadline = BattleServerClient.longer(document, "deadline", 0L);
       long left = deadline - System.currentTimeMillis();
       return left > 0L && left <= 600000L ? deadline : System.currentTimeMillis() + 60000L;
    }
 
-   private static List<Integer> frontOf(int teamSize, int pick) {
-      List<Integer> out = new ArrayList<>();
+   private static List<Integer> frontOf(int rosterSize, int pick) {
+      List<Integer> outputStream = new ArrayList<>();
 
-      for (int i = 0; i < Math.min(pick, teamSize); i++) {
-         out.add(i);
+      for (int i = 0; i < Math.min(pick, rosterSize); i++) {
+         outputStream.add(i);
       }
 
-      return out;
+      return outputStream;
    }
 
    private static TeamPreviewPayload repaint(TeamPreviewPayload shown, boolean mineReady, boolean theirsReady, String closed) {

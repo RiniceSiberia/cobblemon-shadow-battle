@@ -28,9 +28,9 @@ public final class ChatScreenHandler {
          Side.S2C,
          ChatLinePayload.TYPE,
          ChatLinePayload.CODEC,
-         (payload, context) -> context.queue(
+         (body, context) -> context.queue(
             () -> ChatLog.add(
-               ChatLog.Channel.of(payload.channel()), new ChatLog.Line(payload.uid(), payload.id(), payload.name(), payload.sender(), payload.text())
+               ChatLog.Channel.of(body.channel()), new ChatLog.Line(body.uid(), body.id(), body.name(), body.sender(), body.text())
             )
          )
       );
@@ -120,8 +120,8 @@ public final class ChatScreenHandler {
       return minecraft.player != null && ChatPanel.visible();
    }
 
-   static void send(ChatLog.Channel channel, String text) {
-      NetworkManager.sendToServer(new SendChatPayload(channel.id, text));
+   static void send(ChatLog.Channel selectedConversation, String text) {
+      NetworkManager.sendToServer(new SendChatPayload(selectedConversation.id, text));
    }
 
    public static void onDisconnect() {

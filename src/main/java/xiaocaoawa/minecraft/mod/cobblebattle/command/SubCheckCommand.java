@@ -19,14 +19,14 @@ public final class SubCheckCommand extends AbstractSubCommand {
    }
 
    private int run(CommandSourceStack source) {
-      ServerPlayer player = requirePlayer(source, "cmd.only_players.check");
-      if (player == null) {
+      ServerPlayer participant = requirePlayer(source, "cmd.only_players.check");
+      if (participant == null) {
          return 0;
       } else if (!service().dex().isReady()) {
          source.sendFailure(Msg.of(ChatFormatting.RED, "queue.dex_not_ready"));
          return 0;
       } else {
-         Component result = service().describePartyCompatibility(player);
+         Component result = service().describePartyCompatibility(participant);
          source.sendSuccess(() -> result, false);
          return 1;
       }

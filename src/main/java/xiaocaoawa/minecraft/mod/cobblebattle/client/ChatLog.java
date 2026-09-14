@@ -6,8 +6,8 @@ import java.util.UUID;
 
 public final class ChatLog {
     private ChatLog() {}
-    public static void add(Channel channel, Line line) { ChatHistory.append(channel, line); }
-    public static List<Line> lines(Channel channel) { return ChatHistory.snapshot(channel); }
+    public static void add(Channel selectedConversation, Line line) { ChatHistory.append(selectedConversation, line); }
+    public static List<Line> lines(Channel selectedConversation) { return ChatHistory.snapshot(selectedConversation); }
     public static void clearBattle() { ChatHistory.clearBattleConversation(); }
     public static void clear() { ChatHistory.clearConversations(); }
     public enum Channel {

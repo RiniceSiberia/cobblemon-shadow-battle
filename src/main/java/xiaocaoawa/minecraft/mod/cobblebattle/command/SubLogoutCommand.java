@@ -18,14 +18,14 @@ public final class SubLogoutCommand extends AbstractSubCommand {
    }
 
    private int run(CommandSourceStack source) {
-      ServerPlayer player = requirePlayer(source, "cmd.only_players.logout");
-      if (player == null) {
+      ServerPlayer participant = requirePlayer(source, "cmd.only_players.logout");
+      if (participant == null) {
          return 0;
-      } else if (!service().auth().isSignedIn(player.getUUID())) {
+      } else if (!service().auth().isSignedIn(participant.getUUID())) {
          source.sendFailure(Msg.of(ChatFormatting.YELLOW, "auth.not_signed_in"));
          return 0;
       } else {
-         service().signOut(player);
+         service().signOut(participant);
          source.sendSuccess(() -> Msg.of(ChatFormatting.GREEN, "auth.logged_out"), false);
          return 1;
       }

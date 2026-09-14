@@ -17,8 +17,8 @@ public class RemoteBattleActor extends BattleActor {
    private final String originServerId;
    private final String seat;
 
-   public RemoteBattleActor(UUID playerUuid, String displayName, String originServerId, String seat, List<BattlePokemon> pokemon) {
-      super(playerUuid, new ArrayList<>(pokemon));
+   public RemoteBattleActor(UUID participantUuid, String displayName, String originServerId, String seat, List<BattlePokemon> creature) {
+      super(participantUuid, new ArrayList<>(creature));
       this.displayName = displayName;
       this.originServerId = originServerId;
       this.seat = seat;
@@ -50,7 +50,7 @@ public class RemoteBattleActor extends BattleActor {
    public void sendMessage(Component component) {
    }
 
-   public void awardExperience(BattlePokemon battlePokemon, int experience) {
+   public void awardExperience(BattlePokemon battleCreature, int experience) {
    }
 
    public void win(List<? extends BattleActor> otherWinners, List<? extends BattleActor> losers) {

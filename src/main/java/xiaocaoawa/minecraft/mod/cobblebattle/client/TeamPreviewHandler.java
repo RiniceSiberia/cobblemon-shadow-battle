@@ -10,13 +10,13 @@ public final class TeamPreviewHandler {
    }
 
    public static void init() {
-      NetworkManager.registerReceiver(Side.S2C, TeamPreviewPayload.TYPE, TeamPreviewPayload.CODEC, (payload, context) -> context.queue(() -> {
+      NetworkManager.registerReceiver(Side.S2C, TeamPreviewPayload.TYPE, TeamPreviewPayload.CODEC, (body, context) -> context.queue(() -> {
          Minecraft minecraft = Minecraft.getInstance();
          if (minecraft.player != null) {
-            if (minecraft.screen instanceof TeamPreviewScreen open && open.battleId().equals(payload.battleId())) {
-               open.update(payload);
-            } else if (payload.closed().isEmpty()) {
-               minecraft.setScreen(new TeamPreviewScreen(payload));
+            if (minecraft.screen instanceof TeamPreviewScreen open && open.battleId().equals(body.battleId())) {
+               open.update(body);
+            } else if (body.closed().isEmpty()) {
+               minecraft.setScreen(new TeamPreviewScreen(body));
             }
          }
       }));

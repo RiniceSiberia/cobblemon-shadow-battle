@@ -70,9 +70,9 @@ public final class ChatHud {
    }
 
    public static void scroll(double notches) {
-      int wanted = ChatState.scroll() + (int)Math.signum(notches) * 1;
+      int connectionRequested = ChatState.scroll() + (int)Math.signum(notches) * 1;
       int max = ChatPanel.maxScroll(Minecraft.getInstance().font, ChatLog.lines(ChatState.channel()));
-      ChatState.setScroll(Math.max(0, Math.min(wanted, max)));
+      ChatState.setScroll(Math.max(0, Math.min(connectionRequested, max)));
    }
 
    private static void drawHint(GuiGraphics graphics, int originX, int originY) {

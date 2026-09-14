@@ -71,10 +71,10 @@ public record RoomStatePayload(
          boolean hasGuest = buf.readBoolean();
          RoomStatePayload.Member guest = (RoomStatePayload.Member)RoomStatePayload.Member.CODEC.decode(buf);
          int count = Math.min(buf.readVarInt(), 256);
-         ArrayList<RoomStatePayload.Member> watchers = new ArrayList<>(count);
+         ArrayList<RoomStatePayload.Member> observers = new ArrayList<>(count);
 
          for (int i = 0; i < count; i++) {
-            watchers.add((RoomStatePayload.Member)RoomStatePayload.Member.CODEC.decode(buf));
+            observers.add((RoomStatePayload.Member)RoomStatePayload.Member.CODEC.decode(buf));
          }
 
          return new RoomStatePayload(
@@ -92,7 +92,7 @@ public record RoomStatePayload(
             host,
             hasGuest,
             guest,
-            List.copyOf(watchers),
+            List.copyOf(observers),
             buf.readUtf(16)
          );
       }

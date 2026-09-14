@@ -12,7 +12,7 @@ public final class ServerDexHandler {
 
    public static void init() {
       NetworkManager.registerReceiver(
-         Side.S2C, ServerDexPayload.TYPE, ServerDexPayload.CODEC, (payload, context) -> context.queue(() -> ServerDex.open(payload))
+         Side.S2C, ServerDexPayload.TYPE, ServerDexPayload.CODEC, (body, context) -> context.queue(() -> ServerDex.open(body))
       );
       ClientTickEvent.CLIENT_POST.register((Client)minecraft -> ServerDex.tick());
    }

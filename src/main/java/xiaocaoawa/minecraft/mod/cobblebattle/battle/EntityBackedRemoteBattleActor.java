@@ -11,8 +11,8 @@ public final class EntityBackedRemoteBattleActor extends RemoteBattleActor imple
    private final NPCEntity npc;
    private final Vec3 initialPos;
 
-   public EntityBackedRemoteBattleActor(UUID playerUuid, String displayName, String originServerId, String seat, List<BattlePokemon> pokemon, NPCEntity npc) {
-      super(playerUuid, displayName, originServerId, seat, pokemon);
+   public EntityBackedRemoteBattleActor(UUID participantUuid, String displayName, String originServerId, String seat, List<BattlePokemon> creature, NPCEntity npc) {
+      super(participantUuid, displayName, originServerId, seat, creature);
       if (npc == null) {
          throw new IllegalArgumentException("an entity-backed mirror actor needs an entity");
       } else {

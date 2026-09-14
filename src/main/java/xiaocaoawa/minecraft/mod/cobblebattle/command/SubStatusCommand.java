@@ -34,15 +34,15 @@ public final class SubStatusCommand extends AbstractSubCommand {
          ),
          false
       );
-      ServerPlayer player = source.getPlayer();
-      if (player != null) {
-         String account = svc.auth().accountOf(player.getUUID());
-         String nickname = svc.auth().nicknameOf(player.getUUID());
-         long uid = svc.auth().uidOf(player.getUUID());
+      ServerPlayer participant = source.getPlayer();
+      if (participant != null) {
+         String account = svc.auth().accountOf(participant.getUUID());
+         String displayLabel = svc.auth().nicknameOf(participant.getUUID());
+         long accountNumber = svc.auth().uidOf(participant.getUUID());
          source.sendSuccess(
             () -> account == null
                ? Msg.of(ChatFormatting.YELLOW, "cmd.status.account_none")
-               : Msg.of(ChatFormatting.GREEN, "cmd.status.account", account, nickname, uid),
+               : Msg.of(ChatFormatting.GREEN, "cmd.status.account", account, displayLabel, accountNumber),
             false
          );
       }

@@ -46,8 +46,8 @@ public final class ClientSettings {
             if (root.has("chatHud")) {
                chatHud = root.get("chatHud").getAsBoolean();
             }
-         } catch (Exception var2) {
-            LOGGER.warn("Could not read client settings: {}", var2.toString());
+         } catch (Exception failure) {
+            LOGGER.warn("Could not read client settings: {}", failure.toString());
          }
       }
    }
@@ -59,8 +59,8 @@ public final class ClientSettings {
          JsonObject root = new JsonObject();
          root.addProperty("chatHud", chatHud);
          Files.writeString(file, root.toString(), StandardCharsets.UTF_8);
-      } catch (Exception var2) {
-         LOGGER.warn("Could not save client settings: {}", var2.toString());
+      } catch (Exception failure) {
+         LOGGER.warn("Could not save client settings: {}", failure.toString());
       }
    }
 }

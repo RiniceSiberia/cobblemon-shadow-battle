@@ -117,17 +117,17 @@ public final class ChatPanel {
    }
 
    private static List<ChatPanel.Row> rows(Font font, List<ChatLog.Line> lines) {
-      List<ChatPanel.Row> out = new ArrayList<>();
+      List<ChatPanel.Row> outputStream = new ArrayList<>();
 
       for (ChatLog.Line line : lines) {
          List<String> wrapped = wrap(font, prefixOf(line) + line.text(), 139);
 
          for (int i = 0; i < wrapped.size(); i++) {
-            out.add(new ChatPanel.Row(line, wrapped.get(i), i == 0));
+            outputStream.add(new ChatPanel.Row(line, wrapped.get(i), i == 0));
          }
       }
 
-      return out;
+      return outputStream;
    }
 
    private static String prefixOf(ChatLog.Line line) {
@@ -152,7 +152,7 @@ public final class ChatPanel {
       return Math.max(0, rows(font, lines).size() - 4);
    }
 
-   public static void drawMessages(GuiGraphics graphics, Font font, int originX, int originY, List<ChatLog.Line> lines, Component empty, int scroll) {
+   public static void drawMessages(GuiGraphics graphics, Font font, int originX, int originY, List<ChatLog.Line> lines, Component empty, int scrollOffsets) {
       int left = originX + 5;
       int top = originY + 14;
       NAME_BOXES.clear();
@@ -163,7 +163,7 @@ public final class ChatPanel {
       try {
          if (!lines.isEmpty()) {
             List<ChatPanel.Row> all = rows(font, lines);
-            int clamped = Math.max(0, Math.min(scroll, Math.max(0, all.size() - 4)));
+            int clamped = Math.max(0, Math.min(scrollOffsets, Math.max(0, all.size() - 4)));
             int end = all.size() - clamped;
             int start = Math.max(0, end - 4);
             int y = top + 44 - 2 - (end - start) * 10;
@@ -174,7 +174,7 @@ public final class ChatPanel {
             }
 
             if (clamped > 0) {
-               drawScrollHint(graphics, left, top);
+               drawScrollOffsetsHint(graphics, left, top);
             }
 
             return;
@@ -186,7 +186,7 @@ public final class ChatPanel {
       }
    }
 
-   private static void drawScrollHint(GuiGraphics graphics, int left, int top) {
+   private static void drawScrollOffsetsHint(GuiGraphics graphics, int left, int top) {
       int x = left + 153 - 2 - 2;
       int y = top + 44 - 2 - 3;
       graphics.fill(x, y, x + 2, y + 2, -8399617);
@@ -230,7 +230,7 @@ public final class ChatPanel {
    }
 
    public static List<String> wrap(Font font, String text, int width) {
-      List<String> out = new ArrayList<>();
+      List<String> outputStream = new ArrayList<>();
       StringBuilder row = new StringBuilder();
       int rowWidth = 0;
       int i = 0;
@@ -241,7 +241,7 @@ public final class ChatPanel {
          i += Character.charCount(cp);
          int chWidth = Ui.width(font, ch);
          if (rowWidth + chWidth > width && row.length() > 0) {
-            out.add(row.toString());
+            outputStream.add(row.toString());
             row.setLength(0);
             rowWidth = 0;
          }
@@ -251,14 +251,14 @@ public final class ChatPanel {
       }
 
       if (row.length() > 0) {
-         out.add(row.toString());
+         outputStream.add(row.toString());
       }
 
-      if (out.isEmpty()) {
-         out.add("");
+      if (outputStream.isEmpty()) {
+         outputStream.add("");
       }
 
-      return out;
+      return outputStream;
    }
 
    public static ChatLog.Channel tabAt(int relX, int relY) {
