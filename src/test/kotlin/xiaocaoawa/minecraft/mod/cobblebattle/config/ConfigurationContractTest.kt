@@ -1,6 +1,8 @@
 package xiaocaoawa.minecraft.mod.cobblebattle.config
 
 import com.google.gson.JsonParser
+import io.github.rinicesiberia.shadowbattle.configuration.ConfigurationDocument
+import io.github.rinicesiberia.shadowbattle.configuration.ConfigurationRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
@@ -8,18 +10,18 @@ import java.nio.file.Files
 class ConfigurationContractTest {
     @Test
     fun `YAML 支持空文档嵌套列表和标量键`() {
-        assertEquals("{}", YamlTree.parse("").toString())
+        assertEquals("{}", ConfigurationDocument.decode("").toString())
         val expected = JsonParser.parseString("""{"root":{"enabled":true,"ports":[1,2],"empty":null},"3":"value"}""")
-        assertEquals(expected, YamlTree.parse("root:\n  enabled: true\n  ports: [1, 2]\n  empty: null\n3: value"))
+        assertEquals(expected, ConfigurationDocument.decode("root:\n  enabled: true\n  ports: [1, 2]\n  empty: null\n3: value"))
     }
 
     @Test
     fun `顶层非映射及不安全标签被拒绝`() {
         for (document in listOf("[1, 2]", "hello", "true", "42")) {
-            val failure = assertThrows(IllegalArgumentException::class.java) { YamlTree.parse(document) }
+            val failure = assertThrows(IllegalArgumentException::class.java) { ConfigurationDocument.decode(document) }
             assertEquals("the top level of cobblebattle.yml must be a mapping", failure.message)
         }
-        assertThrows(RuntimeException::class.java) { YamlTree.parse("!!java.net.URL ['https://example.com']") }
+        assertThrows(RuntimeException::class.java) { ConfigurationDocument.decode("!!java.net.URL ['https://example.com']") }
     }
 
     @Test
@@ -44,14 +46,14 @@ class ConfigurationContractTest {
     fun `模板保留部署参数且其余默认值一致`() {
         val template = requireNotNull(javaClass.getResourceAsStream("/cobblebattle.yml")).bufferedReader().use { it.readText() }
         val defaults = CobbleBattleConfig.GSON.toJsonTree(CobbleBattleConfig()).asJsonObject
-        val bundled = YamlTree.parse(template)
+        val bundled = ConfigurationDocument.decode(template)
         for (key in defaults.keySet() - setOf("serverHost", "authToken")) assertEquals(defaults[key], bundled[key], key)
         for (key in setOf("serverHost", "authToken")) assertTrue(bundled.has(key))
     }
 
     @Test
     fun `热加载区分连接字段且失败不改变现有配置`() {
-        val location = ConfigFile.PATH
+        val location = ConfigurationRepository.location
         Files.createDirectories(location.parent)
         val previous = if (Files.exists(location)) Files.readAllBytes(location) else null
         try {
@@ -65,10 +67,11 @@ class ConfigurationContractTest {
             Files.writeString(location, "[invalid]")
             assertThrows(IllegalStateException::class.java) { configuration.reload() }
             assertEquals(beforeFailure, CobbleBattleConfig.GSON.toJsonTree(configuration))
-            assertEquals(18470, ConfigFile.load().serverPort)
+            assertEquals(18470, ConfigurationRepository.loadOrDefault().serverPort)
         } finally {
             if (previous == null) Files.deleteIfExists(location) else Files.write(location, previous)
         }
     }
 }
+
 

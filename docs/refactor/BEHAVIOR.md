@@ -19,3 +19,5 @@
 测试只能在实际执行后填写通过，后续改动影响调用链时需重新执行。生产服务器身份的随机生成不能因测试可复现而改成固定 seed；测试输入使用固定值。
 
 B1-gradle-baseline：Gradle build 成功，13个测试全部通过。ConfigurationContractTest 5项，ValueContractTest 3项，TransportContractTest 2项（本地真实Socket双向压缩/异常长度），ChatContractTest 3项。此证据建立于业务源码迁移前；未覆盖完整认证请求、游戏实体和UI。配置模板部署字段按用户决定保持。
+
+B2-configuration：ConfigFile→ConfigurationRepository，YamlTree→ConfigurationDocument，reload→ConfigurationReloading，ServerIdentity内部缓存/IO→PersistentServerIdentity；配置字段和公开入口保留。原配置5项契约继续通过；新增身份3项验证Java trim、缓存、16次并发只生成一次、磁盘写入失败仍返回。全量16 tests / 0 failures，详细计数见 b2-tests.json。

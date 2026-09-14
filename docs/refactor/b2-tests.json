@@ -1,0 +1,27 @@
+[
+  {
+    "suite": "io.github.rinicesiberia.shadowbattle.configuration.PersistentServerIdentityTest",
+    "tests": "3",
+    "failures": "0"
+  },
+  {
+    "suite": "xiaocaoawa.minecraft.mod.cobblebattle.ChatContractTest",
+    "tests": "3",
+    "failures": "0"
+  },
+  {
+    "suite": "xiaocaoawa.minecraft.mod.cobblebattle.config.ConfigurationContractTest",
+    "tests": "5",
+    "failures": "0"
+  },
+  {
+    "suite": "xiaocaoawa.minecraft.mod.cobblebattle.TransportContractTest",
+    "tests": "2",
+    "failures": "0"
+  },
+  {
+    "suite": "xiaocaoawa.minecraft.mod.cobblebattle.ValueContractTest",
+    "tests": "3",
+    "failures": "0"
+  }
+]
