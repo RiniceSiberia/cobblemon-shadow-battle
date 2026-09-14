@@ -42,6 +42,7 @@ dependencies {
     implementation("maven.modrinth:cobblemon:jeZJOCEb")
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(files(sourceSets.main.get().compileClasspath))
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -55,7 +56,6 @@ tasks.test {
     useJUnitPlatform()
     dependsOn(tasks.shadowJar)
     systemProperty("battle.artifact", tasks.shadowJar.get().archiveFile.get().asFile.absolutePath)
-    classpath += sourceSets.main.get().compileClasspath
     workingDir(layout.buildDirectory.dir("test-workspace"))
     doFirst { workingDir.mkdirs() }
 }

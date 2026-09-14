@@ -5,11 +5,11 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
-import net.minecraft.resources.ResourceLocation;
+import io.github.rinicesiberia.shadowbattle.network.PayloadTypeCatalog;
 import xiaocaoawa.minecraft.mod.cobblebattle.account.AuthMode;
 
 public record SubmitAuthPayload(int mode, String accountId, String email, String password, String verificationCode) implements CustomPacketPayload {
-   public static final Type<SubmitAuthPayload> TYPE = new Type(ResourceLocation.fromNamespaceAndPath("cobblebattle", "submit_auth"));
+   public static final Type<SubmitAuthPayload> TYPE = PayloadTypeCatalog.named("submit_auth");
    public static final StreamCodec<RegistryFriendlyByteBuf, SubmitAuthPayload> CODEC = StreamCodec.composite(
       ByteBufCodecs.VAR_INT,
       SubmitAuthPayload::mode,

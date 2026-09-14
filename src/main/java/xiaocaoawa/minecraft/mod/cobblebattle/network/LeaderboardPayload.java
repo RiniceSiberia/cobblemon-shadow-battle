@@ -6,11 +6,11 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
-import net.minecraft.resources.ResourceLocation;
+import io.github.rinicesiberia.shadowbattle.network.PayloadTypeCatalog;
 
 public record LeaderboardPayload(String rankedId, String name, int players, List<LeaderboardPayload.Entry> top, LeaderboardPayload.Entry you)
    implements CustomPacketPayload {
-   public static final Type<LeaderboardPayload> TYPE = new Type(ResourceLocation.fromNamespaceAndPath("cobblebattle", "leaderboard"));
+   public static final Type<LeaderboardPayload> TYPE = PayloadTypeCatalog.named("leaderboard");
    public static final StreamCodec<RegistryFriendlyByteBuf, LeaderboardPayload> CODEC = StreamCodec.composite(
       ByteBufCodecs.stringUtf8(64),
       LeaderboardPayload::rankedId,

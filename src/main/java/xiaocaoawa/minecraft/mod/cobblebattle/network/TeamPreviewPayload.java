@@ -6,7 +6,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
-import net.minecraft.resources.ResourceLocation;
+import io.github.rinicesiberia.shadowbattle.network.PayloadTypeCatalog;
 
 public record TeamPreviewPayload(
    String battleId,
@@ -23,7 +23,7 @@ public record TeamPreviewPayload(
    String closed
 ) implements CustomPacketPayload {
    private static final int MAX_SLOTS = 6;
-   public static final Type<TeamPreviewPayload> TYPE = new Type(ResourceLocation.fromNamespaceAndPath("cobblebattle", "team_preview"));
+   public static final Type<TeamPreviewPayload> TYPE = PayloadTypeCatalog.named("team_preview");
    public static final StreamCodec<RegistryFriendlyByteBuf, TeamPreviewPayload> CODEC = StreamCodec.of(
       (buf, p) -> {
          buf.writeUtf(p.battleId(), 48);

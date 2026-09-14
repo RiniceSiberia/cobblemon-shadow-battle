@@ -7,10 +7,10 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
-import net.minecraft.resources.ResourceLocation;
+import io.github.rinicesiberia.shadowbattle.network.PayloadTypeCatalog;
 
 public record OpenMainMenuPayload(String nickname, String favourite, List<OpenMainMenuPayload.RankedInfo> competitions) implements CustomPacketPayload {
-   public static final Type<OpenMainMenuPayload> TYPE = new Type(ResourceLocation.fromNamespaceAndPath("cobblebattle", "open_main_menu"));
+   public static final Type<OpenMainMenuPayload> TYPE = PayloadTypeCatalog.named("open_main_menu");
    public static final StreamCodec<RegistryFriendlyByteBuf, OpenMainMenuPayload> CODEC = StreamCodec.composite(
       ByteBufCodecs.stringUtf8(64),
       OpenMainMenuPayload::nickname,

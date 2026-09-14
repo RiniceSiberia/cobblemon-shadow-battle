@@ -7,7 +7,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
-import net.minecraft.resources.ResourceLocation;
+import io.github.rinicesiberia.shadowbattle.network.PayloadTypeCatalog;
 
 public record RoomStatePayload(
    String roomId,
@@ -30,7 +30,7 @@ public record RoomStatePayload(
    public static final String HOST = "host";
    public static final String GUEST = "guest";
    public static final String WATCHER = "watcher";
-   public static final Type<RoomStatePayload> TYPE = new Type(ResourceLocation.fromNamespaceAndPath("cobblebattle", "room_state"));
+   public static final Type<RoomStatePayload> TYPE = PayloadTypeCatalog.named("room_state");
    public static final StreamCodec<RegistryFriendlyByteBuf, RoomStatePayload> CODEC = StreamCodec.of(
       (buf, s) -> {
          buf.writeUtf(s.roomId(), 16);

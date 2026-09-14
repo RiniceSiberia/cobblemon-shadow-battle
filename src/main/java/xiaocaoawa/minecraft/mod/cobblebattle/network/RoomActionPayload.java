@@ -4,7 +4,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
-import net.minecraft.resources.ResourceLocation;
+import io.github.rinicesiberia.shadowbattle.network.PayloadTypeCatalog;
 
 public record RoomActionPayload(
    String action,
@@ -25,7 +25,7 @@ public record RoomActionPayload(
    public static final String JOIN_CODE = "join_code";
    public static final String LEAVE = "leave";
    public static final String START = "start";
-   public static final Type<RoomActionPayload> TYPE = new Type(ResourceLocation.fromNamespaceAndPath("cobblebattle", "room_action"));
+   public static final Type<RoomActionPayload> TYPE = PayloadTypeCatalog.named("room_action");
    public static final StreamCodec<RegistryFriendlyByteBuf, RoomActionPayload> CODEC = StreamCodec.of(
       (buf, a) -> {
          buf.writeUtf(a.action(), 16);

@@ -6,10 +6,10 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
-import net.minecraft.resources.ResourceLocation;
+import io.github.rinicesiberia.shadowbattle.network.PayloadTypeCatalog;
 
 public record ServerDexPayload(String digest, boolean unchanged, List<ServerDexPayload.Entry> entries) implements CustomPacketPayload {
-   public static final Type<ServerDexPayload> TYPE = new Type(ResourceLocation.fromNamespaceAndPath("cobblebattle", "server_dex"));
+   public static final Type<ServerDexPayload> TYPE = PayloadTypeCatalog.named("server_dex");
    public static final StreamCodec<RegistryFriendlyByteBuf, ServerDexPayload> CODEC = StreamCodec.composite(
       ByteBufCodecs.stringUtf8(128),
       ServerDexPayload::digest,

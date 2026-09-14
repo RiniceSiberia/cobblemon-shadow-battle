@@ -8,7 +8,7 @@
 | 服务器身份 | ServerIdentity | 复用非空文件；空/不可读时生成；保存失败仍返回；并发缓存；mc-前缀 | Kotlin 实现；身份3项契约通过 | 已验证 |
 | TCP 传输 | BattleServerClient | 压缩流、四字节长度、引用序号、握手、按需连接、拒绝、重连及回调 | Kotlin 状态机；Socket契约2项通过，重连交错待验证 | 待验证 |
 | 认证 | AuthService / AuthMode | 枚举顺序及越界LOGIN；登录注册绑定邮箱验证码；事件及清理 | Kotlin 会话与消息；5项契约通过，远端联调待验证 | 待验证 |
-| 游戏包 | network/* | 17个文件；包ID、字段顺序、线程调度、客户端/服务器路由 | 待提取契约 | 待审查 |
+| 游戏包 | network/* | 17个文件；包ID、字段顺序、线程调度、客户端/服务器路由 | 16个包ID及全部CODEC代表值契约通过；注册与线程路由待集成验证 | 待验证 |
 | 排队及对战 | BattleQueue / CrossServerBattleService | 加入退出、远端匹配、选择与回合中继、断线、结束清理、事件顺序 | 队列与服务请求状态已提取；状态契约5项通过，游戏链路继续实施 | 进行中 |
 | 镜像及观战 | MirrorBattle / MirrorFactory / SpectatorFactory | 实体、队伍、座位、回合、退出及错误回收 | 索引与序号缓存8项契约通过；实体生命周期待验证 | 待验证 |
 | 图鉴 | RemoteDex / ServerDex | 远端数据、同步、缓存及错误处理 | 待审查 | 待审查 |
@@ -59,3 +59,5 @@ B4-clean-build-56：在提交 `a415554` 后使用 JDK 21 执行 `./gradlew.bat -
 B4-npc-state：`MirrorNpc` 的活跃实体 UUID、皮肤缓存和显示名规范化已委托给 Kotlin `MirrorNpcState`。显示名裁剪空白并去除首个 `#` 后的编号，空结果不查询；活跃登记/移除幂等；缓存由最后一次结果覆盖。新增3项状态契约，全量59项测试通过；`MirrorNpc` 公开 `javap` 签名与原始 JAR 一致。Mojang 皮肤查询、主线程应用和 NPC 世界生命周期待验证。
 
 B5-public-abi：首次全量扫描发现 `CobbleBattleConfig` 比原 JAR 多出公开 `validate()`；校验逻辑迁入 Kotlin `ConfigurationValidation`，Java 类恢复原公开表面，包级 `GSON` 保留。随后从原 JAR 的152个项目自有候选 class 中识别123个 public class，与当前发布 JAR 逐项比较 `javap -public`，缺失0、差异0。配置契约及全量59项测试通过。审计结果位于 `D:/workspace/cobblebattle-public-abi-filtered-20260915.json`；运行时事件顺序另行验证。
+
+B3-payload-contract：16个公开payload record保留原JVM形态，TYPE创建委托给Kotlin `PayloadTypeCatalog`。新增4项契约逐项固定16个资源ID，并覆盖全部CODEC的字符串、UUID、整数、布尔值、嵌套record和列表顺序；解码后缓冲区无剩余字节；原JAR与当前JAR的23个network公开class逐项`javap -public`一致。为测试源码补齐ModDev主编译类路径，JDK21离线全量63项测试、0失败。`CobbleBattleNetwork`注册侧、主线程调度与真实客户端收发仍待验证。

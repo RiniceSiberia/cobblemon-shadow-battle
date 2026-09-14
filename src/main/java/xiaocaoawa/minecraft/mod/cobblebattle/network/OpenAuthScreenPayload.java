@@ -5,11 +5,11 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
-import net.minecraft.resources.ResourceLocation;
+import io.github.rinicesiberia.shadowbattle.network.PayloadTypeCatalog;
 import xiaocaoawa.minecraft.mod.cobblebattle.account.AuthMode;
 
 public record OpenAuthScreenPayload(int mode, String suggestedId, boolean emailEnabled) implements CustomPacketPayload {
-   public static final Type<OpenAuthScreenPayload> TYPE = new Type(ResourceLocation.fromNamespaceAndPath("cobblebattle", "open_auth"));
+   public static final Type<OpenAuthScreenPayload> TYPE = PayloadTypeCatalog.named("open_auth");
    public static final StreamCodec<RegistryFriendlyByteBuf, OpenAuthScreenPayload> CODEC = StreamCodec.composite(
       ByteBufCodecs.VAR_INT,
       OpenAuthScreenPayload::mode,

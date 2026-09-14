@@ -6,10 +6,10 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
-import net.minecraft.resources.ResourceLocation;
+import io.github.rinicesiberia.shadowbattle.network.PayloadTypeCatalog;
 
 public record RoomListPayload(List<RoomListPayload.Room> rooms, boolean refresh) implements CustomPacketPayload {
-   public static final Type<RoomListPayload> TYPE = new Type(ResourceLocation.fromNamespaceAndPath("cobblebattle", "room_list"));
+   public static final Type<RoomListPayload> TYPE = PayloadTypeCatalog.named("room_list");
    public static final StreamCodec<RegistryFriendlyByteBuf, RoomListPayload> CODEC = StreamCodec.composite(
       RoomListPayload.Room.CODEC.apply(ByteBufCodecs.list(1024)), RoomListPayload::rooms, ByteBufCodecs.BOOL, RoomListPayload::refresh, RoomListPayload::new
    );
