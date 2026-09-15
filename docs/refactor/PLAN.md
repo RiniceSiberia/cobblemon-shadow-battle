@@ -45,3 +45,5 @@ B5-command-runtime（2026-09-15）：七个子命令的树构建和执行逻辑�
 B4-dex-snapshot（2026-09-15）：远端图鉴的快照解析、摘要、就绪、暂停、失效和磁盘文档生成迁入 Kotlin，公开 `RemoteDex` 继续承担兼容入口与 Pokémon 合法性校验。磁盘往返纳入自动验证；客户端全局图鉴替换和真实 Pokémon 规则检查继续分批处理。
 
 B5-client-dex-state（2026-09-15）：客户端图鉴消息的摘要匹配、六项能力值索引、形态回退和最近排行迁入 Kotlin；公开 `ServerDex` 保留网络请求、Cobblemon 全局图鉴替换、反射填充和 GUI 生命周期。
+
+B4-dex-legality（2026-09-15）：Showdown 标识规范化、能力和招式集合判断、非负限制及 EV/IV 上限边界迁入 Kotlin；`RemoteDex` 保持原拒绝类型、顺序和消息构造。

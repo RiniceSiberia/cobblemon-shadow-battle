@@ -1,6 +1,6 @@
 # 恢复入口
 
-当前推进 B4/B5 图鉴与客户端审查。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-15 使用 JDK 21 执行 `--offline clean build` 成功，9个任务全部执行，96项测试全部通过。IDEA使用相同Gradle模型，测试编译类路径已补齐，实际界面导入尚未测试。
+当前推进 B4/B5 图鉴与客户端审查。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-15 使用 JDK 21 执行 `--offline clean build` 成功，9个任务全部执行，100项测试全部通过。IDEA使用相同Gradle模型，测试编译类路径已补齐，实际界面导入尚未测试。
 
 业务源码基线为本地提交 2b4ea8d；本批次提交包含测试和构建。首次 Modrinth 下载 TLS 中断，通过缓存相同版本原件重试成功，项目不依赖 .deps 绝对路径。此前 tests 缺 Gson 依赖已修复。
 
@@ -71,3 +71,5 @@ B5-command-runtime（2026-09-15）：新增 Kotlin `CommandExecutionRuntime` 和
 B4-dex-snapshot（2026-09-15）：新增Kotlin `RemoteDexSnapshotState`，`RemoteDex`公开入口保留并委托物种快照、摘要与就绪状态。新增5项测试覆盖解析、不可变能力值、未变化确认、暂停/失效和真实磁盘往返；JDK21离线clean build成功，9个任务全部执行，92项测试零失败，`RemoteDex`公开签名与原JAR一致。日志位于`D:/workspace/gradle-clean-b4-dex-snapshot-92-20260915.log`。下一步迁移`RemoteDex`的纯规则判断与`ServerDex`客户端快照状态；实际Pokémon和Pokedex全局替换继续列为集成验证。
 
 B5-client-dex-state（2026-09-15）：新增Kotlin `ServerDexSnapshotState`，`ServerDex`委托摘要、能力值索引、形态回退和最近排行。新增4项测试；JDK21离线clean build成功，9个任务全部执行，96项测试零失败，`ServerDex`公开签名与原JAR一致。日志位于`D:/workspace/gradle-clean-b5-client-dex-96-20260915.log`。下一步处理`RemoteDex`纯规则判断及其余客户端界面；实际Dexes替换、反射字段和GUI生命周期继续列为集成验证。
+
+B4-dex-legality（2026-09-15）：新增Kotlin `DexLegalityRules`，`RemoteDex`委托标识规范化、能力/招式许可和EV/IV上限判断。新增4项边界测试；JDK21离线clean build成功，9个任务全部执行，100项测试零失败，`RemoteDex`公开签名与原JAR一致。日志位于`D:/workspace/gradle-clean-b4-dex-rules-100-20260915.log`。下一步审查其余客户端界面状态与语言资源，并准备实际NeoForge客户端/服务端启动验证。

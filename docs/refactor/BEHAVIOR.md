@@ -11,7 +11,7 @@
 | 游戏包 | network/* | 17个文件；包ID、字段顺序、线程调度、客户端/服务器路由 | 16个包ID、全部CODEC及收发调度策略契约通过；环境注册待集成验证 | 待验证 |
 | 排队及对战 | BattleQueue / CrossServerBattleService | 加入退出、远端匹配、选择与回合中继、断线、结束清理、事件顺序 | 队列与服务请求状态已提取；状态契约5项通过，游戏链路继续实施 | 进行中 |
 | 镜像及观战 | MirrorBattle / MirrorFactory / SpectatorFactory | 实体、队伍、座位、回合、退出及错误回收 | 索引、序号缓存、启动作用域及回收调度契约通过；实体生命周期待验证 | 待验证 |
-| 图鉴 | RemoteDex / ServerDex | 远端数据、同步、缓存及错误处理 | 远端快照与客户端摘要/能力索引共9项契约通过；Pokémon规则和客户端全局图鉴替换待集成验证 | 进行中 |
+| 图鉴 | RemoteDex / ServerDex | 远端数据、同步、缓存及错误处理 | 快照、客户端索引及合法性纯规则共13项契约通过；真实Pokémon和客户端全局图鉴替换待集成验证 | 进行中 |
 | UI及命令 | client/* / command/* / lang/* | 权限、显示、输入、翻译、数据请求、副作用 | 客户端接收器和七个命令执行链已迁入Kotlin；界面切换、参数选择和命令树11项契约通过，其余界面待审查 | 进行中 |
 | 公开API | api/* | 类名、record访问器、事件类型、静态字段及JVM签名 | 原JAR 123个公开class与当前发布包逐项 `javap -public` 一致；事件运行待验证 | 待验证 |
 | Mixin及引导 | mixin/* / neoforge/* / CobbleBattle | 注入目标/描述符、客户端隔离、注册顺序 | 配置、类清单、13个Inject目标及3个绘制调用描述符契约通过；实际应用待验证 | 待验证 |
@@ -85,3 +85,5 @@ B5-command-runtime：`cbattle` 根命令及 open、logout、join、leave、check
 B4-dex-snapshot：`RemoteDex` 的物种快照表、摘要和就绪状态委托给 Kotlin `RemoteDexSnapshotState`。采用快照保持六项能力值和不可变映射；服务端确认未变化时仅在本地缓存非空时就绪；暂停保留快照和摘要，失效清空；读取坏文件继续清空缓存且等待重新拉取。新增5项测试，包括真实 `config/cobblebattle-dex.json` 写入、恢复和 unchanged 确认。JDK21离线clean build的9个任务全部执行，92项测试、0失败；`RemoteDex`公开签名与原JAR一致。真实 Pokémon 能力、招式、EV/IV 规则及客户端图鉴替换待集成验证。
 
 B5-client-dex-state：`ServerDex` 的服务端消息摘要、能力值索引和最近排行委托给 Kotlin `ServerDexSnapshotState`。完整快照按六项 Stat 建索引；unchanged 在缓存为空或摘要不符时清空摘要并请求完整快照；形态无数据时回退物种。新增4项状态测试。JDK21离线clean build的9个任务全部执行，96项测试、0失败；`ServerDex`公开签名与原JAR一致。Dexes全局替换、反射记录填充和GUI关闭恢复待客户端验证。
+
+B4-dex-legality：`RemoteDex` 的 Showdown ID、能力许可、招式集合和数值上限判断委托给 Kotlin `DexLegalityRules`。名称继续按ROOT小写并剔除非字母数字；空能力、noability、空合法招式集合及零上限保持原放行行为；边界等于上限合法。新增4项纯规则测试。JDK21离线clean build的9个任务全部执行，100项测试、0失败；`RemoteDex`公开签名与原JAR一致。真实Pokémon对象、拒绝文本和队伍顺序待游戏内验证。

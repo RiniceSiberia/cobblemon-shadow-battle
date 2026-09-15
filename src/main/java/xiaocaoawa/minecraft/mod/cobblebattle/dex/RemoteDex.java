@@ -21,14 +21,13 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.github.rinicesiberia.shadowbattle.dex.DexLegalityRules;
 
 public final class RemoteDex {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle/Dex");
@@ -141,9 +140,9 @@ public final class RemoteDex {
    public void setTeamRules(boolean strictAbilities, boolean strictMoves, int maxEvPerStat, int maxEvTotal, int maxIv) {
       this.strictAbilities = strictAbilities;
       this.strictMoves = strictMoves;
-      this.maxEvPerStat = Math.max(0, maxEvPerStat);
-      this.maxEvTotal = Math.max(0, maxEvTotal);
-      this.maxIv = Math.max(0, maxIv);
+      this.maxEvPerStat = DexLegalityRules.nonNegativeLimit(maxEvPerStat);
+      this.maxEvTotal = DexLegalityRules.nonNegativeLimit(maxEvTotal);
+      this.maxIv = DexLegalityRules.nonNegativeLimit(maxIv);
    }
 
    public List<RemoteDex.Rejection> check(Pokemon creature, int slot) {
@@ -191,14 +190,11 @@ public final class RemoteDex {
       if (this.strictAbilities) {
          AbilityTemplate template = creature.getAbility().getTemplate();
          String ability = template.getName();
-         String id = showdownId(ability);
-         if (!id.isEmpty() && !"noability".equals(id)) {
-            for (PotentialAbility potential : creature.getForm().getAbilities()) {
-               if (id.equals(showdownId(potential.getTemplate().getName()))) {
-                  return;
-               }
-            }
-
+         List<String> available = new ArrayList<>();
+         for (PotentialAbility potential : creature.getForm().getAbilities()) {
+            available.add(potential.getTemplate().getName());
+         }
+         if (!DexLegalityRules.abilityAllowed(ability, available)) {
             outputStream.add(
                new RemoteDex.Rejection(
                   slot, name, speciesTemplateId, RemoteDex.Rejection.Kind.ILLEGAL_ABILITY, Component.translatableWithFallback(template.getDisplayName(), ability)
@@ -211,26 +207,24 @@ public final class RemoteDex {
    private void checkMoves(Pokemon creature, int slot, Component name, String speciesTemplateId, List<RemoteDex.Rejection> outputStream) {
       if (this.strictMoves) {
          Learnset learnset = creature.getForm().getMoves();
-         Set<String> legal = new HashSet<>();
+         List<String> available = new ArrayList<>();
 
          for (MoveTemplate move : learnset.getAllLegalMoves()) {
-            legal.add(showdownId(move.getName()));
+            available.add(move.getName());
          }
 
          for (MoveTemplate move : learnset.getLegacyMoves()) {
-            legal.add(showdownId(move.getName()));
+            available.add(move.getName());
          }
 
          for (MoveTemplate move : learnset.getSpecialMoves()) {
-            legal.add(showdownId(move.getName()));
+            available.add(move.getName());
          }
 
-         if (!legal.isEmpty()) {
-            for (Move move : creature.getMoveSet().getMoves()) {
-               String id = showdownId(move.getTemplate().getName());
-               if (!id.isEmpty() && !legal.contains(id)) {
-                  outputStream.add(new RemoteDex.Rejection(slot, name, speciesTemplateId, RemoteDex.Rejection.Kind.ILLEGAL_MOVE, move.getTemplate().getDisplayName()));
-               }
+         Set<String> legal = DexLegalityRules.legalMoveIds(available);
+         for (Move move : creature.getMoveSet().getMoves()) {
+            if (!DexLegalityRules.moveAllowed(move.getTemplate().getName(), legal)) {
+               outputStream.add(new RemoteDex.Rejection(slot, name, speciesTemplateId, RemoteDex.Rejection.Kind.ILLEGAL_MOVE, move.getTemplate().getDisplayName()));
             }
          }
       }
@@ -243,7 +237,7 @@ public final class RemoteDex {
          for (Map.Entry<? extends Stat, ? extends Integer> entry : creature.getEvs()) {
             int value = entry.getValue();
             total += value;
-            if (this.maxEvPerStat > 0 && value > this.maxEvPerStat) {
+            if (DexLegalityRules.exceedsLimit(value, this.maxEvPerStat)) {
                outputStream.add(
                   new RemoteDex.Rejection(
                      slot,
@@ -256,7 +250,7 @@ public final class RemoteDex {
             }
          }
 
-         if (this.maxEvTotal > 0 && total > this.maxEvTotal) {
+         if (DexLegalityRules.exceedsLimit(total, this.maxEvTotal)) {
             outputStream.add(
                new RemoteDex.Rejection(
                   slot, name, speciesTemplateId, RemoteDex.Rejection.Kind.EV_OVER_CAP, Component.literal("total " + total + " > " + this.maxEvTotal)
@@ -268,7 +262,7 @@ public final class RemoteDex {
       if (this.maxIv > 0) {
          for (Map.Entry<? extends Stat, ? extends Integer> entryx : creature.getIvs()) {
             int value = entryx.getValue();
-            if (value > this.maxIv) {
+            if (DexLegalityRules.exceedsLimit(value, this.maxIv)) {
                outputStream.add(
                   new RemoteDex.Rejection(
                      slot,
@@ -289,7 +283,7 @@ public final class RemoteDex {
    }
 
    private static String showdownId(String raw) {
-      return raw == null ? "" : raw.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+      return DexLegalityRules.normalizedId(raw);
    }
 
    public JsonArray describeTeam(List<Pokemon> roster) {
