@@ -75,3 +75,5 @@ B6-residue-cleanup：删除失效的`build.ps1`、旧IDEA模块、反编译摘�
 B5-mixin-contract：`cobblebattle.mixins.json`与原JAR文本一致，4个客户端类和2个通用类均存在。新增3项元数据契约固定13个`@Inject`目标名、图鉴`@ModifyArg`调用目标及两套`@ModifyArgs`完整描述符和可选要求。服务与Showdown注入共用Kotlin `BattleIdentifierParsing`，新增1项UUID正常/异常边界契约。全量75项测试、0失败，`CrossServerBattleService`与`GraalShowdownServiceMixin`公开签名一致；实际Mixin应用和游戏内副作用待验证。
 
 B5-neoforge-entry：Java `CobbleBattleNeoForge`迁移为同包同名Kotlin入口，保留`@Mod("cobblebattle")`、唯一公开零参数构造、先执行公共初始化及仅`Dist.CLIENT`执行客户端初始化的顺序。新增1项入口元数据契约，全量76项测试、0失败；忽略`Compiled from`来源文件名后，`javap -public`签名与原JAR一致。FML实际实例化和分侧类加载仍待客户端/专用服务端启动验证。
+
+B5-clean-76：最新Kotlin入口提交后使用JDK21执行`./gradlew.bat --offline clean build --console=plain`成功，9个任务全部实际执行，76项测试、0失败，thin JAR与发布JAR均生成；日志位于`D:/workspace/gradle-clean-b5-76-20260915.log`。该证据覆盖完整编译、资源、测试和打包，仍不替代IDEA界面导入、NeoForge进程启动与真实远端服务联调。
