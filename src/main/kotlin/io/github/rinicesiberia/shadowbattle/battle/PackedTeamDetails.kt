@@ -5,8 +5,8 @@ data class PackedTeamDetails(
     val natureName: String?,
     val abilityName: String?,
     val moveNames: List<String>,
-    val movePp: List<Int?>,
-    val friendship: Int?,
+    val movePp: List<String?>,
+    val friendship: String?,
     val teraName: String?,
 )
 
@@ -22,30 +22,18 @@ object PackedTeamDetailsParser {
                 ?.takeIf(String::isNotEmpty)
                 ?.split(",", limit = Int.MAX_VALUE)
                 ?.take(4)
-                ?.filter(String::isNotEmpty)
                 .orEmpty(),
             movePp = parseMovePp(fields.getOrNull(9)),
-            friendship = misc.getOrNull(0)?.takeIf(String::isNotEmpty)?.let {
-                boundedIntOrNull(it, 0, 255)
-            },
+            friendship = misc.getOrNull(0)?.takeIf(String::isNotEmpty),
             teraName = misc.getOrNull(5)?.takeIf(String::isNotEmpty),
         )
     }
 
-    private fun parseMovePp(raw: String?): List<Int?> {
+    private fun parseMovePp(raw: String?): List<String?> {
         if (raw.isNullOrEmpty()) return emptyList()
         return raw.split(",", limit = Int.MAX_VALUE).take(4).map { entry ->
-            val current = entry.substringBefore("/", missingDelimiterValue = "")
-            current.takeIf { entry.contains("/") && it.isNotEmpty() }?.let {
-                boundedIntOrNull(it, 0, 99)
-            }
+            if (entry.contains("/")) entry.substringBefore("/") else null
         }
     }
 
-    private fun boundedIntOrNull(raw: String, minimum: Int, maximum: Int): Int? =
-        try {
-            raw.trim { character -> character.code <= 0x20 }.toInt().coerceIn(minimum, maximum)
-        } catch (_: NumberFormatException) {
-            null
-        }
 }

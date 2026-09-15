@@ -143,7 +143,7 @@ public final class RemoteTeamCodec {
                optional(
                   slot,
                   "friendship",
-                  () -> creature.setFriendship(details.getFriendship(), true)
+                  () -> creature.setFriendship(PackedTeamValueParsing.boundedInt(details.getFriendship(), creature.getFriendship(), 0, 255), true)
                );
             }
 
@@ -217,7 +217,7 @@ public final class RemoteTeamCodec {
                } else {
                   Move move = template.create();
                   if (i < details.getMovePp().size() && details.getMovePp().get(i) != null) {
-                     move.setCurrentPp(details.getMovePp().get(i));
+                     move.setCurrentPp(PackedTeamValueParsing.boundedInt(details.getMovePp().get(i), move.getCurrentPp(), 0, 99));
                   }
 
                   creature.getMoveSet().setMove(i, move);

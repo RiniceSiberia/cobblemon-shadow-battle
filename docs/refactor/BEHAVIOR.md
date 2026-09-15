@@ -1,5 +1,9 @@
 # 行为契约与证据
 
+B4-packed-details-compatibility最终证据：clean build全量150项测试通过，9个任务全部执行；RemoteTeamCodec公开ABI一致。5项附加字段契约包含48组输入的原实现调用决策对照，恢复空槽位置及非法数值回退后的setter调用；真实世界对象副作用仍待集成验证。
+
+B4-packed-details-compatibility（当前纠正）：dffef6f引入的空招式过滤会错配槽位和PP；将非法亲密度/PP表示为空也省略了原setter调用。已恢复原始槽位和原始数值文本，在Java装配时读取对象当前值作为回退。PackedTeamDetailsTest新增空槽测试及48组对照930c9db分割/调用决策的差分输入；定向5项通过，全量验证进行中。此前“过滤空项兼容”的记录撤回。历史失败实际原因是Kotlin split禁止负limit，以及非法PP错误回退为0；与Array(17)构造无关。差分测试覆盖调用决策，不替代真实Cobblemon setter和注册对象的运行验证。
+
 基线版本 baseline-local-20260914；仅全量编译通过，以下行为尚未建立运行证据。
 
 | 链路 | 原实现 | 正常、异常及副作用约束 | 新实现/证据 | 状态 |

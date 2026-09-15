@@ -1,5 +1,9 @@
 # 恢复入口
 
+本批最终验证：JDK21离线clean build成功，9个任务全部执行，150项测试零失败；RemoteTeamCodec公开ABI与原JAR一致。三项受影响文件台账已更新内容哈希与验证批次。B4-packed-details-compatibility已完成兼容修复，下一步继续审查远端队伍对象装配和观战镜像失败清理；全项目仍未完成。
+
+当前恢复批次B4-packed-details-compatibility，基线ba72372，工作区恢复时干净。发现并修复dffef6f的空招式槽位压缩和非法PP/亲密度setter跳过；5项定向测试已通过，包含48组调用决策差分。正在执行JDK21离线clean build，日志D:/workspace/gradle-packed-details-compatibility.log。下方142/145/148项及“当前下一步”均属历史快照，以本段最新状态为准。仍需远端队伍对象装配与镜像实体验证，90%命名覆盖、远端联调、推送和最终清理未完成。
+
 当前完成 B5 双端启动与主要表单状态迁移，并继续完成 B4 服务端队伍预览、远端队伍基础字段和观战格式解析；下一步处理远端队伍的物种/招式装配和镜像实体装配，再继续剩余客户端界面。Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0 / KotlinForForge 5.3.0。2026-09-15 使用 JDK 21 执行 `--offline clean build` 成功，9个任务全部执行，142项测试全部通过。实际客户端完成模组构造、Showdown启动与资源加载；专用服务端完成世界生成并报告 `Done`。IDEA使用同一Gradle模型，界面导入仍未人工确认。
 
 业务源码基线为本地提交 2b4ea8d；本批次提交包含测试和构建。首次 Modrinth 下载 TLS 中断，通过缓存相同版本原件重试成功，项目不依赖 .deps 绝对路径。此前 tests 缺 Gson 依赖已修复。
