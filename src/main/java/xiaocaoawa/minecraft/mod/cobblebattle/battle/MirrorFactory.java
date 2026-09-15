@@ -22,6 +22,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.config.ServerIdentity;
 import xiaocaoawa.minecraft.mod.cobblebattle.lang.Msg;
 import xiaocaoawa.minecraft.mod.cobblebattle.net.BattleServerClient;
 import io.github.rinicesiberia.shadowbattle.battle.BattleFormatResolver;
+import io.github.rinicesiberia.shadowbattle.battle.BattleConstructionAttempt;
 import io.github.rinicesiberia.shadowbattle.battle.TeamSelection;
 
 final class MirrorFactory {
@@ -125,22 +126,16 @@ final class MirrorFactory {
                            mirror.attachBody(npc, remoteActor);
                            MirrorPokemon.claim(mirror, opponentRoster);
                            CrossServerBattles.beginConstruction(mirror);
-
-                           label164: {
-                              try {
-                                 BattleRegistry.startBattle(format, side1, side2, false);
-                                 break label164;
-                              } catch (RuntimeException failure) {
-                                 LOGGER.error("Failed to build the mirror battle for {}", remoteBattleId, failure);
-                                 MirrorNpc.despawn(npc);
-                                 MirrorPokemon.release(opponentRoster);
-                                 CrossServerBattles.forget(mirror.localBattleId() == null ? new UUID(0L, 0L) : mirror.localBattleId());
-                                 this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
-                                 this.service.sendAbort(remoteBattleId, "mirror construction failed");
-                              } finally {
-                                 CrossServerBattles.endConstruction();
-                              }
-
+                           RuntimeException startFailure = BattleConstructionAttempt.captureFailure(
+                              () -> BattleRegistry.startBattle(format, side1, side2, false), CrossServerBattles::endConstruction
+                           );
+                           if (startFailure != null) {
+                              LOGGER.error("Failed to build the mirror battle for {}", remoteBattleId, startFailure);
+                              MirrorNpc.despawn(npc);
+                              MirrorPokemon.release(opponentRoster);
+                              CrossServerBattles.forget(mirror.localBattleId() == null ? new UUID(0L, 0L) : mirror.localBattleId());
+                              this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
+                              this.service.sendAbort(remoteBattleId, "mirror construction failed");
                               return;
                            }
 
@@ -225,24 +220,18 @@ final class MirrorFactory {
                remoteBattleId, mySeat, opponentSeatId, myParticipantUuid, opponentUuid, opponentName, here, sourceOfTruth, this.service.config().debug
             );
             CrossServerBattles.beginConstruction(mirror);
+            RuntimeException startFailure = BattleConstructionAttempt.captureFailure(
+               () -> BattleRegistry.startBattle(format, side1, side2, false), CrossServerBattles::endConstruction
+            );
+            if (startFailure != null) {
+               LOGGER.error("Failed to build the two-player battle for {}", remoteBattleId, startFailure);
+               CrossServerBattles.forget(mirror.localBattleId() == null ? new UUID(0L, 0L) : mirror.localBattleId());
 
-            label180: {
-               try {
-                  BattleRegistry.startBattle(format, side1, side2, false);
-                  break label180;
-               } catch (RuntimeException failure) {
-                  LOGGER.error("Failed to build the two-player battle for {}", remoteBattleId, failure);
-                  CrossServerBattles.forget(mirror.localBattleId() == null ? new UUID(0L, 0L) : mirror.localBattleId());
-
-                  for (UUID who : List.of(myParticipantUuid, opponentUuid)) {
-                     this.service.tellParticipant(who, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
-                  }
-
-                  this.service.sendAbort(remoteBattleId, "mirror construction failed");
-               } finally {
-                  CrossServerBattles.endConstruction();
+               for (UUID who : List.of(myParticipantUuid, opponentUuid)) {
+                  this.service.tellParticipant(who, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
                }
 
+               this.service.sendAbort(remoteBattleId, "mirror construction failed");
                return;
             }
 
