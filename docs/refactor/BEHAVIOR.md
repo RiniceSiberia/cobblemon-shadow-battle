@@ -12,7 +12,7 @@
 | 排队及对战 | BattleQueue / CrossServerBattleService | 加入退出、远端匹配、选择与回合中继、断线、结束清理、事件顺序 | 队列与服务请求状态已提取；状态契约5项通过，游戏链路继续实施 | 进行中 |
 | 镜像及观战 | MirrorBattle / MirrorFactory / SpectatorFactory | 实体、队伍、座位、回合、退出及错误回收 | 索引、序号缓存、启动作用域及回收调度契约通过；实体生命周期待验证 | 待验证 |
 | 图鉴 | RemoteDex / ServerDex | 远端数据、同步、缓存及错误处理 | 快照、客户端索引及合法性纯规则共13项契约通过；真实Pokémon和客户端全局图鉴替换待集成验证 | 进行中 |
-| UI及命令 | client/* / command/* / lang/* | 权限、显示、输入、翻译、数据请求、副作用 | 客户端接收器和七个命令执行链已迁入Kotlin；界面切换、参数选择和命令树11项契约通过，其余界面待审查 | 进行中 |
+| UI及命令 | client/* / command/* / lang/* | 权限、显示、输入、翻译、数据请求、副作用 | 客户端接收器、聊天编辑状态和七个命令执行链已迁入Kotlin；界面切换、输入、参数选择和命令树17项契约通过，其余界面待审查 | 进行中 |
 | 公开API | api/* | 类名、record访问器、事件类型、静态字段及JVM签名 | 原JAR 123个公开class与当前发布包逐项 `javap -public` 一致；事件运行待验证 | 待验证 |
 | Mixin及引导 | mixin/* / neoforge/* / CobbleBattle | 注入目标/描述符、客户端隔离、注册顺序 | 配置、类清单、13个Inject目标及3个绘制调用描述符契约通过；客户端和专用服务端均完成模组构造与资源加载 | 待验证 |
 
@@ -91,3 +91,5 @@ B4-dex-legality：`RemoteDex` 的 Showdown ID、能力许可、招式集合和�
 B5-client-startup：首次执行 `runClient` 依次发现开发运行时缺少 KotlinForForge 和 SnakeYAML。KotlinForForge 5.3.0 作为运行模组加入，SnakeYAML 同时保留发布包重定位配置并加入 ModDevGradle `additionalRuntimeClasspath`。修复后实际启动完成 NeoForge、KotlinForForge、Cobblemon、CobbleBattle 构造，Showdown 启动，资源全部加载且进程保持稳定；Cobblemon 自身的可选 Adorn Mixin、资源路径和缺失音效警告未影响启动。模板差异日志新增1项契约，确认受保护字段值不出现在消息中。JDK21离线clean build的9个任务全部执行，101项测试、0失败。客户端收包、具体界面、世界内Mixin回调和专用服务端仍待验证。
 
 B5-server-startup：`runServer --nogui` 实际完成 NeoForge、KotlinForForge、Cobblemon 和 CobbleBattle 构造，Showdown 服务启动并预热，数据注册完成，世界生成后服务端报告 `Done`。启动日志没有 CobbleBattle FATAL/ERROR；Cobblemon 对客户端声音类的分侧探测、可选 Adorn 目标和资源标签诊断未阻止服务端运行。网络环境注册随公共初始化完成且未抛异常。真实玩家登录、C2S/S2C往返、远端对战服务连接及世界实体生命周期仍待验证。
+
+B5-chat-composer：`ChatInput` 的可变草稿和编辑状态委托给 Kotlin `ChatComposerState`。未输入时字符返回未消费；输入时空格可写，控制字符、DEL和格式控制符拒绝；达到200个UTF-16单元后继续返回已消费但不增长；退格按完整Unicode码点删除；暂停/取消隐藏并保留草稿；提交沿用Java `trim` 范围后清空。新增状态5项及Java兼容入口1项测试，原聊天3项继续通过。JDK21离线clean build的9个任务全部执行，107项测试、0失败；`ChatInput`公开签名与原JAR一致。真实键盘事件和消息下发待客户端交互验证。

@@ -1,49 +1,35 @@
 package xiaocaoawa.minecraft.mod.cobblebattle.client;
 
+import io.github.rinicesiberia.shadowbattle.client.ChatComposerState;
+
 public final class ChatInput {
-   private static final int MAX_LENGTH = 200;
-   private static boolean typing;
-   private static String draft = "";
+   private static final ChatComposerState COMPOSER = new ChatComposerState(200);
 
    private ChatInput() {
    }
 
    public static boolean typing() {
-      return typing;
+      return COMPOSER.isComposing();
    }
 
    public static String draftOrNull() {
-      return typing ? draft : null;
+      return COMPOSER.visibleDraft();
    }
 
    public static void start() {
-      typing = true;
+      COMPOSER.begin();
    }
 
    public static void stop() {
-      typing = false;
-   }
-
-   private static boolean typable(char ch) {
-      return ch >= ' ' && ch != 127 && ch != 167;
+      COMPOSER.pause();
    }
 
    public static boolean type(char ch) {
-      if (typing && typable(ch)) {
-         if (draft.length() < 200) {
-            draft = draft + ch;
-         }
-
-         return true;
-      } else {
-         return false;
-      }
+      return COMPOSER.append(ch);
    }
 
    public static void backspace() {
-      if (!draft.isEmpty()) {
-         draft = draft.substring(0, draft.offsetByCodePoints(draft.length(), -1));
-      }
+      COMPOSER.eraseLastCodePoint();
    }
 
    public static void toggleChannel() {
@@ -51,20 +37,17 @@ public final class ChatInput {
    }
 
    public static void send() {
-      String text = draft.trim();
-      draft = "";
-      typing = false;
+      String text = COMPOSER.finish();
       if (!text.isEmpty()) {
          ChatScreenHandler.send(ChatState.channel(), text);
       }
    }
 
    public static void cancel() {
-      typing = false;
+      COMPOSER.pause();
    }
 
    public static void reset() {
-      typing = false;
-      draft = "";
+      COMPOSER.clear();
    }
 }

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import xiaocaoawa.minecraft.mod.cobblebattle.client.ChatInput
 import xiaocaoawa.minecraft.mod.cobblebattle.client.ChatLog
 import xiaocaoawa.minecraft.mod.cobblebattle.client.ChatState
 import java.util.UUID
@@ -11,7 +12,7 @@ import java.util.UUID
 class ChatContractTest {
     @BeforeEach
     @AfterEach
-    fun reset() { ChatState.reset(); ChatState.setEnabled(true) }
+    fun reset() { ChatState.reset(); ChatState.setEnabled(true); ChatInput.reset() }
 
     @Test
     fun `聊天记录每个频道最多保留四十条且返回不可变快照`() {
@@ -49,6 +50,22 @@ class ChatContractTest {
         ChatState.setEnabled(false)
         ChatState.reset()
         assertFalse(ChatState.enabled())
+    }
+
+    @Test
+    fun `聊天输入兼容入口保留草稿退格和频道切换`() {
+        assertFalse(ChatInput.type('a'))
+        ChatInput.start()
+        "a😀".forEach { assertTrue(ChatInput.type(it)) }
+        ChatInput.backspace()
+        assertEquals("a", ChatInput.draftOrNull())
+        ChatInput.stop()
+        assertNull(ChatInput.draftOrNull())
+        ChatInput.start()
+        assertEquals("a", ChatInput.draftOrNull())
+        assertEquals(ChatLog.Channel.GLOBAL, ChatState.channel())
+        ChatInput.toggleChannel()
+        assertEquals(ChatLog.Channel.BATTLE, ChatState.channel())
     }
 }
 
