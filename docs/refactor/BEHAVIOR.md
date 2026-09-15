@@ -12,7 +12,7 @@
 | 排队及对战 | BattleQueue / CrossServerBattleService | 加入退出、远端匹配、选择与回合中继、断线、结束清理、事件顺序 | 队列与服务请求状态已提取；状态契约5项通过，游戏链路继续实施 | 进行中 |
 | 镜像及观战 | MirrorBattle / MirrorFactory / SpectatorFactory | 实体、队伍、座位、回合、退出及错误回收 | 索引、序号缓存、启动作用域及回收调度契约通过；实体生命周期待验证 | 待验证 |
 | 图鉴 | RemoteDex / ServerDex | 远端数据、同步、缓存及错误处理 | 待审查 | 待审查 |
-| UI及命令 | client/* / command/* / lang/* | 权限、显示、输入、翻译、数据请求、副作用 | 待审查 | 待审查 |
+| UI及命令 | client/* / command/* / lang/* | 权限、显示、输入、翻译、数据请求、副作用 | 客户端七组接收器和输入事件已迁入Kotlin；房间/预览切换5项契约通过，命令与其余界面待审查 | 进行中 |
 | 公开API | api/* | 类名、record访问器、事件类型、静态字段及JVM签名 | 原JAR 123个公开class与当前发布包逐项 `javap -public` 一致；事件运行待验证 | 待验证 |
 | Mixin及引导 | mixin/* / neoforge/* / CobbleBattle | 注入目标/描述符、客户端隔离、注册顺序 | 配置、类清单、13个Inject目标及3个绘制调用描述符契约通过；实际应用待验证 | 待验证 |
 
@@ -77,3 +77,5 @@ B5-mixin-contract：`cobblebattle.mixins.json`与原JAR文本一致，4个客户
 B5-neoforge-entry：Java `CobbleBattleNeoForge`迁移为同包同名Kotlin入口，保留`@Mod("cobblebattle")`、唯一公开零参数构造、先执行公共初始化及仅`Dist.CLIENT`执行客户端初始化的顺序。新增1项入口元数据契约，全量76项测试、0失败；忽略`Compiled from`来源文件名后，`javap -public`签名与原JAR一致。FML实际实例化和分侧类加载仍待客户端/专用服务端启动验证。
 
 B5-clean-76：最新Kotlin入口提交后使用JDK21执行`./gradlew.bat --offline clean build --console=plain`成功，9个任务全部实际执行，76项测试、0失败，thin JAR与发布JAR均生成；日志位于`D:/workspace/gradle-clean-b5-76-20260915.log`。该证据覆盖完整编译、资源、测试和打包，仍不替代IDEA界面导入、NeoForge进程启动与真实远端服务联调。
+
+B5-client-handlers：认证、聊天、排行榜、图鉴、房间、主菜单和队伍预览的 S2C 注册及客户端输入事件迁入 Kotlin `ClientHandlerRuntime`，原七个 Java handler 的公开静态入口和包内发送入口保持。所有消息处理继续先调用 `context.queue`；聊天按键、鼠标和字符事件的拦截条件及初始化顺序保持。房间列表、房间状态和队伍预览通过 `ClientViewTransitions` 固定刷新、打开、忽略规则，5项测试覆盖无玩家、当前界面匹配、刷新包、战斗中和关闭原因分支。JDK21离线clean build的9个任务全部执行，81项测试、0失败；七个公开handler逐项与原JAR的`javap -public`一致。实际客户端注册、收包、按键和界面副作用待游戏内验证。
