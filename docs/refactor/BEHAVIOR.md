@@ -8,13 +8,13 @@
 | 服务器身份 | ServerIdentity | 复用非空文件；空/不可读时生成；保存失败仍返回；并发缓存；mc-前缀 | Kotlin 实现；身份3项契约通过 | 已验证 |
 | TCP 传输 | BattleServerClient | 压缩流、四字节长度、引用序号、握手、按需连接、拒绝、重连及回调 | Kotlin 状态机；Socket契约2项通过，重连交错待验证 | 待验证 |
 | 认证 | AuthService / AuthMode | 枚举顺序及越界LOGIN；登录注册绑定邮箱验证码；事件及清理 | Kotlin 会话与消息；5项契约通过，远端联调待验证 | 待验证 |
-| 游戏包 | network/* | 17个文件；包ID、字段顺序、线程调度、客户端/服务器路由 | 16个包ID、全部CODEC及收发调度策略契约通过；环境注册待集成验证 | 待验证 |
+| 游戏包 | network/* | 17个文件；包ID、字段顺序、线程调度、客户端/服务器路由 | 16个包ID、全部CODEC及收发调度策略契约通过；客户端和专用服务端环境注册成功 | 待验证 |
 | 排队及对战 | BattleQueue / CrossServerBattleService | 加入退出、远端匹配、选择与回合中继、断线、结束清理、事件顺序 | 队列与服务请求状态已提取；状态契约5项通过，游戏链路继续实施 | 进行中 |
 | 镜像及观战 | MirrorBattle / MirrorFactory / SpectatorFactory | 实体、队伍、座位、回合、退出及错误回收 | 索引、序号缓存、启动作用域及回收调度契约通过；实体生命周期待验证 | 待验证 |
 | 图鉴 | RemoteDex / ServerDex | 远端数据、同步、缓存及错误处理 | 快照、客户端索引及合法性纯规则共13项契约通过；真实Pokémon和客户端全局图鉴替换待集成验证 | 进行中 |
 | UI及命令 | client/* / command/* / lang/* | 权限、显示、输入、翻译、数据请求、副作用 | 客户端接收器和七个命令执行链已迁入Kotlin；界面切换、参数选择和命令树11项契约通过，其余界面待审查 | 进行中 |
 | 公开API | api/* | 类名、record访问器、事件类型、静态字段及JVM签名 | 原JAR 123个公开class与当前发布包逐项 `javap -public` 一致；事件运行待验证 | 待验证 |
-| Mixin及引导 | mixin/* / neoforge/* / CobbleBattle | 注入目标/描述符、客户端隔离、注册顺序 | 配置、类清单、13个Inject目标及3个绘制调用描述符契约通过；NeoForge客户端实际完成模组构造和资源加载 | 待验证 |
+| Mixin及引导 | mixin/* / neoforge/* / CobbleBattle | 注入目标/描述符、客户端隔离、注册顺序 | 配置、类清单、13个Inject目标及3个绘制调用描述符契约通过；客户端和专用服务端均完成模组构造与资源加载 | 待验证 |
 
 测试只能在实际执行后填写通过，后续改动影响调用链时需重新执行。生产服务器身份的随机生成不能因测试可复现而改成固定 seed；测试输入使用固定值。
 
@@ -89,3 +89,5 @@ B5-client-dex-state：`ServerDex` 的服务端消息摘要、能力值索引和�
 B4-dex-legality：`RemoteDex` 的 Showdown ID、能力许可、招式集合和数值上限判断委托给 Kotlin `DexLegalityRules`。名称继续按ROOT小写并剔除非字母数字；空能力、noability、空合法招式集合及零上限保持原放行行为；边界等于上限合法。新增4项纯规则测试。JDK21离线clean build的9个任务全部执行，100项测试、0失败；`RemoteDex`公开签名与原JAR一致。真实Pokémon对象、拒绝文本和队伍顺序待游戏内验证。
 
 B5-client-startup：首次执行 `runClient` 依次发现开发运行时缺少 KotlinForForge 和 SnakeYAML。KotlinForForge 5.3.0 作为运行模组加入，SnakeYAML 同时保留发布包重定位配置并加入 ModDevGradle `additionalRuntimeClasspath`。修复后实际启动完成 NeoForge、KotlinForForge、Cobblemon、CobbleBattle 构造，Showdown 启动，资源全部加载且进程保持稳定；Cobblemon 自身的可选 Adorn Mixin、资源路径和缺失音效警告未影响启动。模板差异日志新增1项契约，确认受保护字段值不出现在消息中。JDK21离线clean build的9个任务全部执行，101项测试、0失败。客户端收包、具体界面、世界内Mixin回调和专用服务端仍待验证。
+
+B5-server-startup：`runServer --nogui` 实际完成 NeoForge、KotlinForForge、Cobblemon 和 CobbleBattle 构造，Showdown 服务启动并预热，数据注册完成，世界生成后服务端报告 `Done`。启动日志没有 CobbleBattle FATAL/ERROR；Cobblemon 对客户端声音类的分侧探测、可选 Adorn 目标和资源标签诊断未阻止服务端运行。网络环境注册随公共初始化完成且未抛异常。真实玩家登录、C2S/S2C往返、远端对战服务连接及世界实体生命周期仍待验证。

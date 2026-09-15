@@ -49,3 +49,5 @@ B5-client-dex-state（2026-09-15）：客户端图鉴消息的摘要匹配、六
 B4-dex-legality（2026-09-15）：Showdown 标识规范化、能力和招式集合判断、非负限制及 EV/IV 上限边界迁入 Kotlin；`RemoteDex` 保持原拒绝类型、顺序和消息构造。
 
 B5-client-startup（2026-09-15）：补齐开发及 IDEA 运行环境所需的 KotlinForForge 5.3.0，并按 ModDevGradle 1.21.1 的隔离类路径规则将 SnakeYAML 加入游戏运行类路径。保持发布 JAR 只打入并重定位 SnakeYAML；配置模板值不变，模板差异日志隐藏受保护值。以实际客户端进入稳定可交互状态作为入口、依赖装载、客户端初始化和 Mixin 配置的集成证据；界面操作、收包与游戏内对战仍分别验证。
+
+B5-server-startup（2026-09-15）：用同一 Gradle 模型实际启动无界面 NeoForge 专用服务端，验收服务端分侧装载、公共入口、网络注册、Cobblemon 数据加载、Showdown 预热和世界就绪。上游模组的分侧 Mixin 与资源标签诊断单独记录，不把其无害日志归为本项目故障；真实玩家连接和远端对战服务交互继续保留为后续集成项。
