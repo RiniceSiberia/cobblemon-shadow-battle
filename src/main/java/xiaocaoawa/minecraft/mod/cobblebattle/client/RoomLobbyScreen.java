@@ -8,6 +8,9 @@ import com.cobblemon.mod.common.pokemon.RenderablePokemon;
 import com.cobblemon.mod.common.pokemon.Species;
 import com.cobblemon.mod.common.util.math.QuaternionUtilsKt;
 import dev.architectury.networking.NetworkManager;
+import io.github.rinicesiberia.shadowbattle.client.RoomCreationOptions;
+import io.github.rinicesiberia.shadowbattle.client.RoomCreationRequest;
+import io.github.rinicesiberia.shadowbattle.client.RoomLobbyRules;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,9 +87,6 @@ public final class RoomLobbyScreen extends Screen {
    private static final int FORM_EDGE = -1996488705;
    private static final int DIM = -1728053248;
    private static final int REFRESH_TICKS = 100;
-   private static final List<String> TYPES = List.of("singles", "doubles", "triples");
-   private static final List<Integer> LEVELS = List.of(-1, 50, 100);
-   private static final List<Integer> PICKS = List.of(6, 3, 4);
    private static final int ROW_NAME = 0;
    private static final int ROW_TYPE = 1;
    private static final int ROW_PICK = 2;
@@ -107,12 +107,7 @@ public final class RoomLobbyScreen extends Screen {
    private EditBox nameBox;
    private EditBox passwordBox;
    private EditBox codeBox;
-   private int type;
-   private int level;
-   private int pick;
-   private boolean fullHeal = true;
-   private boolean hostEngine;
-   private boolean legality = true;
+   private final RoomCreationOptions creationOptions = new RoomCreationOptions();
    private int formX;
    private int formY;
 
@@ -120,12 +115,8 @@ public final class RoomLobbyScreen extends Screen {
       return 36 + 17 * index;
    }
 
-   private static String seatType(RoomListPayload.Room room) {
-      return room.fighting() ? "" : room.battleType();
-   }
-
    private int passwordRow() {
-      return this.hostEngine ? 7 : 6;
+      return this.creationOptions.passwordRow();
    }
 
    private int buttonY() {
@@ -401,29 +392,33 @@ public final class RoomLobbyScreen extends Screen {
          this.label(graphics, "cobblebattle.room.level", row(3));
          this.label(graphics, "cobblebattle.room.heal", row(4));
          this.label(graphics, "cobblebattle.room.engine", row(5));
-         if (this.hostEngine) {
+         if (this.creationOptions.hostEngine()) {
             this.label(graphics, "cobblebattle.room.legality", row(6));
          }
 
          this.label(graphics, "cobblebattle.room.password", row(this.passwordRow()));
-         this.picker(graphics, mouseX, mouseY, row(1), Component.translatable("cobblebattle.room.type." + TYPES.get(this.type)));
-         this.picker(graphics, mouseX, mouseY, row(2), Component.translatable("cobblebattle.room.pick_of", new Object[]{PICKS.get(this.pick)}));
+         this.picker(graphics, mouseX, mouseY, row(1), Component.translatable("cobblebattle.room.type." + this.creationOptions.battleType()));
+         this.picker(graphics, mouseX, mouseY, row(2), Component.translatable("cobblebattle.room.pick_of", new Object[]{this.creationOptions.pick()}));
          this.picker(
             graphics,
             mouseX,
             mouseY,
             row(3),
-            LEVELS.get(this.level) > 0
-               ? Component.translatable("cobblebattle.room.level_at", new Object[]{LEVELS.get(this.level)})
+            this.creationOptions.level() > 0
+               ? Component.translatable("cobblebattle.room.level_at", new Object[]{this.creationOptions.level()})
                : Component.translatable("cobblebattle.room.level_free")
          );
-         this.picker(graphics, mouseX, mouseY, row(4), Component.translatable(this.fullHeal ? "cobblebattle.room.heal_on" : "cobblebattle.room.heal_off"));
+         this.picker(graphics, mouseX, mouseY, row(4), Component.translatable(this.creationOptions.fullHeal() ? "cobblebattle.room.heal_on" : "cobblebattle.room.heal_off"));
          this.picker(
-            graphics, mouseX, mouseY, row(5), Component.translatable(this.hostEngine ? "cobblebattle.room.engine_host" : "cobblebattle.room.engine_server")
+            graphics, mouseX, mouseY, row(5), Component.translatable(this.creationOptions.hostEngine() ? "cobblebattle.room.engine_host" : "cobblebattle.room.engine_server")
          );
-         if (this.hostEngine) {
+         if (this.creationOptions.hostEngine()) {
             this.picker(
-               graphics, mouseX, mouseY, row(6), Component.translatable(this.legality ? "cobblebattle.room.legality_on" : "cobblebattle.room.legality_off")
+               graphics,
+               mouseX,
+               mouseY,
+               row(6),
+               Component.translatable(this.creationOptions.legality() ? "cobblebattle.room.legality_on" : "cobblebattle.room.legality_off")
             );
          }
       } else {
@@ -505,31 +500,35 @@ public final class RoomLobbyScreen extends Screen {
 
    private void submitForm() {
       if (this.form == RoomLobbyScreen.Form.CREATE) {
-         String name = this.nameBox.getValue().trim();
-         if (name.isEmpty()) {
-            name = this.defaultName();
-         }
-
+         RoomCreationRequest request = this.creationOptions.createRequest(this.nameBox.getValue(), this.passwordBox.getValue(), this.defaultName());
          send(
             new RoomActionPayload(
                "create",
                "",
-               name,
-               this.passwordBox.getValue().trim(),
-               TYPES.get(this.type),
-               LEVELS.get(this.level),
-               PICKS.get(this.pick),
-               this.fullHeal,
-               this.hostEngine,
-               this.legality,
+               request.getName(),
+               request.getPassword(),
+               request.getBattleType(),
+               request.getLevel(),
+               request.getPick(),
+               request.getFullHeal(),
+               request.getHostEngine(),
+               request.getLegality(),
                ""
             )
          );
       } else if (this.form == RoomLobbyScreen.Form.PASSWORD && this.locked != null) {
-         send(RoomActionPayload.join(this.locked.id(), this.passwordBox.getValue(), seatType(this.locked), this.locked.hostEngine(), this.locked.legality()));
+         send(
+            RoomActionPayload.join(
+               this.locked.id(),
+               this.passwordBox.getValue(),
+               RoomLobbyRules.seatType(this.locked.fighting(), this.locked.battleType()),
+               this.locked.hostEngine(),
+               this.locked.legality()
+            )
+         );
       } else if (this.form == RoomLobbyScreen.Form.INVITE) {
-         String code = this.codeBox.getValue().trim();
-         if (code.isEmpty()) {
+         String code = RoomLobbyRules.invitationCode(this.codeBox.getValue());
+         if (code == null) {
             return;
          }
 
@@ -602,7 +601,7 @@ public final class RoomLobbyScreen extends Screen {
                if (room.locked() && !room.mine()) {
                   this.openPassword(room);
                } else {
-                  send(RoomActionPayload.join(room.id(), "", seatType(room), room.hostEngine(), room.legality()));
+                  send(RoomActionPayload.join(room.id(), "", RoomLobbyRules.seatType(room.fighting(), room.battleType()), room.hostEngine(), room.legality()));
                }
 
                return true;
@@ -624,50 +623,50 @@ public final class RoomLobbyScreen extends Screen {
             int healY = this.formY + row(4);
             int engineY = this.formY + row(5);
             if (hit(mouseX, mouseY, left, typeY, 11, 13)) {
-               this.type = Math.floorMod(this.type - 1, TYPES.size());
+               this.creationOptions.cycleBattleType(-1);
                return true;
             }
 
             if (hit(mouseX, mouseY, right, typeY, 11, 13)) {
-               this.type = Math.floorMod(this.type + 1, TYPES.size());
+               this.creationOptions.cycleBattleType(1);
                return true;
             }
 
             if (hit(mouseX, mouseY, left, pickY, 11, 13)) {
-               this.pick = Math.floorMod(this.pick - 1, PICKS.size());
+               this.creationOptions.cyclePick(-1);
                return true;
             }
 
             if (hit(mouseX, mouseY, right, pickY, 11, 13)) {
-               this.pick = Math.floorMod(this.pick + 1, PICKS.size());
+               this.creationOptions.cyclePick(1);
                return true;
             }
 
             if (hit(mouseX, mouseY, left, levelY, 11, 13)) {
-               this.level = Math.floorMod(this.level - 1, LEVELS.size());
+               this.creationOptions.cycleLevel(-1);
                return true;
             }
 
             if (hit(mouseX, mouseY, right, levelY, 11, 13)) {
-               this.level = Math.floorMod(this.level + 1, LEVELS.size());
+               this.creationOptions.cycleLevel(1);
                return true;
             }
 
             if (hit(mouseX, mouseY, left, healY, 11, 13) || hit(mouseX, mouseY, right, healY, 11, 13)) {
-               this.fullHeal = !this.fullHeal;
+               this.creationOptions.toggleFullHeal();
                return true;
             }
 
             if (hit(mouseX, mouseY, left, engineY, 11, 13) || hit(mouseX, mouseY, right, engineY, 11, 13)) {
-               this.hostEngine = !this.hostEngine;
+               this.creationOptions.toggleHostEngine();
                this.applyForm();
                return true;
             }
 
-            if (this.hostEngine) {
+            if (this.creationOptions.hostEngine()) {
                int legalityY = this.formY + row(6);
                if (hit(mouseX, mouseY, left, legalityY, 11, 13) || hit(mouseX, mouseY, right, legalityY, 11, 13)) {
-                  this.legality = !this.legality;
+                  this.creationOptions.toggleLegality();
                   return true;
                }
             }

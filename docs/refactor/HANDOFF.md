@@ -1,6 +1,6 @@
 # 恢复入口
 
-当前完成 B5 双端启动、聊天输入、客户端设置、认证表单和队伍预览选择迁移，下一步继续房间大厅与房间内动作，再回到 B4 世界实体链路。Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0 / KotlinForForge 5.3.0。2026-09-15 使用 JDK 21 执行 `--offline clean build` 成功，9个任务全部执行，123项测试全部通过。实际客户端完成模组构造、Showdown启动与资源加载；专用服务端完成世界生成并报告 `Done`。IDEA使用同一Gradle模型，界面导入仍未人工确认。
+当前完成 B5 双端启动、聊天输入、客户端设置、认证表单、队伍预览和房间大厅创建规则迁移，下一步处理房间内动作，再回到 B4 世界实体链路。Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0 / KotlinForForge 5.3.0。2026-09-15 使用 JDK 21 执行 `--offline clean build` 成功，9个任务全部执行，128项测试全部通过。实际客户端完成模组构造、Showdown启动与资源加载；专用服务端完成世界生成并报告 `Done`。IDEA使用同一Gradle模型，界面导入仍未人工确认。
 
 业务源码基线为本地提交 2b4ea8d；本批次提交包含测试和构建。首次 Modrinth 下载 TLS 中断，通过缓存相同版本原件重试成功，项目不依赖 .deps 绝对路径。此前 tests 缺 Gson 依赖已修复。
 
@@ -85,3 +85,5 @@ B5-client-settings（2026-09-15）：新增 Kotlin `ClientSettingsStore` 并接�
 B5-auth-form（2026-09-15）：新增 Kotlin `AuthenticationFormRules` 和 `AuthenticationSubmission`，`AuthScreen`委托模式、翻译键、字段门控、验证码冷却及提交参数。新增7项分支契约；`AuthScreen`公开ABI与原JAR一致。JDK21离线clean build的9个任务全部执行，119项测试零失败，日志位于`D:/workspace/gradle-clean-b5-auth-form-119-20260915.log`。下一步按房间链路审查`RoomScreen`、`RoomLobbyScreen`与`TeamPreviewScreen`。
 
 B5-team-preview（2026-09-15）：新增 Kotlin `TeamPreviewSelectionState` 并接入 `TeamPreviewScreen`，覆盖插入顺序、重复移除、选择上限、关闭/截止/准备锁定、精确确认数量和倒计时取整。新增4项状态契约；`TeamPreviewScreen`公开ABI与原JAR一致。JDK21离线clean build的9个任务全部执行，123项测试零失败，日志位于`D:/workspace/gradle-clean-b5-team-preview-123-20260915.log`。下一步处理房间大厅表单和房间内动作。
+
+B5-room-lobby（2026-09-15）：新增 Kotlin `RoomCreationOptions`、`RoomCreationRequest` 和 `RoomLobbyRules` 并接入 `RoomLobbyScreen`。创建默认值、循环选项、开关、Java裁剪边界、空名称回退、邀请码与座位类型共5项契约通过；空邀请码保持表单打开、密码加入不裁剪的Java控制流不变。`RoomLobbyScreen`公开ABI与原JAR一致。JDK21离线clean build的9个任务全部执行，128项测试零失败，日志位于`D:/workspace/gradle-clean-b5-room-lobby-20260915.log`。下一步审查并迁移`RoomScreen`的邀请、开始冷却和离开动作。
