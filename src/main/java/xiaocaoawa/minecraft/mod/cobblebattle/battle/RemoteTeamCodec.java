@@ -27,6 +27,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import io.github.rinicesiberia.shadowbattle.battle.PackedTeamValueParsing;
+import io.github.rinicesiberia.shadowbattle.battle.PackedTeamDetails;
+import io.github.rinicesiberia.shadowbattle.battle.PackedTeamDetailsParser;
 import kotlin.Unit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,8 +123,9 @@ public final class RemoteTeamCodec {
             creature.setLevel(PackedTeamValueParsing.boundedInt(f[15], 1, 1, 100));
             creature.setGender(PackedTeamValueParsing.gender(f[12]));
             creature.setShiny("S".equals(f[14]));
+            PackedTeamDetails details = PackedTeamDetailsParser.parse(f);
             optional(slot, "nature", () -> {
-               Nature nature = f[10].isEmpty() ? null : Natures.getNature(f[10]);
+               Nature nature = details.getNatureName() == null ? null : Natures.getNature(details.getNatureName());
                if (nature != null) {
                   creature.setNature(nature);
                }
@@ -130,24 +133,23 @@ public final class RemoteTeamCodec {
             applyStats(creature, f[13], true, slot);
             applyStats(creature, f[11], false, slot);
             optional(slot, "ability", () -> {
-               AbilityTemplate ability = f[7].isEmpty() ? null : Abilities.get(f[7]);
+               AbilityTemplate ability = details.getAbilityName() == null ? null : Abilities.get(details.getAbilityName());
                if (ability != null) {
                   creature.updateAbility(ability.create(false, Priority.LOWEST));
                }
             });
-            applyMoves(creature, f[8], f[9], slot);
-            String[] misc = f[16].split(",", -1);
-            if (misc.length > 0 && !misc[0].isEmpty()) {
+            applyMoves(creature, details, slot);
+            if (details.getFriendship() != null) {
                optional(
                   slot,
                   "friendship",
-                  () -> creature.setFriendship(PackedTeamValueParsing.boundedInt(misc[0], creature.getFriendship(), 0, 255), true)
+                  () -> creature.setFriendship(details.getFriendship(), true)
                );
             }
 
-            if (misc.length > 5 && !misc[5].isEmpty()) {
+            if (details.getTeraName() != null) {
                optional(slot, "tera type", () -> {
-                  TeraType tera = teraType(misc[5]);
+                  TeraType tera = teraType(details.getTeraName());
                   if (tera != null) {
                      creature.setTeraType(tera);
                   }
@@ -202,22 +204,20 @@ public final class RemoteTeamCodec {
       }
    }
 
-   private static void applyMoves(Pokemon creature, String movesCsv, String ppCsv, int slot) {
-      if (!movesCsv.isEmpty()) {
-         String[] names = movesCsv.split(",", -1);
-         String[] pps = ppCsv.isEmpty() ? new String[0] : ppCsv.split(",", -1);
+   private static void applyMoves(Pokemon creature, PackedTeamDetails details, int slot) {
+      if (!details.getMoveNames().isEmpty()) {
          creature.getMoveSet().clear();
 
-         for (int i = 0; i < names.length && i < 4; i++) {
-            if (!names[i].isEmpty()) {
-               MoveTemplate template = Moves.getByName(names[i]);
+         for (int i = 0; i < details.getMoveNames().size() && i < 4; i++) {
+            String name = details.getMoveNames().get(i);
+            if (!name.isEmpty()) {
+               MoveTemplate template = Moves.getByName(name);
                if (template == null) {
-                  LOGGER.warn("Remote team slot {} has unknown move '{}'", slot, names[i]);
+                  LOGGER.warn("Remote team slot {} has unknown move '{}'", slot, name);
                } else {
                   Move move = template.create();
-                  if (i < pps.length && pps[i].contains("/")) {
-                     String[] pair = pps[i].split("/", 2);
-                     move.setCurrentPp(PackedTeamValueParsing.boundedInt(pair[0], move.getCurrentPp(), 0, 99));
+                  if (i < details.getMovePp().size() && details.getMovePp().get(i) != null) {
+                     move.setCurrentPp(details.getMovePp().get(i));
                   }
 
                   creature.getMoveSet().setMove(i, move);

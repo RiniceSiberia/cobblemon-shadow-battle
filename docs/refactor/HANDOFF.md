@@ -97,3 +97,6 @@ B4-packed-team-values（2026-09-15）：新增 Kotlin `PackedTeamValueParsing` �
 B4-spectator-format（2026-09-15）：`SpectatorFactory` 删除重复格式解析，改用 Kotlin `BattleFormatResolver.resolveSpectator`。新增2项契约固定观战外层格式回退和内层类型优先，普通镜像3项格式契约继续通过。JDK21离线clean build的9个任务全部执行，142项测试零失败，日志位于`D:/workspace/gradle-clean-b4-spectator-format-20260915.log`。下一步继续观战实体装配、失败清理与远端队伍对象验证。
 
 台账核对（2026-09-15）：逐项检查 `FILES.csv` 的路径存在性，137个缺失路径均为已记录删除或Java到Kotlin迁移关系。纠正 `MirrorTeardown.java` 和 `CobbleBattleNeoForge.java` 两个旧路径仍标待验证的过期状态；对应 Kotlin 实现继续分别承载实体集成风险和已完成的双端启动证据。当前台账348项、无重复路径、状态值全部合法。
+
+B4-packed-team-details（2026-09-15）：`RemoteTeamCodec` 使用 Kotlin `PackedTeamDetailsParser` 读取固定字段。性质和能力为空时保持空值；招式名称最多四项并过滤空项；PP 保留位置，仅带 `/` 且可解析的当前值进入对象装配，异常值沿用原对象默认；亲密度限制在0至255，太晶字段保留原文本交给 Java 名称/标识解析。新增3项契约。JDK21离线clean build的9个任务全部执行，145项测试、0失败，日志位于`D:/workspace/gradle-clean-b4-packed-details-20260915.log`。物种/形态索引、Cobblemon能力与招式注册、太晶名称和实体标记待真实数据验证。
+下一步：审查物种/形态索引、注册对象创建和太晶名称分支。

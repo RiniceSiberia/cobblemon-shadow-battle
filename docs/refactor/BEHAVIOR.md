@@ -109,3 +109,5 @@ B4-team-preview-sessions：`TeamPreviews` 的玩家会话表委托给 Kotlin `Te
 B4-packed-team-values：`RemoteTeamCodec` 的基础标量解析委托给 Kotlin `PackedTeamValueParsing`。整数先按 Java `trim` 范围裁剪，解析失败沿用调用处回退值，解析成功限制在指定上下界；UUID合法时保留，非法时返回空并由Java入口记录原警告；性别只接受协议大写 M/F，其余均映射 GENDERLESS。等级、亲密度、当前HP、IV、EV和招式PP共用有界整数入口。新增4项边界契约。JDK21离线clean build的9个任务全部执行，140项测试、0失败；`RemoteTeamCodec`公开签名与原JAR一致。物种/形态、能力、招式、太晶属性和实体标记待真实数据验证。
 
 B4-spectator-format：`SpectatorFactory` 删除重复的 Java 规则解析并调用 Kotlin `BattleFormatResolver.resolveSpectator`。观战 `formatJson` 缺少 `battleType` 时沿用外层 `format`，存在内层类型时以内层为准；规则去重、空规则回退和 `adjustLevel` 继续复用已验证实现。新增2项观战分支契约，原3项普通镜像格式契约继续通过。JDK21离线clean build的9个任务全部执行，142项测试、0失败。观战实体装配、数据包下发和最后观战者离开后的回收待游戏内验证。
+
+B4-packed-team-details（2026-09-15）：`RemoteTeamCodec` 使用 Kotlin `PackedTeamDetailsParser` 读取固定字段。性质和能力为空时保持空值；招式名称最多四项并过滤空项；PP 保留位置，仅带 `/` 且可解析的当前值进入对象装配，异常值沿用原对象默认；亲密度限制在0至255，太晶字段保留原文本交给 Java 名称/标识解析。新增3项契约。JDK21离线clean build的9个任务全部执行，145项测试、0失败，日志位于`D:/workspace/gradle-clean-b4-packed-details-20260915.log`。物种/形态索引、Cobblemon能力与招式注册、太晶名称和实体标记待真实数据验证。
