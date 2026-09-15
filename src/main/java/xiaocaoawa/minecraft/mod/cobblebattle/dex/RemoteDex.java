@@ -21,8 +21,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -37,9 +35,7 @@ public final class RemoteDex {
    private static final Gson GSON = new Gson();
    private static final Path CACHE_FILE = Paths.get("config", "cobblebattle-dex.json");
    private static final String[] STAT_KEYS = new String[]{"hp", "atk", "def", "spa", "spd", "spe"};
-   private volatile Map<String, RemoteDex.Entry> speciesTemplate = Collections.emptyMap();
-   private volatile String digest = null;
-   private volatile boolean ready = false;
+   private final RemoteDexSnapshotState snapshotState = new RemoteDexSnapshotState();
    private volatile boolean strictBaseStats = true;
    private volatile boolean strictAbilities = false;
    private volatile boolean strictMoves = false;
@@ -51,27 +47,27 @@ public final class RemoteDex {
    );
 
    public boolean isReady() {
-      return this.ready;
+      return this.snapshotState.isReady();
    }
 
    public String digest() {
-      return this.digest;
+      return this.snapshotState.digest();
    }
 
    public String cachedDigest() {
-      return this.speciesTemplate.isEmpty() ? null : this.digest;
+      return this.snapshotState.cachedDigest();
    }
 
    public int size() {
-      return this.speciesTemplate.size();
+      return this.snapshotState.size();
    }
 
    public RemoteDex.Entry get(String speciesTemplateId) {
-      return this.speciesTemplate.get(speciesTemplateId);
+      return this.snapshotState.get(speciesTemplateId);
    }
 
    public Collection<RemoteDex.Entry> entries() {
-      return this.speciesTemplate.values();
+      return this.snapshotState.entries();
    }
 
    public void loadFromDisk() {
@@ -83,73 +79,37 @@ public final class RemoteDex {
             }
 
             this.adopt(parsed.getAsJsonObject());
-            LOGGER.info("Restored {} cached species from {} (digest {})", new Object[]{this.speciesTemplate.size(), CACHE_FILE, this.shortDigest()});
+            LOGGER.info("Restored {} cached species from {} (digest {})", new Object[]{this.snapshotState.size(), CACHE_FILE, this.snapshotState.shortDigest()});
          } catch (Exception failure) {
             LOGGER.warn("Could not read {} ({}); the dex will be fetched again", CACHE_FILE, failure.getMessage());
-            this.speciesTemplate = Collections.emptyMap();
-            this.digest = null;
+            this.snapshotState.discardCachedData();
          }
       }
    }
 
    public void accept(JsonObject snapshot) {
       if (snapshot.has("unchanged") && snapshot.get("unchanged").getAsBoolean()) {
-         this.ready = !this.speciesTemplate.isEmpty();
-         if (this.ready) {
-            LOGGER.info("The battle host confirmed our cached dex ({} species, digest {})", this.speciesTemplate.size(), this.shortDigest());
+         if (this.snapshotState.confirmUnchanged()) {
+            LOGGER.info("The battle host confirmed our cached dex ({} species, digest {})", this.snapshotState.size(), this.snapshotState.shortDigest());
          } else {
             LOGGER.warn("The battle host says our dex is unchanged, but nothing is cached");
          }
       } else {
          this.adopt(snapshot);
-         this.ready = true;
-         LOGGER.info("Cached {} species from the battle host (digest {})", this.speciesTemplate.size(), this.shortDigest());
+         this.snapshotState.markAccepted();
+         LOGGER.info("Cached {} species from the battle host (digest {})", this.snapshotState.size(), this.snapshotState.shortDigest());
          this.saveToDisk();
       }
    }
 
    private void adopt(JsonObject snapshot) {
-      JsonArray array = snapshot.getAsJsonArray("species");
-      Map<String, RemoteDex.Entry> parsed = new HashMap<>(array.size() * 2);
-
-      for (JsonElement element : array) {
-         JsonObject object = element.getAsJsonObject();
-         JsonObject stats = object.getAsJsonObject("baseStats");
-         Map<String, Integer> baseStats = new HashMap<>(8);
-
-         for (String key : STAT_KEYS) {
-            baseStats.put(key, stats.get(key).getAsInt());
-         }
-
-         String id = object.get("id").getAsString();
-         parsed.put(id, new RemoteDex.Entry(id, Collections.unmodifiableMap(baseStats)));
-      }
-
-      this.speciesTemplate = Collections.unmodifiableMap(parsed);
-      this.digest = snapshot.has("digest") ? snapshot.get("digest").getAsString() : null;
+      this.snapshotState.adopt(snapshot);
    }
 
    private void saveToDisk() {
-      if (this.digest != null && !this.speciesTemplate.isEmpty()) {
+      JsonObject document = this.snapshotState.serializableDocument();
+      if (document != null) {
          try {
-            JsonArray array = new JsonArray();
-
-            for (RemoteDex.Entry entry : this.speciesTemplate.values()) {
-               JsonObject stats = new JsonObject();
-
-               for (String key : STAT_KEYS) {
-                  stats.addProperty(key, entry.baseStats().getOrDefault(key, 0));
-               }
-
-               JsonObject object = new JsonObject();
-               object.addProperty("id", entry.id());
-               object.add("baseStats", stats);
-               array.add(object);
-            }
-
-            JsonObject document = new JsonObject();
-            document.addProperty("digest", this.digest);
-            document.add("species", array);
             Path parent = CACHE_FILE.getParent();
             if (parent != null) {
                Files.createDirectories(parent);
@@ -165,19 +125,13 @@ public final class RemoteDex {
    }
 
    public void suspend(String reason) {
-      this.ready = false;
-      LOGGER.info("Dex cache suspended: {} ({} species kept for the next handshake)", reason, this.speciesTemplate.size());
+      this.snapshotState.suspend();
+      LOGGER.info("Dex cache suspended: {} ({} species kept for the next handshake)", reason, this.snapshotState.size());
    }
 
    public void invalidate(String reason) {
-      this.ready = false;
-      this.speciesTemplate = Collections.emptyMap();
-      this.digest = null;
+      this.snapshotState.invalidate();
       LOGGER.info("Dex cache invalidated: {}", reason);
-   }
-
-   private String shortDigest() {
-      return this.digest == null ? "?" : this.digest.substring(0, Math.min(12, this.digest.length()));
    }
 
    public void setStrictBaseStats(boolean strict) {
@@ -199,7 +153,7 @@ public final class RemoteDex {
    public List<RemoteDex.Rejection> check(Pokemon creature, int slot, boolean dexAuthority) {
       String speciesTemplateId = creature.showdownId();
       Component name = creature.getSpecies().getTranslatedName();
-      RemoteDex.Entry entry = this.speciesTemplate.get(speciesTemplateId);
+      RemoteDex.Entry entry = this.snapshotState.get(speciesTemplateId);
       if (entry == null && dexAuthority) {
          return List.of(new RemoteDex.Rejection(slot, name, speciesTemplateId, RemoteDex.Rejection.Kind.UNKNOWN_SPECIES, Component.literal(speciesTemplateId)));
       } else {
