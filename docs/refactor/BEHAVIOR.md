@@ -97,3 +97,5 @@ B5-chat-composer：`ChatInput` 的可变草稿和编辑状态委托给 Kotlin `C
 B5-client-settings：`ClientSettings` 的加载标记和聊天HUD开关委托给 Kotlin `ClientSettingsStore`。首次访问只请求一次路径；缺少文件保留开启默认值；合法 `chatHud` 覆盖默认值；损坏文件记录一次读取诊断且同实例不重试；设置开关先更新内存，再创建父目录并写出单字段JSON；保存失败保留内存值并记录诊断。新增5项文件契约。JDK21离线clean build的9个任务全部执行，112项测试、0失败；`ClientSettings`公开签名与原JAR一致。设置界面点击和重新启动客户端后的实际读取待交互验证。
 
 B5-auth-form：`AuthScreen` 的初始模式、标题/提交/切换翻译键、邮箱字段要求、模式循环、按钮可用性、验证码倒计时和请求参数委托给 Kotlin `AuthenticationFormRules`。CODE_REQUEST初始转REGISTER；禁用邮箱时BIND_EMAIL回LOGIN；邮箱启用时LOGIN→REGISTER→BIND_EMAIL循环；密码只要求非空且保持原值，标识、邮箱、验证码沿用Java `trim`；注册密码不匹配不生成请求；绑定验证码请求保留固定账户标记。新增7项规则契约。JDK21离线clean build的9个任务全部执行，119项测试、0失败；`AuthScreen`公开签名与原JAR一致。控件焦点、响应后的关闭/清空和远端认证待客户端交互验证。
+
+B5-team-preview：`TeamPreviewScreen` 的已选槽位列表委托给 Kotlin `TeamPreviewSelectionState`。首次点击按顺序添加，重复点击移除；达到上限后新槽位忽略但点击仍由界面消费；截止时刻采用 `now >= deadline`，关闭原因或本方已准备均锁定；确认要求未锁定且选择数精确等于要求；倒计时毫秒向上取整。新增4项状态契约。JDK21离线clean build的9个任务全部执行，123项测试、0失败；`TeamPreviewScreen`公开签名与原JAR一致。真实鼠标命中、TeamPickPayload下发和双方准备后启动待联调。

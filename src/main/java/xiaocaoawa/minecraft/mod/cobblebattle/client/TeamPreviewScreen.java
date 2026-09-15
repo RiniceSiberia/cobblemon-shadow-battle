@@ -10,6 +10,7 @@ import com.cobblemon.mod.common.pokemon.RenderablePokemon;
 import com.cobblemon.mod.common.pokemon.Species;
 import com.cobblemon.mod.common.util.math.QuaternionUtilsKt;
 import dev.architectury.networking.NetworkManager;
+import io.github.rinicesiberia.shadowbattle.client.TeamPreviewSelectionState;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -90,7 +91,7 @@ public final class TeamPreviewScreen extends Screen {
    private static final int FILL_OFF = 872415231;
    private static final int URGENT = -30107;
    private TeamPreviewPayload preview;
-   private final List<Integer> picks = new ArrayList<>();
+   private final TeamPreviewSelectionState selection = new TeamPreviewSelectionState();
    private final Map<String, RenderablePokemon> models = new HashMap<>();
    private final Map<String, FloatingState> poses = new HashMap<>();
    private PlayerPortrait theirPortrait;
@@ -124,7 +125,7 @@ public final class TeamPreviewScreen extends Screen {
    }
 
    private boolean over() {
-      return !this.preview.closed().isEmpty() || System.currentTimeMillis() >= this.preview.deadlineMs();
+      return this.selection.isOver(this.preview.closed(), this.preview.deadlineMs(), System.currentTimeMillis());
    }
 
    public void tick() {
@@ -160,10 +161,10 @@ public final class TeamPreviewScreen extends Screen {
       Ui.draw(graphics, this.font, Component.translatable("cobblebattle.preview.title"), this.originX + 24, this.originY + 15, -1, true);
       Component counts = (Component)(this.preview.lead() > 1
          ? Ui.join(
-            Component.translatable("cobblebattle.preview.count", new Object[]{this.picks.size(), this.preview.pick()}),
+            Component.translatable("cobblebattle.preview.count", new Object[]{this.selection.count(), this.preview.pick()}),
             Component.translatable("cobblebattle.preview.lead", new Object[]{this.preview.lead()})
          )
-         : Component.translatable("cobblebattle.preview.count", new Object[]{this.picks.size(), this.preview.pick()}));
+         : Component.translatable("cobblebattle.preview.count", new Object[]{this.selection.count(), this.preview.pick()}));
       Component right = (Component)(this.over() && !this.preview.closed().isEmpty()
          ? Component.translatable("cobblebattle.preview.over")
          : Ui.join(counts, this.clock()));
@@ -171,8 +172,7 @@ public final class TeamPreviewScreen extends Screen {
    }
 
    private Component clock() {
-      long left = Math.max(0L, this.preview.deadlineMs() - System.currentTimeMillis());
-      long seconds = (left + 999L) / 1000L;
+      long seconds = this.selection.remainingSeconds(this.preview.deadlineMs(), System.currentTimeMillis());
       return Component.literal(String.format("%d:%02d", seconds / 60L, seconds % 60L));
    }
 
@@ -181,7 +181,7 @@ public final class TeamPreviewScreen extends Screen {
          int px = this.originX + x;
          int py = this.originY + 30 + i * 24;
          TeamPreviewPayload.Slot slot = i < roster.size() ? roster.get(i) : null;
-         int order = mine ? this.picks.indexOf(i) : -1;
+         int order = mine ? this.selection.orderOf(i) : -1;
          boolean hover = slot != null && mine && !this.locked() && mouseX >= px && mouseX < px + 72 && mouseY >= py && mouseY < py + 22;
          int fill;
          if (slot == null) {
@@ -322,11 +322,13 @@ public final class TeamPreviewScreen extends Screen {
    }
 
    private boolean locked() {
-      return this.preview.mineReady() || this.over();
+      return this.selection.isLocked(this.preview.mineReady(), this.preview.closed(), this.preview.deadlineMs(), System.currentTimeMillis());
    }
 
    private boolean confirmable() {
-      return !this.locked() && this.picks.size() == this.preview.pick();
+      return this.selection.canConfirm(
+         this.preview.pick(), this.preview.mineReady(), this.preview.closed(), this.preview.deadlineMs(), System.currentTimeMillis()
+      );
    }
 
    private void drawConfirm(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -344,8 +346,8 @@ public final class TeamPreviewScreen extends Screen {
          label = Component.translatable("cobblebattle.preview.closed");
       } else if (this.preview.mineReady()) {
          label = Component.translatable(this.preview.theirsReady() ? "cobblebattle.preview.starting" : "cobblebattle.preview.waiting");
-      } else if (this.picks.size() < this.preview.pick()) {
-         label = Component.translatable("cobblebattle.preview.pick_more", new Object[]{this.preview.pick() - this.picks.size()});
+      } else if (this.selection.count() < this.preview.pick()) {
+         label = Component.translatable("cobblebattle.preview.pick_more", new Object[]{this.preview.pick() - this.selection.count()});
       } else {
          label = Component.translatable("cobblebattle.preview.confirm");
       }
@@ -419,11 +421,7 @@ public final class TeamPreviewScreen extends Screen {
    }
 
    private void toggle(int slot) {
-      if (!this.picks.remove(Integer.valueOf(slot))) {
-         if (this.picks.size() < this.preview.pick()) {
-            this.picks.add(slot);
-         }
-      }
+      this.selection.toggle(slot, this.preview.pick());
    }
 
    private void send() {
@@ -441,7 +439,7 @@ public final class TeamPreviewScreen extends Screen {
          this.preview.theirsReady(),
          this.preview.closed()
       );
-      NetworkManager.sendToServer(new TeamPickPayload(this.preview.battleId(), List.copyOf(this.picks)));
+      NetworkManager.sendToServer(new TeamPickPayload(this.preview.battleId(), this.selection.snapshot()));
    }
 
    private static String key(TeamPreviewPayload.Slot slot) {
