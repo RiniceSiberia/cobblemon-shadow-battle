@@ -1,6 +1,6 @@
 # 恢复入口
 
-当前推进 B4 对战状态与 B5 Mixin/引导。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-15 使用 JDK 21 执行 `--offline test` 成功，75项测试全部通过；最近一次`clean build`为71项且9个任务全部执行。IDEA使用相同Gradle模型，测试编译类路径已补齐，实际界面导入尚未测试。
+当前推进 B4 对战状态与 B5 Mixin/引导。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-15 使用 JDK 21 执行 `--offline test` 成功，76项测试全部通过；最近一次`clean build`为71项且9个任务全部执行。IDEA使用相同Gradle模型，测试编译类路径已补齐，实际界面导入尚未测试。
 
 业务源码基线为本地提交 2b4ea8d；本批次提交包含测试和构建。首次 Modrinth 下载 TLS 中断，通过缓存相同版本原件重试成功，项目不依赖 .deps 绝对路径。此前 tests 缺 Gson 依赖已修复。
 
@@ -59,3 +59,5 @@ B3-B4-clean-71（2026-09-15）：JDK21离线clean build成功，9个任务全部
 B6-residue-cleanup（2026-09-15）：删除失效的`build.ps1`、旧`.iml`、反编译摘要/日志/导入/参数文件及无入站依赖的合成`PlatformMethods`。删除后JDK21离线clean build的9个任务全部执行，71项测试通过，发布JAR无`architectury_inject_*`条目；日志位于`D:/workspace/gradle-clean-b6-residue-71-20260915.log`。当前工作树待提交；下一步继续B4实体装配和mixin未触发分支，随后审查B5客户端、命令与Mixin。
 
 B5-mixin-contract（2026-09-15）：Mixin配置与原JAR一致，6个配置类存在；新增3项元数据契约覆盖13个Inject目标和3个图鉴绘制调用目标。新增Kotlin `BattleIdentifierParsing`供服务与Showdown输出注入共用，1项UUID边界测试通过。JDK21离线全量75项测试通过，两个受影响公开类签名一致；日志位于`D:/workspace/gradle-b5-mixin-contract.log`。实际客户端/服务端Mixin应用仍待验证。下一步审查NeoForge引导和客户端接收器注册，再执行clean build。
+
+B5-neoforge-entry（2026-09-15）：NeoForge入口迁移为同包同名Kotlin类，`@Mod`值、公开零参数构造与初始化顺序保持。新增1项入口契约，全量76项测试通过；归一化`javap -public`签名与原JAR一致，日志位于`D:/workspace/gradle-b5-neoforge-entry.log`。FML实际实例化及客户端/服务端分侧加载仍待验证。下一步逐组迁移客户端接收器注册，先固定7个handler的包类型和主线程入队行为。
