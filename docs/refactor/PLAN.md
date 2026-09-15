@@ -47,3 +47,5 @@ B4-dex-snapshot（2026-09-15）：远端图鉴的快照解析、摘要、就绪�
 B5-client-dex-state（2026-09-15）：客户端图鉴消息的摘要匹配、六项能力值索引、形态回退和最近排行迁入 Kotlin；公开 `ServerDex` 保留网络请求、Cobblemon 全局图鉴替换、反射填充和 GUI 生命周期。
 
 B4-dex-legality（2026-09-15）：Showdown 标识规范化、能力和招式集合判断、非负限制及 EV/IV 上限边界迁入 Kotlin；`RemoteDex` 保持原拒绝类型、顺序和消息构造。
+
+B5-client-startup（2026-09-15）：补齐开发及 IDEA 运行环境所需的 KotlinForForge 5.3.0，并按 ModDevGradle 1.21.1 的隔离类路径规则将 SnakeYAML 加入游戏运行类路径。保持发布 JAR 只打入并重定位 SnakeYAML；配置模板值不变，模板差异日志隐藏受保护值。以实际客户端进入稳定可交互状态作为入口、依赖装载、客户端初始化和 Mixin 配置的集成证据；界面操作、收包与游戏内对战仍分别验证。

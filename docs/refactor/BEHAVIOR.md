@@ -14,7 +14,7 @@
 | 图鉴 | RemoteDex / ServerDex | 远端数据、同步、缓存及错误处理 | 快照、客户端索引及合法性纯规则共13项契约通过；真实Pokémon和客户端全局图鉴替换待集成验证 | 进行中 |
 | UI及命令 | client/* / command/* / lang/* | 权限、显示、输入、翻译、数据请求、副作用 | 客户端接收器和七个命令执行链已迁入Kotlin；界面切换、参数选择和命令树11项契约通过，其余界面待审查 | 进行中 |
 | 公开API | api/* | 类名、record访问器、事件类型、静态字段及JVM签名 | 原JAR 123个公开class与当前发布包逐项 `javap -public` 一致；事件运行待验证 | 待验证 |
-| Mixin及引导 | mixin/* / neoforge/* / CobbleBattle | 注入目标/描述符、客户端隔离、注册顺序 | 配置、类清单、13个Inject目标及3个绘制调用描述符契约通过；实际应用待验证 | 待验证 |
+| Mixin及引导 | mixin/* / neoforge/* / CobbleBattle | 注入目标/描述符、客户端隔离、注册顺序 | 配置、类清单、13个Inject目标及3个绘制调用描述符契约通过；NeoForge客户端实际完成模组构造和资源加载 | 待验证 |
 
 测试只能在实际执行后填写通过，后续改动影响调用链时需重新执行。生产服务器身份的随机生成不能因测试可复现而改成固定 seed；测试输入使用固定值。
 
@@ -87,3 +87,5 @@ B4-dex-snapshot：`RemoteDex` 的物种快照表、摘要和就绪状态委托�
 B5-client-dex-state：`ServerDex` 的服务端消息摘要、能力值索引和最近排行委托给 Kotlin `ServerDexSnapshotState`。完整快照按六项 Stat 建索引；unchanged 在缓存为空或摘要不符时清空摘要并请求完整快照；形态无数据时回退物种。新增4项状态测试。JDK21离线clean build的9个任务全部执行，96项测试、0失败；`ServerDex`公开签名与原JAR一致。Dexes全局替换、反射记录填充和GUI关闭恢复待客户端验证。
 
 B4-dex-legality：`RemoteDex` 的 Showdown ID、能力许可、招式集合和数值上限判断委托给 Kotlin `DexLegalityRules`。名称继续按ROOT小写并剔除非字母数字；空能力、noability、空合法招式集合及零上限保持原放行行为；边界等于上限合法。新增4项纯规则测试。JDK21离线clean build的9个任务全部执行，100项测试、0失败；`RemoteDex`公开签名与原JAR一致。真实Pokémon对象、拒绝文本和队伍顺序待游戏内验证。
+
+B5-client-startup：首次执行 `runClient` 依次发现开发运行时缺少 KotlinForForge 和 SnakeYAML。KotlinForForge 5.3.0 作为运行模组加入，SnakeYAML 同时保留发布包重定位配置并加入 ModDevGradle `additionalRuntimeClasspath`。修复后实际启动完成 NeoForge、KotlinForForge、Cobblemon、CobbleBattle 构造，Showdown 启动，资源全部加载且进程保持稳定；Cobblemon 自身的可选 Adorn Mixin、资源路径和缺失音效警告未影响启动。模板差异日志新增1项契约，确认受保护字段值不出现在消息中。JDK21离线clean build的9个任务全部执行，101项测试、0失败。客户端收包、具体界面、世界内Mixin回调和专用服务端仍待验证。

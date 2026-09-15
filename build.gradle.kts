@@ -36,9 +36,11 @@ configurations.implementation { extendsFrom(bundledLibraries) }
 
 dependencies {
     bundledLibraries("org.yaml:snakeyaml:2.6")
+    add("additionalRuntimeClasspath", "org.yaml:snakeyaml:2.6")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.slf4j:slf4j-api:2.0.9")
     implementation("dev.architectury:architectury-neoforge:13.0.8")
+    runtimeOnly("maven.modrinth:kotlin-for-forge:OsLZdICe")
     implementation("maven.modrinth:cobblemon:jeZJOCEb")
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")

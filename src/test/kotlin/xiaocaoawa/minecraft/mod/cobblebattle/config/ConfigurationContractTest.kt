@@ -4,6 +4,12 @@ import com.google.gson.JsonParser
 import io.github.rinicesiberia.shadowbattle.configuration.ConfigurationDocument
 import io.github.rinicesiberia.shadowbattle.configuration.ConfigurationRepository
 import io.github.rinicesiberia.shadowbattle.configuration.ConfigurationValidation
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.core.LogEvent
+import org.apache.logging.log4j.core.Logger
+import org.apache.logging.log4j.core.appender.AbstractAppender
+import org.apache.logging.log4j.core.config.Property
+import org.apache.logging.log4j.core.layout.PatternLayout
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
@@ -50,6 +56,38 @@ class ConfigurationContractTest {
         val bundled = ConfigurationDocument.decode(template)
         for (key in defaults.keySet() - setOf("serverHost", "authToken")) assertEquals(defaults[key], bundled[key], key)
         for (key in setOf("serverHost", "authToken")) assertTrue(bundled.has(key))
+    }
+
+    @Test
+    fun `模板差异日志隐藏受保护值`() {
+        val hostMarker = "test-host-marker"
+        val tokenMarker = "test-token-marker"
+        val messages = mutableListOf<String>()
+        val appender = object : AbstractAppender(
+            "configuration-contract",
+            null,
+            PatternLayout.createDefaultLayout(),
+            false,
+            Property.EMPTY_ARRAY,
+        ) {
+            override fun append(event: LogEvent) {
+                messages += event.message.formattedMessage
+            }
+        }
+        val logger = LogManager.getLogger("CobbleBattle/Config") as Logger
+        appender.start()
+        logger.addAppender(appender)
+        try {
+            val method = ConfigurationRepository::class.java.getDeclaredMethod("inspectTemplate", String::class.java)
+            assertTrue(method.trySetAccessible())
+            method.invoke(ConfigurationRepository, "serverHost: $hostMarker\nauthToken: $tokenMarker")
+        } finally {
+            logger.removeAppender(appender)
+            appender.stop()
+        }
+        assertTrue(messages.any { it.contains("serverHost") })
+        assertTrue(messages.any { it.contains("authToken") })
+        assertFalse(messages.any { it.contains(hostMarker) || it.contains(tokenMarker) })
     }
 
     @Test

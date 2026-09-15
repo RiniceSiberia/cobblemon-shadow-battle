@@ -12,6 +12,7 @@ object ConfigurationRepository {
     @JvmField val location: Path = Path.of("config", "cobblebattle.yml")
     private val logger = LoggerFactory.getLogger("CobbleBattle/Config")
     private val json = GsonBuilder().create()
+    private val protectedTemplateKeys = setOf("serverHost", "authToken")
 
     @JvmStatic
     fun loadOrDefault(): CobbleBattleConfig {
@@ -74,7 +75,9 @@ object ConfigurationRepository {
             val expected = defaults[key]
             val actual = bundled[key]
             if (actual == null) logger.warn("Bundled {} is missing '{}'", "cobblebattle.yml", key)
-            else if (expected != actual) logger.warn(
+            else if (expected != actual && key in protectedTemplateKeys) logger.warn(
+                "Bundled {} overrides protected setting '{}'", "cobblebattle.yml", key
+            ) else if (expected != actual) logger.warn(
                 "Bundled {} has {} = {} but the built-in default is {}", "cobblebattle.yml", key, actual, expected
             )
         }

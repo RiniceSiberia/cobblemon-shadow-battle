@@ -1,12 +1,12 @@
 # 恢复入口
 
-当前推进 B4/B5 图鉴与客户端审查。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-15 使用 JDK 21 执行 `--offline clean build` 成功，9个任务全部执行，100项测试全部通过。IDEA使用相同Gradle模型，测试编译类路径已补齐，实际界面导入尚未测试。
+当前完成 B5 客户端实际启动批次，下一步执行 NeoForge 专用服务端启动，再回到客户端界面与 B4 世界实体链路。Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0 / KotlinForForge 5.3.0。2026-09-15 使用 JDK 21 执行 `--offline clean build` 成功，9个任务全部执行，101项测试全部通过。实际客户端已完成模组构造、Showdown启动与资源加载；IDEA使用同一Gradle模型，界面导入仍未人工确认。
 
 业务源码基线为本地提交 2b4ea8d；本批次提交包含测试和构建。首次 Modrinth 下载 TLS 中断，通过缓存相同版本原件重试成功，项目不依赖 .deps 绝对路径。此前 tests 缺 Gson 依赖已修复。
 
 恢复时先读 PLAN.md、FILES.csv、BEHAVIOR.md，再核对 git status/diff/log 和验证版本。构建命令：JDK21 下 ./gradlew.bat build。当前网络需要代理可在命令行临时传 -Dhttps.proxyHost=localhost -Dhttps.proxyPort=7897，不写入项目配置。
 
-下一步：将配置解析、文件读写和身份缓存迁移至 Kotlin，保持原配置键/错误规则，重跑配置与完整测试后立刻更新记录；之后处理传输与认证。尚未推送，也未清理。用户要求暂保留部署地址和凭证；公开发布前仍需处理这部分，禁止把当前带凭证的本地历史直接推送。
+当前具体下一步：运行 `./gradlew.bat --offline runServer`，确认专用服务端分侧装载、网络注册和启动完成；若 EULA 阻止启动，只在忽略的 `run` 目录写本地测试文件。随后继续界面交互、世界实体和远端服务链路。尚未推送，也未最终清理。用户要求暂保留部署配置；公开发布前必须从可推送历史中移除，日志不得打印其值。
 
 B2已完成：配置/身份迁移及16项测试通过，见 b2-tests.json。当前下一步B3：传输及认证业务。SnakeYAML源码仍在，计划替换为锁定2.6版本并隔离打包。
 
@@ -73,3 +73,5 @@ B4-dex-snapshot（2026-09-15）：新增Kotlin `RemoteDexSnapshotState`，`Remot
 B5-client-dex-state（2026-09-15）：新增Kotlin `ServerDexSnapshotState`，`ServerDex`委托摘要、能力值索引、形态回退和最近排行。新增4项测试；JDK21离线clean build成功，9个任务全部执行，96项测试零失败，`ServerDex`公开签名与原JAR一致。日志位于`D:/workspace/gradle-clean-b5-client-dex-96-20260915.log`。下一步处理`RemoteDex`纯规则判断及其余客户端界面；实际Dexes替换、反射字段和GUI生命周期继续列为集成验证。
 
 B4-dex-legality（2026-09-15）：新增Kotlin `DexLegalityRules`，`RemoteDex`委托标识规范化、能力/招式许可和EV/IV上限判断。新增4项边界测试；JDK21离线clean build成功，9个任务全部执行，100项测试零失败，`RemoteDex`公开签名与原JAR一致。日志位于`D:/workspace/gradle-clean-b4-dex-rules-100-20260915.log`。下一步审查其余客户端界面状态与语言资源，并准备实际NeoForge客户端/服务端启动验证。
+
+B5-client-startup（2026-09-15）：实际 `runClient` 先发现 KotlinForForge 缺失，再发现普通库未进入 1.21.1 游戏隔离类路径。`build.gradle.kts` 已加入 Modrinth 固定版本 KotlinForForge 5.3.0，并将 SnakeYAML 2.6 加入 `additionalRuntimeClasspath`；发布包仍仅重定位打入 SnakeYAML。修复后客户端完成 CobbleBattle 构造、Showdown 启动与全部资源加载，稳定停留在可交互状态；未发现项目自身 FATAL/ERROR。模板配置值未改变，差异日志已隐藏受保护值并新增1项契约。JDK21离线clean build的9个任务全部执行，101项测试零失败；日志位于`D:/workspace/gradle-run-client-b5-background-20260915.log`和`D:/workspace/gradle-clean-b5-client-runtime-101-20260915.log`。下一步运行专用服务端，并继续记录网络注册和分侧加载结果。
