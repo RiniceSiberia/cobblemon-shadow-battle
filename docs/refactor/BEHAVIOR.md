@@ -93,3 +93,5 @@ B5-client-startup：首次执行 `runClient` 依次发现开发运行时缺少 K
 B5-server-startup：`runServer --nogui` 实际完成 NeoForge、KotlinForForge、Cobblemon 和 CobbleBattle 构造，Showdown 服务启动并预热，数据注册完成，世界生成后服务端报告 `Done`。启动日志没有 CobbleBattle FATAL/ERROR；Cobblemon 对客户端声音类的分侧探测、可选 Adorn 目标和资源标签诊断未阻止服务端运行。网络环境注册随公共初始化完成且未抛异常。真实玩家登录、C2S/S2C往返、远端对战服务连接及世界实体生命周期仍待验证。
 
 B5-chat-composer：`ChatInput` 的可变草稿和编辑状态委托给 Kotlin `ChatComposerState`。未输入时字符返回未消费；输入时空格可写，控制字符、DEL和格式控制符拒绝；达到200个UTF-16单元后继续返回已消费但不增长；退格按完整Unicode码点删除；暂停/取消隐藏并保留草稿；提交沿用Java `trim` 范围后清空。新增状态5项及Java兼容入口1项测试，原聊天3项继续通过。JDK21离线clean build的9个任务全部执行，107项测试、0失败；`ChatInput`公开签名与原JAR一致。真实键盘事件和消息下发待客户端交互验证。
+
+B5-client-settings：`ClientSettings` 的加载标记和聊天HUD开关委托给 Kotlin `ClientSettingsStore`。首次访问只请求一次路径；缺少文件保留开启默认值；合法 `chatHud` 覆盖默认值；损坏文件记录一次读取诊断且同实例不重试；设置开关先更新内存，再创建父目录并写出单字段JSON；保存失败保留内存值并记录诊断。新增5项文件契约。JDK21离线clean build的9个任务全部执行，112项测试、0失败；`ClientSettings`公开签名与原JAR一致。设置界面点击和重新启动客户端后的实际读取待交互验证。
