@@ -55,3 +55,5 @@ B4-mirror-cleanup（2026-09-15）：删除包内Java `MirrorTeardown`，迁移�
 B4-construction-attempt（2026-09-15）：新增Kotlin `BattleConstructionAttempt`，`MirrorFactory`两条创建路径共用启动与构造上下文收尾。新增3项测试覆盖成功、运行时异常和Error，全量71项通过；日志位于 `D:/workspace/gradle-b4-construction-attempt.log`。下一步执行JDK21离线clean build与公开ABI复核，再继续实体装配和mixin未触发分支。
 
 B3-B4-clean-71（2026-09-15）：JDK21离线clean build成功，9个任务全部执行，71项测试零失败，thin与发布JAR已生成；日志位于`D:/workspace/gradle-clean-b3-b4-71-20260915.log`。公开ABI以此前123类全量审计为基线，对其后受影响的23个network类和`CrossServerBattleService`增量核对一致。客户端、专用服务端、真实远端服务及实体生命周期仍未验证。下一步审查并移除构建模型不使用的反编译工程残留，再继续B4/B5。
+
+B6-residue-cleanup（2026-09-15）：删除失效的`build.ps1`、旧`.iml`、反编译摘要/日志/导入/参数文件及无入站依赖的合成`PlatformMethods`。删除后JDK21离线clean build的9个任务全部执行，71项测试通过，发布JAR无`architectury_inject_*`条目；日志位于`D:/workspace/gradle-clean-b6-residue-71-20260915.log`。当前工作树待提交；下一步继续B4实体装配和mixin未触发分支，随后审查B5客户端、命令与Mixin。

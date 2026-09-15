@@ -69,3 +69,5 @@ B4-mirror-cleanup：包内Java `MirrorTeardown`迁移并重命名为Kotlin `Mirr
 B4-construction-attempt：`MirrorFactory`的远端单玩家与双本地玩家路径统一通过Kotlin `BattleConstructionAttempt`执行`BattleRegistry.startBattle`并结束构造上下文。成功返回空失败；`RuntimeException`返回原Java通知/回收分支；其他错误继续抛出；三种退出均执行`CrossServerBattles.endConstruction`。新增3项顺序契约，全量71项测试、0失败。实体装配、mixin未触发和游戏内启动确认仍待验证。
 
 B3-B4-clean-71：JDK21下执行`./gradlew.bat --offline clean build --console=plain`成功，9个任务全部实际执行，71项测试、0失败，thin JAR与发布JAR均生成；日志位于`D:/workspace/gradle-clean-b3-b4-71-20260915.log`。公开ABI沿用`8e0c7a5`的123类全量一致结果，并对后续受影响的23个network类和`CrossServerBattleService`增量复核一致；`MirrorFactory`及已删除的`MirrorTeardown`均非公开类。客户端、专用服务端和远端服务运行仍未验证。
+
+B6-residue-cleanup：删除失效的`build.ps1`、旧IDEA模块、反编译摘要/空错误日志、导入清单、javac参数文件及无入站依赖的合成`PlatformMethods`。源码与jdeps引用扫描未发现合成类调用；删除后JDK21离线clean build的9个任务全部执行，71项测试、0失败，发布JAR不再包含`architectury_inject_*`条目。Gradle构建与IDEA模型继续作为唯一项目构建入口。
