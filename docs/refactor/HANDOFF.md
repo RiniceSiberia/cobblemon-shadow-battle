@@ -1,6 +1,6 @@
 # 恢复入口
 
-当前完成 B5 双端启动与主要表单状态迁移，并继续完成 B4 服务端队伍预览会话、选择校验和远端队伍基础字段解析；下一步处理远端队伍的物种/招式装配和镜像实体装配，再继续剩余客户端界面。Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0 / KotlinForForge 5.3.0。2026-09-15 使用 JDK 21 执行 `--offline clean build` 成功，9个任务全部执行，140项测试全部通过。实际客户端完成模组构造、Showdown启动与资源加载；专用服务端完成世界生成并报告 `Done`。IDEA使用同一Gradle模型，界面导入仍未人工确认。
+当前完成 B5 双端启动与主要表单状态迁移，并继续完成 B4 服务端队伍预览、远端队伍基础字段和观战格式解析；下一步处理远端队伍的物种/招式装配和镜像实体装配，再继续剩余客户端界面。Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0 / KotlinForForge 5.3.0。2026-09-15 使用 JDK 21 执行 `--offline clean build` 成功，9个任务全部执行，142项测试全部通过。实际客户端完成模组构造、Showdown启动与资源加载；专用服务端完成世界生成并报告 `Done`。IDEA使用同一Gradle模型，界面导入仍未人工确认。
 
 业务源码基线为本地提交 2b4ea8d；本批次提交包含测试和构建。首次 Modrinth 下载 TLS 中断，通过缓存相同版本原件重试成功，项目不依赖 .deps 绝对路径。此前 tests 缺 Gson 依赖已修复。
 
@@ -93,3 +93,5 @@ B5-room-controls（2026-09-15）：新增 Kotlin `RoomInteractionState` 并接�
 B4-team-preview-sessions（2026-09-15）：新增 Kotlin `TeamPreviewSessionDirectory`、`TeamPreviewSession` 和 `TeamPreviewRules` 并接入 `TeamPreviews`。会话替换/筛选/清理、默认首选以及数量/范围/重复选择共4项契约通过；首次编译暴露 Java/Kotlin getter 调用错误，修正后定向测试和全量构建通过。JDK21离线clean build的9个任务全部执行，136项测试零失败，日志位于`D:/workspace/gradle-clean-b4-team-preview-sessions-20260915.log`。下一步审查`RemoteTeamCodec`字段解析与镜像实体装配。
 
 B4-packed-team-values（2026-09-15）：新增 Kotlin `PackedTeamValueParsing` 并接入 `RemoteTeamCodec` 的等级、亲密度、HP、IV、EV、PP、UUID和性别解析。新增4项契约覆盖上下界、失败回退、Java裁剪、UUID及大小写敏感标记；Java保留原日志和对象装配。`RemoteTeamCodec`公开ABI与原JAR一致。JDK21离线clean build的9个任务全部执行，140项测试零失败，日志位于`D:/workspace/gradle-clean-b4-team-values-20260915.log`。下一步审查物种/形态、招式和太晶属性装配，再处理镜像实体。
+
+B4-spectator-format（2026-09-15）：`SpectatorFactory` 删除重复格式解析，改用 Kotlin `BattleFormatResolver.resolveSpectator`。新增2项契约固定观战外层格式回退和内层类型优先，普通镜像3项格式契约继续通过。JDK21离线clean build的9个任务全部执行，142项测试零失败，日志位于`D:/workspace/gradle-clean-b4-spectator-format-20260915.log`。下一步继续观战实体装配、失败清理与远端队伍对象验证。

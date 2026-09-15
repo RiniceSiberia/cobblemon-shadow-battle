@@ -35,4 +35,29 @@ class BattleFormatResolverTest {
         val resolved = BattleFormatResolver.resolve(JsonObject().apply { add("formatJson", described) })
         assertEquals(BattleFormat.Companion.fromFormatIdentifier("singles").ruleSet, resolved.ruleSet)
     }
+
+    @Test
+    fun `观战规则缺少类型时沿用外层格式`() {
+        val document = JsonObject().apply {
+            addProperty("format", "doubles")
+            add("formatJson", JsonObject().apply { add("ruleSet", JsonArray()) })
+        }
+        val resolved = BattleFormatResolver.resolveSpectator(document)
+        assertEquals(BattleFormat.Companion.fromFormatIdentifier("doubles").battleType, resolved.battleType)
+        assertEquals(BattleFormat.Companion.fromFormatIdentifier("doubles").ruleSet, resolved.ruleSet)
+    }
+
+    @Test
+    fun `观战规则中的类型优先于外层格式`() {
+        val document = JsonObject().apply {
+            addProperty("format", "doubles")
+            add("formatJson", JsonObject().apply {
+                add("battleType", JsonObject().apply { addProperty("name", "singles") })
+                addProperty("adjustLevel", 44)
+            })
+        }
+        val resolved = BattleFormatResolver.resolveSpectator(document)
+        assertEquals(BattleFormat.Companion.fromFormatIdentifier("singles").battleType, resolved.battleType)
+        assertEquals(44, resolved.adjustLevel)
+    }
 }

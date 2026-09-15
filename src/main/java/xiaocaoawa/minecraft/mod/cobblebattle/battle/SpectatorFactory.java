@@ -3,7 +3,6 @@ package xiaocaoawa.minecraft.mod.cobblebattle.battle;
 import com.cobblemon.mod.common.CobblemonNetwork;
 import com.cobblemon.mod.common.api.battles.model.PokemonBattle;
 import com.cobblemon.mod.common.api.battles.model.actor.BattleActor;
-import com.cobblemon.mod.common.battles.BattleFormat;
 import com.cobblemon.mod.common.battles.BattleRegistry;
 import com.cobblemon.mod.common.battles.BattleSide;
 import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
@@ -13,10 +12,9 @@ import com.cobblemon.mod.common.net.messages.client.battle.BattleMessagePacket;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import io.github.rinicesiberia.shadowbattle.battle.BattleFormatResolver;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import net.minecraft.ChatFormatting;
 import net.minecraft.server.MinecraftServer;
@@ -129,7 +127,10 @@ final class SpectatorFactory {
                Object var33;
                try {
                   BattleRegistry.startBattle(
-                     this.readFormat(document), new BattleSide(new BattleActor[]{actors[0]}), new BattleSide(new BattleActor[]{actors[1]}), false
+                     BattleFormatResolver.resolveSpectator(document),
+                     new BattleSide(new BattleActor[]{actors[0]}),
+                     new BattleSide(new BattleActor[]{actors[1]}),
+                     false
                   );
                   break label178;
                } catch (RuntimeException failure) {
@@ -222,39 +223,6 @@ final class SpectatorFactory {
          if (wasLast && mirror.isSpectator()) {
             this.service.closeReplayViewMirror(mirror);
          }
-      }
-   }
-
-   private BattleFormat readFormat(JsonObject document) {
-      JsonObject described = document.getAsJsonObject("formatJson");
-      String battleType = BattleServerClient.str(document, "format", "singles");
-      if (described != null) {
-         JsonObject type = described.getAsJsonObject("battleType");
-         if (type != null) {
-            battleType = BattleServerClient.str(type, "name", battleType);
-         }
-      }
-
-      BattleFormat base = BattleFormat.Companion.fromFormatIdentifier(battleType);
-      if (described == null) {
-         return base;
-      } else {
-         Set<String> rules = new LinkedHashSet<>();
-         JsonElement ruleSet = described.get("ruleSet");
-         if (ruleSet != null && ruleSet.isJsonArray()) {
-            for (JsonElement rule : ruleSet.getAsJsonArray()) {
-               if (rule.isJsonPrimitive()) {
-                  rules.add(rule.getAsString());
-               }
-            }
-         }
-
-         if (rules.isEmpty()) {
-            rules = base.getRuleSet();
-         }
-
-         int adjustLevel = BattleServerClient.integer(described, "adjustLevel", base.getAdjustLevel());
-         return base.copy(base.getMod(), base.getBattleType(), rules, base.getGen(), adjustLevel);
       }
    }
 

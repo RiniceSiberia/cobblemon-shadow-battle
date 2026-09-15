@@ -107,3 +107,5 @@ B5-room-controls：`RoomScreen` 的开战冷却和复制提示委托给 Kotlin `
 B4-team-preview-sessions：`TeamPreviews` 的玩家会话表委托给 Kotlin `TeamPreviewSessionDirectory`，默认选择和客户端选择检查委托给 `TeamPreviewRules`。同一玩家的新会话覆盖旧会话；状态和关闭帧只处理相同 battleId 的快照；无客户端时依次选取请求数与队伍长度的较小值；客户端选择先检查精确数量，再拒绝负数、越界和重复序号，合法顺序原样发送。新增4项状态契约。首次定向编译因 Java 沿用 record 风格访问器失败，改用 Kotlin getter 后通过。JDK21离线clean build的9个任务全部执行，136项测试、0失败。真实 preview_open/state/closed/pick 往返和玩家断线待联调。
 
 B4-packed-team-values：`RemoteTeamCodec` 的基础标量解析委托给 Kotlin `PackedTeamValueParsing`。整数先按 Java `trim` 范围裁剪，解析失败沿用调用处回退值，解析成功限制在指定上下界；UUID合法时保留，非法时返回空并由Java入口记录原警告；性别只接受协议大写 M/F，其余均映射 GENDERLESS。等级、亲密度、当前HP、IV、EV和招式PP共用有界整数入口。新增4项边界契约。JDK21离线clean build的9个任务全部执行，140项测试、0失败；`RemoteTeamCodec`公开签名与原JAR一致。物种/形态、能力、招式、太晶属性和实体标记待真实数据验证。
+
+B4-spectator-format：`SpectatorFactory` 删除重复的 Java 规则解析并调用 Kotlin `BattleFormatResolver.resolveSpectator`。观战 `formatJson` 缺少 `battleType` 时沿用外层 `format`，存在内层类型时以内层为准；规则去重、空规则回退和 `adjustLevel` 继续复用已验证实现。新增2项观战分支契约，原3项普通镜像格式契约继续通过。JDK21离线clean build的9个任务全部执行，142项测试、0失败。观战实体装配、数据包下发和最后观战者离开后的回收待游戏内验证。

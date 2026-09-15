@@ -67,3 +67,5 @@ B5-room-controls（2026-09-15）：将房间内的开战资格、重复提交冷
 B4-team-preview-sessions（2026-09-15）：将服务端队伍预览会话目录、按对战筛选、无客户端默认选择和客户端选择校验迁入 Kotlin；Java `TeamPreviews` 保留远端 JSON 解析、玩家查找、通知与网络发送。选择校验继续先判断数量，再判断负数、越界和重复序号。
 
 B4-packed-team-values（2026-09-15）：将远端压缩队伍的有界整数、UUID和性别协议字段解析迁入 Kotlin；Java `RemoteTeamCodec` 保留物种/形态索引、能力、招式、太晶属性、战斗 Pokémon 构造和错误日志。字符串裁剪继续采用 Java 范围，性别标记保持大小写敏感。
+
+B4-spectator-format（2026-09-15）：观战镜像改用 Kotlin `BattleFormatResolver` 的独立入口，删除 `SpectatorFactory` 内重复规则解析。观战帧缺少内层对战类型时继续回退外层格式，普通镜像原有的 singles 回退及缺少规则描述警告保持不变。

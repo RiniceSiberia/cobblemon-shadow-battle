@@ -16,9 +16,27 @@ object BattleFormatResolver {
         } else {
             described.getAsJsonObject("battleType")?.let { text(it, "name", "singles") } ?: "singles"
         }
+        return buildFormat(described, identifier, warnWhenUndescribed = true)
+    }
+
+    /** 观战帧的规则描述缺少类型时沿用外层格式标识。 */
+    @JvmStatic
+    fun resolveSpectator(document: JsonObject): BattleFormat {
+        val described = document.getAsJsonObject("formatJson")
+        val outerIdentifier = text(document, "format", "singles")
+        val identifier = described
+            ?.getAsJsonObject("battleType")
+            ?.let { type -> text(type, "name", outerIdentifier) }
+            ?: outerIdentifier
+        return buildFormat(described, identifier, warnWhenUndescribed = false)
+    }
+
+    private fun buildFormat(described: JsonObject?, identifier: String, warnWhenUndescribed: Boolean): BattleFormat {
         val base = BattleFormat.Companion.fromFormatIdentifier(identifier)
         if (described == null) {
-            logger.warn("The battle server sent no rulebook for this battle; falling back to plain {}", identifier)
+            if (warnWhenUndescribed) {
+                logger.warn("The battle server sent no rulebook for this battle; falling back to plain {}", identifier)
+            }
             return base
         }
 
