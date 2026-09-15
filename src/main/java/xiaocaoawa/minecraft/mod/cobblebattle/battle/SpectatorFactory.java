@@ -13,6 +13,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.github.rinicesiberia.shadowbattle.battle.BattleFormatResolver;
+import io.github.rinicesiberia.shadowbattle.battle.BattleConstructionAttempt;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -123,17 +124,14 @@ final class SpectatorFactory {
 
             CrossServerBattles.beginConstruction(mirror);
 
-            label178: {
-               Object var33;
-               try {
-                  BattleRegistry.startBattle(
+            boolean started = BattleConstructionAttempt.startWithRecovery(
+               () -> BattleRegistry.startBattle(
                      BattleFormatResolver.resolveSpectator(document),
                      new BattleSide(new BattleActor[]{actors[0]}),
                      new BattleSide(new BattleActor[]{actors[1]}),
                      false
-                  );
-                  break label178;
-               } catch (RuntimeException failure) {
+                  ),
+               failure -> {
                   LOGGER.error("Could not build a mirror to watch battle {}", remoteBattleId, failure);
 
                   for (NPCEntity npc : npcs) {
@@ -145,13 +143,10 @@ final class SpectatorFactory {
                   }
 
                   this.service.tellParticipant(watcher, Msg.of(ChatFormatting.RED, "battle.spectate_failed"));
-                  var33 = null;
-               } finally {
-                  CrossServerBattles.endConstruction();
-               }
-
-               return (MirrorBattle)var33;
-            }
+               },
+               CrossServerBattles::endConstruction
+            );
+            if (!started) return null;
 
             UUID localBattleId = mirror.localBattleId();
             if (localBattleId == null) {

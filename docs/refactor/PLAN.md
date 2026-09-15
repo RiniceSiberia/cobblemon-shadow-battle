@@ -75,3 +75,5 @@ B4-spectator-format（2026-09-15）：观战镜像改用 Kotlin `BattleFormatRes
 B4-packed-team-details（2026-09-15）：将远端压缩队伍的性质、能力、招式名称、PP、亲密度和太晶字段解析迁入 Kotlin；Java RemoteTeamCodec 保留 Cobblemon 对象装配。协议仍最多读取四个招式，PP 仅接受带斜杠的当前值。
 
 B4-species-index（2026-09-15）：将远端 Showdown 物种/形态标识索引的构建迁入 Kotlin；标准形态和显式形态均登记，重复标识保持首次登记值，Java RemoteTeamCodec 继续管理缓存失效、预热和对象创建。
+
+B4-spectator-recovery：离线build成功，154项测试零失败。观战构造接入Kotlin回收控制，保持start、回收、finish顺序；4项新测试覆盖成功、RuntimeException、回收异常和Error。真实NPC/队伍回收仍待游戏内验证。日志D:/workspace/gradle-spectator-recovery.log。
