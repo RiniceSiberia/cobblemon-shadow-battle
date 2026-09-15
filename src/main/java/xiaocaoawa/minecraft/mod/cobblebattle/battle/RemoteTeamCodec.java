@@ -3,9 +3,7 @@ package xiaocaoawa.minecraft.mod.cobblebattle.battle;
 import com.cobblemon.mod.common.api.Priority;
 import com.cobblemon.mod.common.api.abilities.Abilities;
 import com.cobblemon.mod.common.api.abilities.AbilityTemplate;
-import com.cobblemon.mod.common.api.moves.Move;
-import com.cobblemon.mod.common.api.moves.MoveTemplate;
-import com.cobblemon.mod.common.api.moves.Moves;
+import io.github.rinicesiberia.shadowbattle.battle.PackedMoveAssembly;
 import com.cobblemon.mod.common.api.pokemon.Natures;
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies;
 import com.cobblemon.mod.common.api.pokemon.stats.Stat;
@@ -205,26 +203,7 @@ public final class RemoteTeamCodec {
    }
 
    private static void applyMoves(Pokemon creature, PackedTeamDetails details, int slot) {
-      if (!details.getMoveNames().isEmpty()) {
-         creature.getMoveSet().clear();
-
-         for (int i = 0; i < details.getMoveNames().size() && i < 4; i++) {
-            String name = details.getMoveNames().get(i);
-            if (!name.isEmpty()) {
-               MoveTemplate template = Moves.getByName(name);
-               if (template == null) {
-                  LOGGER.warn("Remote team slot {} has unknown move '{}'", slot, name);
-               } else {
-                  Move move = template.create();
-                  if (i < details.getMovePp().size() && details.getMovePp().get(i) != null) {
-                     move.setCurrentPp(PackedTeamValueParsing.boundedInt(details.getMovePp().get(i), move.getCurrentPp(), 0, 99));
-                  }
-
-                  creature.getMoveSet().setMove(i, move);
-               }
-            }
-         }
-      }
+      PackedMoveAssembly.applyTo(creature, details, slot, LOGGER);
    }
 
 }

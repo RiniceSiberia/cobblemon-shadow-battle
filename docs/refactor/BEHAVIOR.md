@@ -119,3 +119,5 @@ B4-packed-team-details（2026-09-15）：`RemoteTeamCodec` 使用 Kotlin `Packed
 B4-species-index：RemoteTeamCodec 使用 Kotlin SpeciesLookupIndex 构建 Showdown 标识索引。每个物种先登记标准形态，再按原顺序登记显式形态；putIfAbsent 语义保留重复标识的首次值；空集合返回空索引。新增3项纯规则契约。修复 Java 缓存声明残留旧私有类型的编译错误后，JDK21离线clean build的9个任务全部执行，148项测试、0失败；RemoteTeamCodec公开签名与原JAR一致。真实 Cobblemon 物种注册顺序和形态数据仍待游戏内验证。
 
 B4-spectator-recovery：离线build成功，154项测试零失败。观战构造接入Kotlin回收控制，保持start、回收、finish顺序；4项新测试覆盖成功、RuntimeException、回收异常和Error。真实NPC/队伍回收仍待游戏内验证。日志D:/workspace/gradle-spectator-recovery.log。
+
+B4-packed-moves (base eb73675)：远端招式装配迁入Kotlin PackedMoveAssembly，RemoteTeamCodec保留入口。空槽、未知招式、四项限制、PP读写顺序、非法值回退及异常后部分写入由4项新契约约束；离线build全量158项通过，日志D:/workspace/gradle-packed-moves.log。Cobblemon注册招式及真实对象setter仍待游戏内验证。

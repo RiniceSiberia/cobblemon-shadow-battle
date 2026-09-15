@@ -1,5 +1,11 @@
 # 当前恢复状态
 
+B4-packed-moves (base eb73675)：远端招式装配迁入Kotlin PackedMoveAssembly，RemoteTeamCodec保留入口。空槽、未知招式、四项限制、PP读写顺序、非法值回退及异常后部分写入由4项新契约约束；离线build全量158项通过，日志D:/workspace/gradle-packed-moves.log。Cobblemon注册招式及真实对象setter仍待游戏内验证。
+
+下一批次：IV/EV装配。以下为历史快照；整体未完成。
+
+# 当前恢复状态
+
 B4-spectator-recovery：离线build成功，154项测试零失败。观战构造接入Kotlin回收控制，保持start、回收、finish顺序；4项新测试覆盖成功、RuntimeException、回收异常和Error。真实NPC/队伍回收仍待游戏内验证。日志D:/workspace/gradle-spectator-recovery.log。
 
 下一批次：远端招式装配及失败副作用验证。下方均为历史快照，其中运行中描述不代表当前状态。全项目、90%命名覆盖、发布与清理尚未完成。
@@ -112,4 +118,3 @@ B4-packed-team-details（2026-09-15）：`RemoteTeamCodec` 使用 Kotlin `Packed
 下一步：审查物种/形态索引、注册对象创建和太晶名称分支。
 
 B4-species-index（2026-09-15）：新增 Kotlin SpeciesLookupIndex、SpeciesLookupEntry 并接入 RemoteTeamCodec。标准形态、显式形态、重复标识和空集合共3项契约通过；修复 Java 缓存声明残留 FormLookup 的编译错误后，全量构建通过。JDK21离线clean build的9个任务全部执行，148项测试零失败，日志位于D:/workspace/gradle-clean-b4-species-index-20260915.log。下一步处理 Cobblemon 真实物种/形态注册验证和镜像实体装配。
-
