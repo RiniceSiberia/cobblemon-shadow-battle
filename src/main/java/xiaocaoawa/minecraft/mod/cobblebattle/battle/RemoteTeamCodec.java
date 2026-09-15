@@ -6,8 +6,7 @@ import com.cobblemon.mod.common.api.abilities.AbilityTemplate;
 import io.github.rinicesiberia.shadowbattle.battle.PackedMoveAssembly;
 import com.cobblemon.mod.common.api.pokemon.Natures;
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies;
-import com.cobblemon.mod.common.api.pokemon.stats.Stat;
-import com.cobblemon.mod.common.api.pokemon.stats.Stats;
+import io.github.rinicesiberia.shadowbattle.battle.PackedStatAssembly;
 import com.cobblemon.mod.common.api.types.tera.TeraType;
 import com.cobblemon.mod.common.api.types.tera.TeraTypes;
 import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
@@ -35,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 public final class RemoteTeamCodec {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle/Team");
-   private static final Stat[] STAT_ORDER = new Stat[]{Stats.HP, Stats.ATTACK, Stats.DEFENCE, Stats.SPECIAL_ATTACK, Stats.SPECIAL_DEFENCE, Stats.SPEED};
    private static volatile Map<String, SpeciesLookupEntry<Species, FormData>> speciesTemplateByShowdownId = null;
 
    private RemoteTeamCodec() {
@@ -185,21 +183,7 @@ public final class RemoteTeamCodec {
    }
 
    private static void applyStats(Pokemon creature, String csv, boolean ivs, int slot) {
-      if (!csv.isEmpty()) {
-         String[] parts = csv.split(",", -1);
-         if (parts.length != STAT_ORDER.length) {
-            LOGGER.warn("Remote team slot {} has {} {} values, expected {}", new Object[]{slot, parts.length, ivs ? "IV" : "EV", STAT_ORDER.length});
-         } else {
-            for (int i = 0; i < STAT_ORDER.length; i++) {
-               int value = PackedTeamValueParsing.boundedInt(parts[i], 0, 0, ivs ? 31 : 252);
-               if (ivs) {
-                  creature.getIvs().set(STAT_ORDER[i], value);
-               } else {
-                  creature.getEvs().set(STAT_ORDER[i], value);
-               }
-            }
-         }
-      }
+      PackedStatAssembly.applyTo(creature, csv, ivs, slot, LOGGER);
    }
 
    private static void applyMoves(Pokemon creature, PackedTeamDetails details, int slot) {

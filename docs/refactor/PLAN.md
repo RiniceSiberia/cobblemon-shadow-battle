@@ -79,3 +79,5 @@ B4-species-index（2026-09-15）：将远端 Showdown 物种/形态标识索引�
 B4-spectator-recovery：离线build成功，154项测试零失败。观战构造接入Kotlin回收控制，保持start、回收、finish顺序；4项新测试覆盖成功、RuntimeException、回收异常和Error。真实NPC/队伍回收仍待游戏内验证。日志D:/workspace/gradle-spectator-recovery.log。
 
 B4-packed-moves (base eb73675)：远端招式装配迁入Kotlin PackedMoveAssembly，RemoteTeamCodec保留入口。空槽、未知招式、四项限制、PP读写顺序、非法值回退及异常后部分写入由4项新契约约束；离线build全量158项通过，日志D:/workspace/gradle-packed-moves.log。Cobblemon注册招式及真实对象setter仍待游戏内验证。
+
+B4-packed-stats (base 12b5411)：六维IV/EV装配迁入Kotlin PackedStatAssembly，保留HP/攻击/防御/特攻/特防/速度顺序。4项新测试覆盖空字段、维度错误、尾空值、上下界、非法整数和写入异常的部分副作用。JDK21离线clean build成功，9个任务全部执行，162项测试零失败；RemoteTeamCodec公开javap签名与原JAR一致。日志D:/workspace/gradle-packed-stats.log。真实Cobblemon对象及世界行为尚待验证。
