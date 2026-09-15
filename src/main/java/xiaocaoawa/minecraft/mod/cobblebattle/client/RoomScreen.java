@@ -8,6 +8,7 @@ import com.cobblemon.mod.common.entity.PoseType;
 import com.cobblemon.mod.common.pokemon.RenderablePokemon;
 import com.cobblemon.mod.common.pokemon.Species;
 import com.cobblemon.mod.common.util.math.QuaternionUtilsKt;
+import io.github.rinicesiberia.shadowbattle.client.RoomInteractionState;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -81,10 +82,7 @@ public final class RoomScreen extends Screen {
    private final Map<String, FloatingState> poses = new HashMap<>();
    private int originX;
    private int originY;
-   private int starting;
-   private static final int START_COOLDOWN_TICKS = 200;
-   private int copied;
-   private static final int COPIED_TICKS = 40;
+   private final RoomInteractionState interactionState = new RoomInteractionState();
 
    public RoomScreen(RoomStatePayload state) {
       super(Component.translatable("cobblebattle.room.screen_title"));
@@ -109,13 +107,7 @@ public final class RoomScreen extends Screen {
    }
 
    public void tick() {
-      if (this.starting > 0) {
-         this.starting--;
-      }
-
-      if (this.copied > 0) {
-         this.copied--;
-      }
+      this.interactionState.tick();
 
       if (CobblemonClient.INSTANCE.getBattle() != null) {
          Minecraft.getInstance().setScreen(null);
@@ -277,7 +269,7 @@ public final class RoomScreen extends Screen {
          boolean hover = this.inInvite(mouseX, mouseY);
          Component label = Component.translatable("cobblebattle.room.invite_show", new Object[]{code});
          Ui.draw(graphics, this.font, label, x, y, hover ? -1 : -1770753, true);
-         Component hint = this.copied > 0
+         Component hint = this.interactionState.copied()
             ? Component.translatable("cobblebattle.room.invite_copied")
             : (hover ? Component.translatable("cobblebattle.room.invite_copy") : null);
          if (hint != null) {
@@ -301,7 +293,7 @@ public final class RoomScreen extends Screen {
          Ui.drawCentered(graphics, this.font, Component.translatable("cobblebattle.room.in_battle"), x + 42, y + 2, -1770753);
       } else {
          boolean host = "host".equals(this.state.youAre());
-         boolean ready = host && this.state.hasGuest() && this.starting == 0;
+         boolean ready = this.interactionState.canStart(this.state.youAre(), this.state.hasGuest(), this.state.fighting());
          boolean hover = ready && mouseX >= x && mouseX < x + 84 && mouseY >= y && mouseY < y + 12;
          if (!host) {
             Ui.drawCentered(graphics, this.font, Component.translatable("cobblebattle.room.wait_host"), x + 42, y + 2, -1770753);
@@ -311,7 +303,7 @@ public final class RoomScreen extends Screen {
             graphics.fill(x, y + 12 - 1, x + 84, y + 12, -1426063361);
             graphics.fill(x, y, x + 1, y + 12, -1426063361);
             graphics.fill(x + 84 - 1, y, x + 84, y + 12, -1426063361);
-            String label = this.starting > 0
+            String label = this.interactionState.starting()
                ? "cobblebattle.room.starting"
                : (this.state.hasGuest() ? "cobblebattle.room.start" : "cobblebattle.room.need_opponent");
             Ui.drawCentered(graphics, this.font, Component.translatable(label), x + 42, y + 2, ready ? -1 : -1770753);
@@ -352,21 +344,18 @@ public final class RoomScreen extends Screen {
 
          if (!this.state.inviteCode().isEmpty() && this.inInvite(mouseX, mouseY)) {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.state.inviteCode());
-            this.copied = 40;
+            this.interactionState.markInvitationCopied();
             return true;
          }
 
          int x = this.originX + 130;
          int y = this.originY + 183;
-         if ("host".equals(this.state.youAre())
-            && this.state.hasGuest()
-            && !this.state.fighting()
-            && this.starting == 0
+         if (this.interactionState.canStart(this.state.youAre(), this.state.hasGuest(), this.state.fighting())
             && mouseX >= x
             && mouseX < x + 84
             && mouseY >= y
             && mouseY < y + 12) {
-            this.starting = 200;
+            this.interactionState.beginStart(this.state.youAre(), this.state.hasGuest(), this.state.fighting());
             RoomLobbyScreen.send(RoomActionPayload.of("start"));
             return true;
          }

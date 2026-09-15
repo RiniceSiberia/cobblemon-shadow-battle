@@ -101,3 +101,5 @@ B5-auth-form：`AuthScreen` 的初始模式、标题/提交/切换翻译键、�
 B5-team-preview：`TeamPreviewScreen` 的已选槽位列表委托给 Kotlin `TeamPreviewSelectionState`。首次点击按顺序添加，重复点击移除；达到上限后新槽位忽略但点击仍由界面消费；截止时刻采用 `now >= deadline`，关闭原因或本方已准备均锁定；确认要求未锁定且选择数精确等于要求；倒计时毫秒向上取整。新增4项状态契约。JDK21离线clean build的9个任务全部执行，123项测试、0失败；`TeamPreviewScreen`公开签名与原JAR一致。真实鼠标命中、TeamPickPayload下发和双方准备后启动待联调。
 
 B5-room-lobby：`RoomLobbyScreen` 的创建选项委托给 Kotlin `RoomCreationOptions`，创建提交值由 `RoomCreationRequest` 固定，邀请码和座位类型由 `RoomLobbyRules` 判断。默认值保持 singles、自由等级、六选六、完整治疗、服务端引擎和合法性检查；类型、等级和选择数双向循环；主机引擎使密码行后移并显示合法性开关；房间名和创建密码沿用 Java 裁剪，空名称回退默认值；加入密码保持原输入；空邀请码不提交也不关闭表单；战斗中房间使用空座位类型。新增5项规则契约。JDK21离线clean build的9个任务全部执行，128项测试、0失败；`RoomLobbyScreen`公开签名与原JAR一致。真实鼠标命中、网络下发和远端房间交互待联调。
+
+B5-room-controls：`RoomScreen` 的开战冷却和复制提示委托给 Kotlin `RoomInteractionState`。只有角色为 host、已有 guest、尚未 fighting 且冷却为零时可开始；成功开始立即设置200 tick冷却并阻止重复请求；复制邀请码设置40 tick提示；两个计数每tick递减且不低于零。新增4项状态契约。JDK21离线clean build的9个任务全部执行，132项测试、0失败；`RoomScreen`公开签名与原JAR一致。点击命中、剪贴板、leave/start发包和战斗出现后的关屏仍待客户端联调。
