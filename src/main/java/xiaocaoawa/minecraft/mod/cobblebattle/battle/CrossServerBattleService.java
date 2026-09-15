@@ -57,7 +57,7 @@ public final class CrossServerBattleService {
    private final RemoteDex dex = new RemoteDex();
    private final BattleQueue battleQueue = new BattleQueue(this);
    private final MirrorFactory mirrorFactory = new MirrorFactory(this);
-   private final MirrorTeardown teardown = new MirrorTeardown(this);
+   private final MirrorLifecycleCleanup lifecycleCleanup = new MirrorLifecycleCleanup(this);
    private final SpectatorFactory spectators = new SpectatorFactory(this);
    private final TeamPreviews previews = new TeamPreviews(this);
    private final AuthService auth = new AuthService();
@@ -238,7 +238,7 @@ public final class CrossServerBattleService {
       }
 
       for (MirrorBattle mirror : CrossServerBattles.all()) {
-         this.teardown.sweepEntities(mirror, 0L);
+         this.lifecycleCleanup.sweepEntities(mirror, 0L);
       }
 
       CrossServerBattles.clear();
@@ -272,7 +272,7 @@ public final class CrossServerBattleService {
       this.auth.clear();
 
       for (MirrorBattle mirror : CrossServerBattles.all()) {
-         this.teardown.abort(mirror, Msg.of("battle.connection_lost").withStyle(ChatFormatting.RED));
+         this.lifecycleCleanup.abort(mirror, Msg.of("battle.connection_lost").withStyle(ChatFormatting.RED));
       }
    }
 
@@ -490,7 +490,7 @@ public final class CrossServerBattleService {
          MirrorBattle mirror = CrossServerBattles.byRemoteId(BattleServerClient.str(document, "battleId", ""));
          if (mirror != null && !mirror.isFinished()) {
             LOGGER.error("Battle server refused something for battle {} ({}: {}) - closing the local mirror", new Object[]{mirror.remoteBattleId(), code, text});
-            this.teardown.abort(mirror, Msg.of("battle.ended", text).withStyle(ChatFormatting.RED));
+            this.lifecycleCleanup.abort(mirror, Msg.of("battle.ended", text).withStyle(ChatFormatting.RED));
          } else if (this.auth.isAwaiting(document)) {
             UUID waiting = this.auth.onAccountError(document);
             if (waiting != null) {
@@ -652,7 +652,7 @@ public final class CrossServerBattleService {
                BattleRegistry.closeBattle(battle);
             }
          });
-         this.teardown.sweepEntities(mirror, 0L);
+         this.lifecycleCleanup.sweepEntities(mirror, 0L);
       }
    }
 
@@ -780,10 +780,10 @@ public final class CrossServerBattleService {
 
          if (!"win".equals(reason) && !"tie".equals(reason)) {
             LOGGER.warn("Battle {} ended abnormally ({}) - forcing the local mirror closed", remoteBattleId, reason);
-            this.teardown.abort(mirror, Msg.of("battle.ended", reason).withStyle(ChatFormatting.RED));
+            this.lifecycleCleanup.abort(mirror, Msg.of("battle.ended", reason).withStyle(ChatFormatting.RED));
          } else {
             CrossServerBattles.forget(mirror.localBattleId());
-            this.teardown.sweepEntities(mirror, 2000L);
+            this.lifecycleCleanup.sweepEntities(mirror, MirrorLifecycleCleanup.RECALL_GRACE_MS);
          }
       }
    }
@@ -1497,7 +1497,7 @@ public final class CrossServerBattleService {
       if (mirror != null && !mirror.isFinished()) {
          LOGGER.info("{} disconnected during battle {} - closing this side and telling the host", participant.getGameProfile().getName(), mirror.remoteBattleId());
          this.sendAbort(mirror.remoteBattleId(), "player disconnected");
-         this.teardown.abort(mirror, Msg.of("battle.player_left").withStyle(ChatFormatting.RED));
+         this.lifecycleCleanup.abort(mirror, Msg.of("battle.player_left").withStyle(ChatFormatting.RED));
       }
 
       this.announceSignOutputStream(participant);
