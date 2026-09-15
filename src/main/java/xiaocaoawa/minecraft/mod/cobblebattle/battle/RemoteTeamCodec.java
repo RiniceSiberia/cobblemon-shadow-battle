@@ -29,6 +29,8 @@ import java.util.UUID;
 import io.github.rinicesiberia.shadowbattle.battle.PackedTeamValueParsing;
 import io.github.rinicesiberia.shadowbattle.battle.PackedTeamDetails;
 import io.github.rinicesiberia.shadowbattle.battle.PackedTeamDetailsParser;
+import io.github.rinicesiberia.shadowbattle.battle.SpeciesLookupEntry;
+import io.github.rinicesiberia.shadowbattle.battle.SpeciesLookupIndex;
 import kotlin.Unit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +38,7 @@ import org.slf4j.LoggerFactory;
 public final class RemoteTeamCodec {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle/Team");
    private static final Stat[] STAT_ORDER = new Stat[]{Stats.HP, Stats.ATTACK, Stats.DEFENCE, Stats.SPECIAL_ATTACK, Stats.SPECIAL_DEFENCE, Stats.SPEED};
-   private static volatile Map<String, RemoteTeamCodec.FormLookup> speciesTemplateByShowdownId = null;
+   private static volatile Map<String, SpeciesLookupEntry<Species, FormData>> speciesTemplateByShowdownId = null;
 
    private RemoteTeamCodec() {
    }
@@ -49,20 +51,18 @@ public final class RemoteTeamCodec {
       speciesTemplateLookup();
    }
 
-   private static Map<String, RemoteTeamCodec.FormLookup> speciesTemplateLookup() {
-      Map<String, RemoteTeamCodec.FormLookup> cached = speciesTemplateByShowdownId;
+   private static Map<String, SpeciesLookupEntry<Species, FormData>> speciesTemplateLookup() {
+      Map<String, SpeciesLookupEntry<Species, FormData>> cached = speciesTemplateByShowdownId;
       if (cached != null) {
          return cached;
       } else {
-         Map<String, RemoteTeamCodec.FormLookup> built = new HashMap<>();
-
-         for (Species speciesTemplate : PokemonSpecies.getSpecies()) {
-            built.putIfAbsent(speciesTemplate.showdownId(), new RemoteTeamCodec.FormLookup(speciesTemplate, speciesTemplate.getStandardForm()));
-
-            for (FormData form : speciesTemplate.getForms()) {
-               built.putIfAbsent(form.showdownId(), new RemoteTeamCodec.FormLookup(speciesTemplate, form));
-            }
-         }
+         Map<String, SpeciesLookupEntry<Species, FormData>> built = SpeciesLookupIndex.build(
+            PokemonSpecies.getSpecies(),
+            Species::showdownId,
+            Species::getStandardForm,
+            Species::getForms,
+            FormData::showdownId
+         );
 
          speciesTemplateByShowdownId = built;
          LOGGER.debug("Indexed {} showdown species ids", built.size());
@@ -105,14 +105,14 @@ public final class RemoteTeamCodec {
          return null;
       } else {
          String speciesTemplateId = f[0];
-         RemoteTeamCodec.FormLookup lookup = speciesTemplateLookup().get(speciesTemplateId);
+            SpeciesLookupEntry<Species, FormData> lookup = speciesTemplateLookup().get(speciesTemplateId);
          if (lookup == null) {
             LOGGER.error("Remote team slot {} references unknown species '{}' - this server's data is out of step with the battle host", slot, speciesTemplateId);
             return null;
          } else {
             Pokemon creature = new Pokemon();
-            creature.setSpecies(lookup.species());
-            creature.setForm(lookup.form());
+            creature.setSpecies(lookup.getSpecies());
+            creature.setForm(lookup.getForm());
             UUID uuid = PackedTeamValueParsing.uuidOrNull(f[2]);
             if (uuid != null) {
                creature.setUuid(uuid);
@@ -227,6 +227,4 @@ public final class RemoteTeamCodec {
       }
    }
 
-   private record FormLookup(Species species, FormData form) {
-   }
 }

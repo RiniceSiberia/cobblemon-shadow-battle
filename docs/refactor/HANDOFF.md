@@ -100,3 +100,5 @@ B4-spectator-format（2026-09-15）：`SpectatorFactory` 删除重复格式解�
 
 B4-packed-team-details（2026-09-15）：`RemoteTeamCodec` 使用 Kotlin `PackedTeamDetailsParser` 读取固定字段。性质和能力为空时保持空值；招式名称最多四项并过滤空项；PP 保留位置，仅带 `/` 且可解析的当前值进入对象装配，异常值沿用原对象默认；亲密度限制在0至255，太晶字段保留原文本交给 Java 名称/标识解析。新增3项契约。JDK21离线clean build的9个任务全部执行，145项测试、0失败，日志位于`D:/workspace/gradle-clean-b4-packed-details-20260915.log`。物种/形态索引、Cobblemon能力与招式注册、太晶名称和实体标记待真实数据验证。
 下一步：审查物种/形态索引、注册对象创建和太晶名称分支。
+
+B4-species-index（2026-09-15）：新增 Kotlin SpeciesLookupIndex、SpeciesLookupEntry 并接入 RemoteTeamCodec。标准形态、显式形态、重复标识和空集合共3项契约通过；修复 Java 缓存声明残留 FormLookup 的编译错误后，全量构建通过。JDK21离线clean build的9个任务全部执行，148项测试零失败，日志位于D:/workspace/gradle-clean-b4-species-index-20260915.log。下一步处理 Cobblemon 真实物种/形态注册验证和镜像实体装配。

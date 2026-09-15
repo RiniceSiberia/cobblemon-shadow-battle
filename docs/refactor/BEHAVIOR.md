@@ -111,3 +111,5 @@ B4-packed-team-values：`RemoteTeamCodec` 的基础标量解析委托给 Kotlin 
 B4-spectator-format：`SpectatorFactory` 删除重复的 Java 规则解析并调用 Kotlin `BattleFormatResolver.resolveSpectator`。观战 `formatJson` 缺少 `battleType` 时沿用外层 `format`，存在内层类型时以内层为准；规则去重、空规则回退和 `adjustLevel` 继续复用已验证实现。新增2项观战分支契约，原3项普通镜像格式契约继续通过。JDK21离线clean build的9个任务全部执行，142项测试、0失败。观战实体装配、数据包下发和最后观战者离开后的回收待游戏内验证。
 
 B4-packed-team-details（2026-09-15）：`RemoteTeamCodec` 使用 Kotlin `PackedTeamDetailsParser` 读取固定字段。性质和能力为空时保持空值；招式名称最多四项并过滤空项；PP 保留位置，仅带 `/` 且可解析的当前值进入对象装配，异常值沿用原对象默认；亲密度限制在0至255，太晶字段保留原文本交给 Java 名称/标识解析。新增3项契约。JDK21离线clean build的9个任务全部执行，145项测试、0失败，日志位于`D:/workspace/gradle-clean-b4-packed-details-20260915.log`。物种/形态索引、Cobblemon能力与招式注册、太晶名称和实体标记待真实数据验证。
+
+B4-species-index：RemoteTeamCodec 使用 Kotlin SpeciesLookupIndex 构建 Showdown 标识索引。每个物种先登记标准形态，再按原顺序登记显式形态；putIfAbsent 语义保留重复标识的首次值；空集合返回空索引。新增3项纯规则契约。修复 Java 缓存声明残留旧私有类型的编译错误后，JDK21离线clean build的9个任务全部执行，148项测试、0失败；RemoteTeamCodec公开签名与原JAR一致。真实 Cobblemon 物种注册顺序和形态数据仍待游戏内验证。

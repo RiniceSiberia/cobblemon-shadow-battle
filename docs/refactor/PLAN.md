@@ -71,3 +71,5 @@ B4-packed-team-values（2026-09-15）：将远端压缩队伍的有界整数、U
 B4-spectator-format（2026-09-15）：观战镜像改用 Kotlin `BattleFormatResolver` 的独立入口，删除 `SpectatorFactory` 内重复规则解析。观战帧缺少内层对战类型时继续回退外层格式，普通镜像原有的 singles 回退及缺少规则描述警告保持不变。
 
 B4-packed-team-details（2026-09-15）：将远端压缩队伍的性质、能力、招式名称、PP、亲密度和太晶字段解析迁入 Kotlin；Java RemoteTeamCodec 保留 Cobblemon 对象装配。协议仍最多读取四个招式，PP 仅接受带斜杠的当前值。
+
+B4-species-index（2026-09-15）：将远端 Showdown 物种/形态标识索引的构建迁入 Kotlin；标准形态和显式形态均登记，重复标识保持首次登记值，Java RemoteTeamCodec 继续管理缓存失效、预热和对象创建。
