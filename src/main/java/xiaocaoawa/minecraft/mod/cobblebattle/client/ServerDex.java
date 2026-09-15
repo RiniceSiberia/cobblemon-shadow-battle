@@ -10,7 +10,6 @@ import com.cobblemon.mod.common.api.pokedex.entry.PokedexEntry;
 import com.cobblemon.mod.common.api.pokedex.entry.PokedexForm;
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies;
 import com.cobblemon.mod.common.api.pokemon.stats.Stat;
-import com.cobblemon.mod.common.api.pokemon.stats.Stats;
 import com.cobblemon.mod.common.api.storage.player.client.ClientPokedexManager;
 import com.cobblemon.mod.common.client.gui.pokedex.PokedexGUI;
 import com.cobblemon.mod.common.client.pokedex.PokedexType;
@@ -20,7 +19,6 @@ import com.cobblemon.mod.common.pokemon.Species;
 import dev.architectury.networking.NetworkManager;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -36,12 +34,10 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.ServerDexPayload;
 public final class ServerDex {
    public static final ResourceLocation DEX_ID = ResourceLocation.fromNamespaceAndPath("cobblebattle", "server");
    private static final ResourceLocation NATIONAL = ResourceLocation.fromNamespaceAndPath("cobblemon", "national");
-   private static Map<String, Map<Stat, Integer>> stats = Map.of();
-   private static String cachedDigest = "";
+   private static final ServerDexSnapshotState SNAPSHOT = new ServerDexSnapshotState();
    private static boolean active;
    private static Map<ResourceLocation, PokedexDef> savedDexes;
    private static ClientPokedexManager knowledge;
-   private static String lastRanked = "";
 
    private ServerDex() {
    }
@@ -51,15 +47,15 @@ public final class ServerDex {
    }
 
    public static void rememberRanked(String rankedId) {
-      lastRanked = rankedId == null ? "" : rankedId;
+      SNAPSHOT.rememberRanked(rankedId);
    }
 
    public static void requestDex() {
-      NetworkManager.sendToServer(new OpenPagePayload("dex", "", cachedDigest));
+      NetworkManager.sendToServer(new OpenPagePayload("dex", "", SNAPSHOT.digest()));
    }
 
    public static void requestLeaderboard() {
-      NetworkManager.sendToServer(new OpenPagePayload("leaderboard", lastRanked, ""));
+      NetworkManager.sendToServer(new OpenPagePayload("leaderboard", SNAPSHOT.rankedId(), ""));
    }
 
    public static void requestRooms() {
@@ -88,15 +84,9 @@ public final class ServerDex {
       Minecraft minecraft = Minecraft.getInstance();
       if (minecraft.player != null) {
          close();
-         if (body.unchanged()) {
-            if (stats.isEmpty() || !cachedDigest.equals(body.digest())) {
-               cachedDigest = "";
-               requestDex();
-               return;
-            }
-         } else {
-            stats = index(body);
-            cachedDigest = body.digest();
+         if (SNAPSHOT.accept(body) == ServerDexAcceptance.RETRY_FULL_SNAPSHOT) {
+            requestDex();
+            return;
          }
 
          List<PokedexEntry> entries = approvedEntries();
@@ -149,31 +139,9 @@ public final class ServerDex {
                data = speciesTemplate.getStandardForm();
             }
 
-            Map<Stat, Integer> found = stats.get(data.showdownId());
-            if (found == null) {
-               found = stats.get(speciesTemplate.showdownId());
-            }
-
-            return found;
+            return SNAPSHOT.statsFor(data.showdownId(), speciesTemplate.showdownId());
          }
       }
-   }
-
-   private static Map<String, Map<Stat, Integer>> index(ServerDexPayload body) {
-      Map<String, Map<Stat, Integer>> outputStream = new HashMap<>(body.entries().size() * 2);
-
-      for (ServerDexPayload.Entry e : body.entries()) {
-         Map<Stat, Integer> base = new HashMap<>(8);
-         base.put(Stats.HP, e.hp());
-         base.put(Stats.ATTACK, e.atk());
-         base.put(Stats.DEFENCE, e.def());
-         base.put(Stats.SPECIAL_ATTACK, e.spa());
-         base.put(Stats.SPECIAL_DEFENCE, e.spd());
-         base.put(Stats.SPEED, e.spe());
-         outputStream.put(e.id(), base);
-      }
-
-      return outputStream;
    }
 
    private static List<PokedexEntry> approvedEntries() {
@@ -208,11 +176,11 @@ public final class ServerDex {
    }
 
    private static boolean approved(Species speciesTemplate) {
-      if (stats.containsKey(speciesTemplate.showdownId())) {
+      if (SNAPSHOT.contains(speciesTemplate.showdownId())) {
          return true;
       } else {
          for (FormData form : speciesTemplate.getForms()) {
-            if (stats.containsKey(form.showdownId())) {
+            if (SNAPSHOT.contains(form.showdownId())) {
                return true;
             }
          }
