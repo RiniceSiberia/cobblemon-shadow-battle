@@ -3,14 +3,14 @@ package xiaocaoawa.minecraft.mod.cobblebattle.battle;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import io.github.rinicesiberia.shadowbattle.battle.PreviewPickValidation;
+import io.github.rinicesiberia.shadowbattle.battle.TeamPreviewRules;
+import io.github.rinicesiberia.shadowbattle.battle.TeamPreviewSession;
+import io.github.rinicesiberia.shadowbattle.battle.TeamPreviewSessionDirectory;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
@@ -23,18 +23,18 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.TeamPreviewPayload;
 final class TeamPreviews {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle");
    private final CrossServerBattleService service;
-   private final Map<UUID, TeamPreviews.Session> open = new ConcurrentHashMap<>();
+   private final TeamPreviewSessionDirectory sessions = new TeamPreviewSessionDirectory();
 
    TeamPreviews(CrossServerBattleService service) {
       this.service = service;
    }
 
    void clear() {
-      this.open.clear();
+      this.sessions.clear();
    }
 
    void forget(UUID participantUuid) {
-      this.open.remove(participantUuid);
+      this.sessions.forget(participantUuid);
    }
 
    void onOpen(JsonObject document) {
@@ -59,7 +59,7 @@ final class TeamPreviews {
          ServerPlayer participant = this.service.participantOf(participantUuid);
          if (participant == null) {
             LOGGER.warn("preview_open for {} but they are not on this server", participantUuid);
-            this.send(battleId, participantUuid, frontOf(mine.size(), pick));
+            this.send(battleId, participantUuid, TeamPreviewRules.frontPicks(mine.size(), pick));
          } else {
             TeamPreviewPayload shown = new TeamPreviewPayload(
                battleId,
@@ -78,9 +78,9 @@ final class TeamPreviews {
             if (!CobbleBattleNetwork.sendTeamPreview(participant, shown)) {
                LOGGER.info("{} has no CobbleBattle client; picking the first {} of their team", participantUuid, pick);
                this.service.tellParticipant(participantUuid, Msg.of(ChatFormatting.YELLOW, "preview.no_client", pick));
-               this.send(battleId, participantUuid, frontOf(mine.size(), pick));
+               this.send(battleId, participantUuid, TeamPreviewRules.frontPicks(mine.size(), pick));
             } else {
-               this.open.put(participantUuid, new TeamPreviews.Session(battleId, participantUuid, seat, pick, mine.size(), shown));
+               this.sessions.save(new TeamPreviewSession(battleId, participantUuid, seat, pick, mine.size(), shown));
             }
          }
       } else {
@@ -93,31 +93,29 @@ final class TeamPreviews {
       if (battleId != null) {
          JsonObject ready = document.getAsJsonObject("ready");
          if (ready != null) {
-            for (TeamPreviews.Session session : new ArrayList<>(this.open.values())) {
-               if (session.battleId().equals(battleId)) {
-                  ServerPlayer participant = this.service.participantOf(session.player());
+            for (TeamPreviewSession session : this.sessions.forBattle(battleId)) {
+                  ServerPlayer participant = this.service.participantOf(session.getPlayer());
                   if (participant != null) {
                      boolean mineReady = false;
                      boolean theirsReady = false;
 
                      for (Entry<String, JsonElement> entry : ready.entrySet()) {
                         boolean value = entry.getValue().isJsonPrimitive() && entry.getValue().getAsBoolean();
-                        if (entry.getKey().equals(session.seat())) {
+                        if (entry.getKey().equals(session.getSeat())) {
                            mineReady = value;
                         } else {
                            theirsReady = theirsReady || value;
                         }
                      }
 
-                     TeamPreviewPayload shown = repaint(session.shown(), mineReady, theirsReady, "");
-                     this.open
-                        .put(
-                           session.player(),
-                           new TeamPreviews.Session(session.battleId(), session.player(), session.seat(), session.pick(), session.teamSize(), shown)
-                        );
+                     TeamPreviewPayload shown = repaint(session.getShown(), mineReady, theirsReady, "");
+                     this.sessions.save(
+                        new TeamPreviewSession(
+                           session.getBattleId(), session.getPlayer(), session.getSeat(), session.getPick(), session.getTeamSize(), shown
+                        )
+                     );
                      CobbleBattleNetwork.sendTeamPreview(participant, shown);
                   }
-               }
             }
          }
       }
@@ -127,39 +125,35 @@ final class TeamPreviews {
       String battleId = BattleServerClient.str(document, "battleId", null);
       String reason = BattleServerClient.str(document, "reason", "closed");
       if (battleId != null) {
-         for (TeamPreviews.Session session : new ArrayList<>(this.open.values())) {
-            if (session.battleId().equals(battleId)) {
-               this.open.remove(session.player());
-               ServerPlayer participant = this.service.participantOf(session.player());
+         for (TeamPreviewSession session : this.sessions.forBattle(battleId)) {
+               this.sessions.forget(session.getPlayer());
+               ServerPlayer participant = this.service.participantOf(session.getPlayer());
                if (participant != null) {
-                  CobbleBattleNetwork.sendTeamPreview(participant, repaint(session.shown(), session.shown().mineReady(), session.shown().theirsReady(), reason));
+                  CobbleBattleNetwork.sendTeamPreview(
+                     participant, repaint(session.getShown(), session.getShown().mineReady(), session.getShown().theirsReady(), reason)
+                  );
                }
 
-               this.service.tellParticipant(session.player(), Msg.of(ChatFormatting.YELLOW, "preview.closed"));
-               this.service.battleQueue().drop(session.player());
-            }
+               this.service.tellParticipant(session.getPlayer(), Msg.of(ChatFormatting.YELLOW, "preview.closed"));
+               this.service.battleQueue().drop(session.getPlayer());
          }
       }
    }
 
    void onPicked(ServerPlayer participant, String battleId, List<Integer> picks) {
       UUID participantUuid = participant.getUUID();
-      TeamPreviews.Session session = this.open.get(participantUuid);
-      if (session != null && session.battleId().equals(battleId)) {
-         if (picks.size() != session.pick()) {
-            LOGGER.warn("{} picked {} Pokemon for a preview that wants {}", new Object[]{participantUuid, picks.size(), session.pick()});
+      TeamPreviewSession session = this.sessions.find(participantUuid);
+      if (session != null && session.getBattleId().equals(battleId)) {
+         PreviewPickValidation validation = TeamPreviewRules.validatePicks(picks, session.getPick(), session.getTeamSize());
+         if (validation == PreviewPickValidation.WRONG_COUNT) {
+            LOGGER.warn("{} picked {} Pokemon for a preview that wants {}", new Object[]{participantUuid, picks.size(), session.getPick()});
+         } else if (validation == PreviewPickValidation.INVALID_SLOT) {
+            LOGGER.warn("{} sent a malformed team-preview pick: {}", participantUuid, picks);
          } else {
-            Set<Integer> seen = new LinkedHashSet<>();
-
-            for (int pick : picks) {
-               if (pick < 0 || pick >= session.teamSize() || !seen.add(pick)) {
-                  LOGGER.warn("{} sent a malformed team-preview pick: {}", participantUuid, picks);
-                  return;
-               }
-            }
-
-            TeamPreviewPayload shown = repaint(session.shown(), true, session.shown().theirsReady(), "");
-            this.open.put(participantUuid, new TeamPreviews.Session(session.battleId(), participantUuid, session.seat(), session.pick(), session.teamSize(), shown));
+            TeamPreviewPayload shown = repaint(session.getShown(), true, session.getShown().theirsReady(), "");
+            this.sessions.save(
+               new TeamPreviewSession(session.getBattleId(), participantUuid, session.getSeat(), session.getPick(), session.getTeamSize(), shown)
+            );
             this.send(battleId, participantUuid, picks);
          }
       }
@@ -228,16 +222,6 @@ final class TeamPreviews {
       return left > 0L && left <= 600000L ? deadline : System.currentTimeMillis() + 60000L;
    }
 
-   private static List<Integer> frontOf(int rosterSize, int pick) {
-      List<Integer> outputStream = new ArrayList<>();
-
-      for (int i = 0; i < Math.min(pick, rosterSize); i++) {
-         outputStream.add(i);
-      }
-
-      return outputStream;
-   }
-
    private static TeamPreviewPayload repaint(TeamPreviewPayload shown, boolean mineReady, boolean theirsReady, String closed) {
       return new TeamPreviewPayload(
          shown.battleId(),
@@ -253,8 +237,5 @@ final class TeamPreviews {
          theirsReady,
          closed
       );
-   }
-
-   private record Session(String battleId, UUID player, String seat, int pick, int teamSize, TeamPreviewPayload shown) {
    }
 }
