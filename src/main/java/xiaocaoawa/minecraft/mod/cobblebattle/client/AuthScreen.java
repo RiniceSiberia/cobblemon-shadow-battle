@@ -1,5 +1,7 @@
 package xiaocaoawa.minecraft.mod.cobblebattle.client;
 
+import io.github.rinicesiberia.shadowbattle.client.AuthenticationFormRules;
+import io.github.rinicesiberia.shadowbattle.client.AuthenticationSubmission;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -81,15 +83,12 @@ public final class AuthScreen extends Screen {
    public AuthScreen(AuthMode mode, String suggestedId, boolean emailEnabled) {
       super(titleOf(mode));
       this.emailEnabled = emailEnabled;
-      AuthMode connectionRequested = mode == AuthMode.CODE_REQUEST ? AuthMode.REGISTER : mode;
-      this.mode = !emailEnabled && connectionRequested.isBindEmail() ? AuthMode.LOGIN : connectionRequested;
+      this.mode = AuthenticationFormRules.initialMode(mode, emailEnabled);
       this.suggestedId = suggestedId == null ? "" : suggestedId;
    }
 
    private static Component titleOf(AuthMode mode) {
-      return mode.isBindEmail()
-         ? Component.translatable("cobblebattle.auth.title.bind")
-         : Component.translatable(mode.isRegister() ? "cobblebattle.auth.title.register" : "cobblebattle.auth.title.login");
+      return Component.translatable(AuthenticationFormRules.titleKey(mode));
    }
 
    public Component getTitle() {
@@ -97,7 +96,7 @@ public final class AuthScreen extends Screen {
    }
 
    private boolean needsEmail() {
-      return this.emailEnabled && (this.mode.isRegister() || this.mode.isBindEmail());
+      return AuthenticationFormRules.requiresEmail(this.mode, this.emailEnabled);
    }
 
    protected void init() {
@@ -165,33 +164,16 @@ public final class AuthScreen extends Screen {
    }
 
    private Component submitLabel() {
-      return this.mode.isBindEmail()
-         ? Component.translatable("cobblebattle.auth.submit.bind")
-         : Component.translatable(this.mode.isRegister() ? "cobblebattle.auth.submit.register" : "cobblebattle.auth.submit.login");
+      return Component.translatable(AuthenticationFormRules.submitKey(this.mode));
    }
 
    private Component switchLabel() {
-      if (!this.emailEnabled) {
-         return Component.translatable(this.mode.isRegister() ? "cobblebattle.auth.switch.login" : "cobblebattle.auth.switch.register");
-      } else {
-         return this.mode.isBindEmail()
-            ? Component.translatable("cobblebattle.auth.switch.login")
-            : Component.translatable(this.mode.isRegister() ? "cobblebattle.auth.switch.bind" : "cobblebattle.auth.switch.register");
-      }
+      return Component.translatable(AuthenticationFormRules.switchKey(this.mode, this.emailEnabled));
    }
 
    private void toggleMode() {
       if (!this.waiting) {
-         if (!this.emailEnabled) {
-            this.mode = this.mode.isRegister() ? AuthMode.LOGIN : AuthMode.REGISTER;
-         } else if (this.mode == AuthMode.LOGIN) {
-            this.mode = AuthMode.REGISTER;
-         } else if (this.mode.isRegister()) {
-            this.mode = AuthMode.BIND_EMAIL;
-         } else {
-            this.mode = AuthMode.LOGIN;
-         }
-
+         this.mode = AuthenticationFormRules.nextMode(this.mode, this.emailEnabled);
          this.error = Component.empty();
          this.rebuildWidgets();
       }
@@ -224,18 +206,27 @@ public final class AuthScreen extends Screen {
 
    private void refreshSubmit() {
       if (this.submit != null) {
-         boolean top = this.needsEmail() ? !this.emailBox.getValue().isBlank() : !this.idBox.getValue().isBlank();
-         boolean identified = top && (!this.mode.isBindEmail() || !this.idBox.getValue().isBlank());
-         boolean coded = !this.needsEmail() || !this.codeBox.getValue().isBlank();
-         this.submit.active = !this.waiting && identified && coded && !this.passwordBox.getValue().isEmpty();
+         this.submit.active = AuthenticationFormRules.canSubmit(
+            this.mode,
+            this.emailEnabled,
+            this.waiting,
+            this.idBox == null ? "" : this.idBox.getValue(),
+            this.emailBox == null ? "" : this.emailBox.getValue(),
+            this.codeBox == null ? "" : this.codeBox.getValue(),
+            this.passwordBox.getValue()
+         );
       }
    }
 
    private void updateCodeButton() {
       if (this.sendCode != null) {
-         this.sendCode.active = !this.waiting && this.codeCooldown <= 0 && !this.emailBox.getValue().isBlank();
+         this.sendCode.active = AuthenticationFormRules.canRequestCode(this.waiting, this.codeCooldown, this.emailBox.getValue());
          this.sendCode
-            .setMessage(this.codeCooldown > 0 ? Component.literal((this.codeCooldown + 19) / 20 + "s") : Component.translatable("cobblebattle.auth.send_code"));
+            .setMessage(
+               this.codeCooldown > 0
+                  ? Component.literal(AuthenticationFormRules.cooldownSeconds(this.codeCooldown) + "s")
+                  : Component.translatable("cobblebattle.auth.send_code")
+            );
       }
    }
 
@@ -247,7 +238,8 @@ public final class AuthScreen extends Screen {
          this.codeCooldown = 1200;
          this.refreshSubmit();
          this.updateCodeButton();
-         AuthScreenHandler.submit(AuthMode.CODE_REQUEST, this.mode.isBindEmail() ? "__bind" : "", this.emailBox.getValue().trim(), "", "");
+         AuthenticationSubmission request = AuthenticationFormRules.codeRequest(this.mode, this.emailBox.getValue());
+         AuthScreenHandler.submit(request.getMode(), request.getAccountId(), request.getEmail(), request.getPassword(), request.getCode());
       }
    }
 
@@ -262,18 +254,23 @@ public final class AuthScreen extends Screen {
    private void send() {
       if (!this.waiting) {
          String password = this.passwordBox.getValue();
-         if (this.mode.isRegister() && !password.equals(this.confirmBox.getValue())) {
+         AuthenticationSubmission request = AuthenticationFormRules.submission(
+            this.mode,
+            this.idBox == null ? "" : this.idBox.getValue(),
+            this.emailBox == null ? "" : this.emailBox.getValue(),
+            password,
+            this.confirmBox == null ? "" : this.confirmBox.getValue(),
+            this.codeBox == null ? "" : this.codeBox.getValue()
+         );
+         if (request == null) {
             this.error = Component.translatable("cobblebattle.auth.error.mismatch");
          } else {
-            String id = this.idBox == null ? "" : this.idBox.getValue().trim();
-            String email = this.emailBox == null ? "" : this.emailBox.getValue().trim();
-            String code = this.codeBox == null ? "" : this.codeBox.getValue().trim();
             this.error = Component.empty();
             this.waiting = true;
             this.requestingCode = false;
             this.refreshSubmit();
             this.updateCodeButton();
-            AuthScreenHandler.submit(this.mode, id, email, password, code);
+            AuthScreenHandler.submit(request.getMode(), request.getAccountId(), request.getEmail(), request.getPassword(), request.getCode());
          }
       }
    }
