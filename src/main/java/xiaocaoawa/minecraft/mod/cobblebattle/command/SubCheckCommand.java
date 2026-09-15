@@ -1,11 +1,7 @@
 package xiaocaoawa.minecraft.mod.cobblebattle.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
-import xiaocaoawa.minecraft.mod.cobblebattle.lang.Msg;
 
 public final class SubCheckCommand extends AbstractSubCommand {
    @Override
@@ -15,20 +11,6 @@ public final class SubCheckCommand extends AbstractSubCommand {
 
    @Override
    public void build(LiteralArgumentBuilder<CommandSourceStack> node) {
-      node.executes(ctx -> this.run((CommandSourceStack)ctx.getSource()));
-   }
-
-   private int run(CommandSourceStack source) {
-      ServerPlayer participant = requirePlayer(source, "cmd.only_players.check");
-      if (participant == null) {
-         return 0;
-      } else if (!service().dex().isReady()) {
-         source.sendFailure(Msg.of(ChatFormatting.RED, "queue.dex_not_ready"));
-         return 0;
-      } else {
-         Component result = service().describePartyCompatibility(participant);
-         source.sendSuccess(() -> result, false);
-         return 1;
-      }
+      CommandExecutionRuntime.buildCheck(node);
    }
 }
