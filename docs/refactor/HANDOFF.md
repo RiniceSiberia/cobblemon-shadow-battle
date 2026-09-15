@@ -95,3 +95,5 @@ B4-team-preview-sessions（2026-09-15）：新增 Kotlin `TeamPreviewSessionDire
 B4-packed-team-values（2026-09-15）：新增 Kotlin `PackedTeamValueParsing` 并接入 `RemoteTeamCodec` 的等级、亲密度、HP、IV、EV、PP、UUID和性别解析。新增4项契约覆盖上下界、失败回退、Java裁剪、UUID及大小写敏感标记；Java保留原日志和对象装配。`RemoteTeamCodec`公开ABI与原JAR一致。JDK21离线clean build的9个任务全部执行，140项测试零失败，日志位于`D:/workspace/gradle-clean-b4-team-values-20260915.log`。下一步审查物种/形态、招式和太晶属性装配，再处理镜像实体。
 
 B4-spectator-format（2026-09-15）：`SpectatorFactory` 删除重复格式解析，改用 Kotlin `BattleFormatResolver.resolveSpectator`。新增2项契约固定观战外层格式回退和内层类型优先，普通镜像3项格式契约继续通过。JDK21离线clean build的9个任务全部执行，142项测试零失败，日志位于`D:/workspace/gradle-clean-b4-spectator-format-20260915.log`。下一步继续观战实体装配、失败清理与远端队伍对象验证。
+
+台账核对（2026-09-15）：逐项检查 `FILES.csv` 的路径存在性，137个缺失路径均为已记录删除或Java到Kotlin迁移关系。纠正 `MirrorTeardown.java` 和 `CobbleBattleNeoForge.java` 两个旧路径仍标待验证的过期状态；对应 Kotlin 实现继续分别承载实体集成风险和已完成的双端启动证据。当前台账348项、无重复路径、状态值全部合法。
