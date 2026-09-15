@@ -105,3 +105,5 @@ B5-room-lobby：`RoomLobbyScreen` 的创建选项委托给 Kotlin `RoomCreationO
 B5-room-controls：`RoomScreen` 的开战冷却和复制提示委托给 Kotlin `RoomInteractionState`。只有角色为 host、已有 guest、尚未 fighting 且冷却为零时可开始；成功开始立即设置200 tick冷却并阻止重复请求；复制邀请码设置40 tick提示；两个计数每tick递减且不低于零。新增4项状态契约。JDK21离线clean build的9个任务全部执行，132项测试、0失败；`RoomScreen`公开签名与原JAR一致。点击命中、剪贴板、leave/start发包和战斗出现后的关屏仍待客户端联调。
 
 B4-team-preview-sessions：`TeamPreviews` 的玩家会话表委托给 Kotlin `TeamPreviewSessionDirectory`，默认选择和客户端选择检查委托给 `TeamPreviewRules`。同一玩家的新会话覆盖旧会话；状态和关闭帧只处理相同 battleId 的快照；无客户端时依次选取请求数与队伍长度的较小值；客户端选择先检查精确数量，再拒绝负数、越界和重复序号，合法顺序原样发送。新增4项状态契约。首次定向编译因 Java 沿用 record 风格访问器失败，改用 Kotlin getter 后通过。JDK21离线clean build的9个任务全部执行，136项测试、0失败。真实 preview_open/state/closed/pick 往返和玩家断线待联调。
+
+B4-packed-team-values：`RemoteTeamCodec` 的基础标量解析委托给 Kotlin `PackedTeamValueParsing`。整数先按 Java `trim` 范围裁剪，解析失败沿用调用处回退值，解析成功限制在指定上下界；UUID合法时保留，非法时返回空并由Java入口记录原警告；性别只接受协议大写 M/F，其余均映射 GENDERLESS。等级、亲密度、当前HP、IV、EV和招式PP共用有界整数入口。新增4项边界契约。JDK21离线clean build的9个任务全部执行，140项测试、0失败；`RemoteTeamCodec`公开签名与原JAR一致。物种/形态、能力、招式、太晶属性和实体标记待真实数据验证。
