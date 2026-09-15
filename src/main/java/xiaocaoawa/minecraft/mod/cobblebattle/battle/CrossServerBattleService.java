@@ -48,6 +48,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomListPayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomStatePayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.ServerDexPayload;
 import io.github.rinicesiberia.shadowbattle.battle.BattleResultProjection;
+import io.github.rinicesiberia.shadowbattle.battle.BattleIdentifierParsing;
 import io.github.rinicesiberia.shadowbattle.battle.RoomDirectoryState;
 import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
 
@@ -936,7 +937,7 @@ public final class CrossServerBattleService {
    }
 
    private void onRoomState(JsonObject document) {
-      UUID who = uuidOrNull(BattleServerClient.str(document, "player", ""));
+      UUID who = BattleIdentifierParsing.uuidOrNull(BattleServerClient.str(document, "player", ""));
       if (who != null) {
          RoomStatePayload.Member host = readMember(document, "host");
          boolean hasGuest = document.has("guest") && document.get("guest").isJsonObject();
@@ -987,7 +988,7 @@ public final class CrossServerBattleService {
 
    private void onRoomClosed(JsonObject document) {
       this.battleQueue.onRoomClosed(document);
-      UUID who = uuidOrNull(BattleServerClient.str(document, "player", ""));
+      UUID who = BattleIdentifierParsing.uuidOrNull(BattleServerClient.str(document, "player", ""));
       if (who != null) {
          this.refreshRooms(who);
       }
@@ -1203,7 +1204,7 @@ public final class CrossServerBattleService {
       String selectedConversation = BattleServerClient.str(document, "channel", "global");
       String text = BattleServerClient.str(document, "text", "");
       if (!text.isEmpty()) {
-         UUID sender = uuidOrNull(BattleServerClient.str(document, "player", ""));
+         UUID sender = BattleIdentifierParsing.uuidOrNull(BattleServerClient.str(document, "player", ""));
          ChatLinePayload line = new ChatLinePayload(
             selectedConversation,
             document.has("uid") ? document.get("uid").getAsLong() : 0L,
@@ -1227,14 +1228,6 @@ public final class CrossServerBattleService {
                }
             }
          }
-      }
-   }
-
-   private static UUID uuidOrNull(String raw) {
-      try {
-         return raw != null && !raw.isBlank() ? UUID.fromString(raw) : null;
-      } catch (IllegalArgumentException failure) {
-         return null;
       }
    }
 

@@ -14,7 +14,7 @@
 | 图鉴 | RemoteDex / ServerDex | 远端数据、同步、缓存及错误处理 | 待审查 | 待审查 |
 | UI及命令 | client/* / command/* / lang/* | 权限、显示、输入、翻译、数据请求、副作用 | 待审查 | 待审查 |
 | 公开API | api/* | 类名、record访问器、事件类型、静态字段及JVM签名 | 原JAR 123个公开class与当前发布包逐项 `javap -public` 一致；事件运行待验证 | 待验证 |
-| Mixin及引导 | mixin/* / neoforge/* / CobbleBattle | 注入目标/描述符、客户端隔离、注册顺序 | 待验证 | 待审查 |
+| Mixin及引导 | mixin/* / neoforge/* / CobbleBattle | 注入目标/描述符、客户端隔离、注册顺序 | 配置、类清单、13个Inject目标及3个绘制调用描述符契约通过；实际应用待验证 | 待验证 |
 
 测试只能在实际执行后填写通过，后续改动影响调用链时需重新执行。生产服务器身份的随机生成不能因测试可复现而改成固定 seed；测试输入使用固定值。
 
@@ -71,3 +71,5 @@ B4-construction-attempt：`MirrorFactory`的远端单玩家与双本地玩家路
 B3-B4-clean-71：JDK21下执行`./gradlew.bat --offline clean build --console=plain`成功，9个任务全部实际执行，71项测试、0失败，thin JAR与发布JAR均生成；日志位于`D:/workspace/gradle-clean-b3-b4-71-20260915.log`。公开ABI沿用`8e0c7a5`的123类全量一致结果，并对后续受影响的23个network类和`CrossServerBattleService`增量复核一致；`MirrorFactory`及已删除的`MirrorTeardown`均非公开类。客户端、专用服务端和远端服务运行仍未验证。
 
 B6-residue-cleanup：删除失效的`build.ps1`、旧IDEA模块、反编译摘要/空错误日志、导入清单、javac参数文件及无入站依赖的合成`PlatformMethods`。源码与jdeps引用扫描未发现合成类调用；删除后JDK21离线clean build的9个任务全部执行，71项测试、0失败，发布JAR不再包含`architectury_inject_*`条目。Gradle构建与IDEA模型继续作为唯一项目构建入口。
+
+B5-mixin-contract：`cobblebattle.mixins.json`与原JAR文本一致，4个客户端类和2个通用类均存在。新增3项元数据契约固定13个`@Inject`目标名、图鉴`@ModifyArg`调用目标及两套`@ModifyArgs`完整描述符和可选要求。服务与Showdown注入共用Kotlin `BattleIdentifierParsing`，新增1项UUID正常/异常边界契约。全量75项测试、0失败，`CrossServerBattleService`与`GraalShowdownServiceMixin`公开签名一致；实际Mixin应用和游戏内副作用待验证。

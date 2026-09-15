@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import io.github.rinicesiberia.shadowbattle.battle.BattleIdentifierParsing;
 import xiaocaoawa.minecraft.mod.cobblebattle.battle.CrossServerBattles;
 
 @Mixin({GraalShowdownService.class})
@@ -42,10 +43,8 @@ public abstract class GraalShowdownServiceMixin {
       remap = false
    )
    private void cobblebattle$sendFromShowdown(String battleId, String message, CallbackInfo ci) {
-      UUID id;
-      try {
-         id = UUID.fromString(battleId);
-      } catch (IllegalArgumentException var6) {
+      UUID id = BattleIdentifierParsing.uuidOrNull(battleId);
+      if (id == null) {
          return;
       }
 
