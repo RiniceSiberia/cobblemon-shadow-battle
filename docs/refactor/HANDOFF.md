@@ -1,6 +1,6 @@
 # 恢复入口
 
-当前并行推进 B3 游戏包与 B4 对战状态。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-15 使用 JDK 21 执行 `--offline test` 成功，71 项测试全部通过；最近一次空目录构建对应56项测试。IDEA使用相同Gradle模型，测试编译类路径已补齐，实际界面导入尚未测试。
+当前并行推进 B3 游戏包与 B4 对战状态。B1 已完成 Gradle Wrapper 8.12.1、Kotlin 2.2.20、ModDevGradle 2.0.147，固定 Minecraft 1.21.1 / NeoForge 21.1.66 / Architectury 13.0.8 / Cobblemon 1.7.0。2026-09-15 使用 JDK 21 执行 `--offline clean build` 成功，9个任务全部执行，71项测试全部通过。IDEA使用相同Gradle模型，测试编译类路径已补齐，实际界面导入尚未测试。
 
 业务源码基线为本地提交 2b4ea8d；本批次提交包含测试和构建。首次 Modrinth 下载 TLS 中断，通过缓存相同版本原件重试成功，项目不依赖 .deps 绝对路径。此前 tests 缺 Gson 依赖已修复。
 
@@ -53,3 +53,5 @@ B3-network-routing（2026-09-15）：`CobbleBattleNetwork`公开静态入口委�
 B4-mirror-cleanup（2026-09-15）：删除包内Java `MirrorTeardown`，迁移并重命名为Kotlin `MirrorLifecycleCleanup`，服务内部字段同步改为 `lifecycleCleanup`；立即/延迟清理顺序保持。新增2项宽限时间边界契约，全量68项测试通过，`CrossServerBattleService`公开签名一致；日志位于 `D:/workspace/gradle-b4-mirror-cleanup.log`。实体和BattleRegistry实际回收仍待游戏内验证。下一步提取镜像构造作用域与失败结果，再执行clean build。
 
 B4-construction-attempt（2026-09-15）：新增Kotlin `BattleConstructionAttempt`，`MirrorFactory`两条创建路径共用启动与构造上下文收尾。新增3项测试覆盖成功、运行时异常和Error，全量71项通过；日志位于 `D:/workspace/gradle-b4-construction-attempt.log`。下一步执行JDK21离线clean build与公开ABI复核，再继续实体装配和mixin未触发分支。
+
+B3-B4-clean-71（2026-09-15）：JDK21离线clean build成功，9个任务全部执行，71项测试零失败，thin与发布JAR已生成；日志位于`D:/workspace/gradle-clean-b3-b4-71-20260915.log`。公开ABI以此前123类全量审计为基线，对其后受影响的23个network类和`CrossServerBattleService`增量核对一致。客户端、专用服务端、真实远端服务及实体生命周期仍未验证。下一步审查并移除构建模型不使用的反编译工程残留，再继续B4/B5。

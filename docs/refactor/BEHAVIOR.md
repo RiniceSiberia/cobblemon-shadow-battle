@@ -67,3 +67,5 @@ B3-network-routing：`CobbleBattleNetwork`保留原公开静态入口，6类C2S�
 B4-mirror-cleanup：包内Java `MirrorTeardown`迁移并重命名为Kotlin `MirrorLifecycleCleanup`，保留先领取实体引用、立即释放镜像Pokemon归属、按宽限时间提交主线程销毁、异常终止关闭BattleRegistry、最后通知本地参与者的顺序。新增2项调度边界契约覆盖零/负延迟立即执行及正延迟只提交任务；全量68项测试、0失败，`CrossServerBattleService`公开签名一致。世界实体、BattleRegistry关闭、断线和延迟2000ms回收仍待游戏内验证。
 
 B4-construction-attempt：`MirrorFactory`的远端单玩家与双本地玩家路径统一通过Kotlin `BattleConstructionAttempt`执行`BattleRegistry.startBattle`并结束构造上下文。成功返回空失败；`RuntimeException`返回原Java通知/回收分支；其他错误继续抛出；三种退出均执行`CrossServerBattles.endConstruction`。新增3项顺序契约，全量71项测试、0失败。实体装配、mixin未触发和游戏内启动确认仍待验证。
+
+B3-B4-clean-71：JDK21下执行`./gradlew.bat --offline clean build --console=plain`成功，9个任务全部实际执行，71项测试、0失败，thin JAR与发布JAR均生成；日志位于`D:/workspace/gradle-clean-b3-b4-71-20260915.log`。公开ABI沿用`8e0c7a5`的123类全量一致结果，并对后续受影响的23个network类和`CrossServerBattleService`增量复核一致；`MirrorFactory`及已删除的`MirrorTeardown`均非公开类。客户端、专用服务端和远端服务运行仍未验证。
