@@ -1,5 +1,11 @@
 # 当前恢复状态
 
+B4-prop-entities (base f2b00cc)：MirrorPokemon实现迁入Kotlin MirrorPropEntities；MirrorPropTracker集中处理归属优先挂接、遗留标签销毁和返回值。4项新契约覆盖重复接管/释放、空Pokemon、普通实体及异常传播。全量176项测试通过，MirrorPokemon公开ABI一致，日志D:/workspace/gradle-mirror-props-final.log。实体标签写入、挂接及世界销毁仍待集成验证。
+
+下一批：观战入口与双席队伍解析；整体仍未完成。以下为历史快照。
+
+# 当前恢复状态
+
 B4-npc-runtime (base 17520c5，2026-09-16)：MirrorNpc的实体创建/销毁、皮肤查询迁入Kotlin MirrorNpcRuntime；公开Java入口保留。MirrorStageLayout保持原Vec3几何和朝向；NpcSkinDelivery保持缓存命中同步应用、异步先缓存后主线程检查移除状态。新增5项测试，11组站位对照；全量172项通过，公开ABI一致，日志D:/workspace/gradle-npc-runtime-final.log。首次编译的可空模型错误已改为非空默认模型，空URL仍禁止加载；字节码审查发现头部旋转属性会直写字段，已恢复显式setYHeadRot。世界实体、Mojang查询和实际纹理仍待验证。原addFreshEntity/皮肤调度抛异常时的登记残留语义保留，未擅自增加回收。
 
 下一批：Pokémon实体归属与遗留实体销毁。以下均为历史快照，全项目仍未完成。
