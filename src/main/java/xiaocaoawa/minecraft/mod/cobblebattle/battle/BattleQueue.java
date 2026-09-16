@@ -60,28 +60,28 @@ final class BattleQueue {
       return ref != null && !ref.isJsonNull() ? this.references.owner(ref.getAsInt()) : null;
    }
 
-   private BattleQueue.Prepared prepare(ServerPlayer participant) throws BattleQueue.Refused {
-      return this.prepare(participant, true, true);
+   private BattleQueue.PreparedRoster prepareRoster(ServerPlayer participant) throws BattleQueue.QueuePreparationFailure {
+      return this.prepareRoster(participant, true, true);
    }
 
-   private BattleQueue.Prepared prepare(ServerPlayer participant, boolean dexAuthority, boolean legality) throws BattleQueue.Refused {
+   private BattleQueue.PreparedRoster prepareRoster(ServerPlayer participant, boolean dexAuthority, boolean legality) throws BattleQueue.QueuePreparationFailure {
       RemoteDex dex = this.service.dex();
       if (!this.service.isConnected()) {
-         throw new BattleQueue.Refused(this.service.notConnected("queue.not_connected"));
+         throw new BattleQueue.QueuePreparationFailure(this.service.notConnected("queue.not_connected"));
       } else if (!this.service.auth().isSignedIn(participant.getUUID())) {
-         throw new BattleQueue.Refused(Msg.of(ChatFormatting.RED, "queue.not_signed_in"));
+         throw new BattleQueue.QueuePreparationFailure(Msg.of(ChatFormatting.RED, "queue.not_signed_in"));
       } else if (!dex.isReady()) {
-         throw new BattleQueue.Refused(Msg.of(ChatFormatting.RED, "queue.dex_not_ready"));
+         throw new BattleQueue.QueuePreparationFailure(Msg.of(ChatFormatting.RED, "queue.dex_not_ready"));
       } else if (this.references.contains(participant.getUUID())) {
-         throw new BattleQueue.Refused(Msg.of(ChatFormatting.YELLOW, "queue.already_queued"));
+         throw new BattleQueue.QueuePreparationFailure(Msg.of(ChatFormatting.YELLOW, "queue.already_queued"));
       } else if (BattleRegistry.getBattleByParticipatingPlayer(participant) != null) {
-         throw new BattleQueue.Refused(Msg.of(ChatFormatting.RED, "queue.already_in_battle"));
+         throw new BattleQueue.QueuePreparationFailure(Msg.of(ChatFormatting.RED, "queue.already_in_battle"));
       } else {
          RemoteTeamCodec.warmSpeciesCache();
          PartyStore party = PlayerExtensionsKt.party(participant);
          List<BattlePokemon> roster = party.toBattleTeam(false, false, null);
          if (roster.isEmpty()) {
-            throw new BattleQueue.Refused(Msg.of(ChatFormatting.RED, "queue.no_pokemon"));
+            throw new BattleQueue.QueuePreparationFailure(Msg.of(ChatFormatting.RED, "queue.no_pokemon"));
          } else {
             List<Pokemon> plain = new ArrayList<>(roster.size());
             List<RemoteDex.Rejection> violations = new ArrayList<>();
@@ -95,15 +95,15 @@ final class BattleQueue {
             }
 
             if (!violations.isEmpty()) {
-               throw new BattleQueue.Refused(describeViolations(violations));
+               throw new BattleQueue.QueuePreparationFailure(describeViolations(violations));
             } else {
-               return new BattleQueue.Prepared(roster, BattleRegistry.INSTANCE.packTeam(roster), dex.describeTeam(plain));
+               return new BattleQueue.PreparedRoster(roster, BattleRegistry.INSTANCE.packTeam(roster), dex.describeTeam(plain));
             }
          }
       }
    }
 
-   private Component tooFewFor(List<BattlePokemon> roster, String battleType) {
+   private Component describeSlotShortage(List<BattlePokemon> roster, String battleType) {
       if (battleType != null && !battleType.isEmpty()) {
          int slots = QueueRules.requiredSlots(battleType);
          return roster.size() >= slots
@@ -115,16 +115,16 @@ final class BattleQueue {
    }
 
    Component join(ServerPlayer participant, String rankedId) {
-      BattleQueue.Prepared preparedTeam;
+      BattleQueue.PreparedRoster preparedTeam;
       try {
-         preparedTeam = this.prepare(participant);
-      } catch (BattleQueue.Refused failure) {
-         return failure.document;
+         preparedTeam = this.prepareRoster(participant);
+      } catch (BattleQueue.QueuePreparationFailure failure) {
+         return failure.message;
       }
 
       CrossServerBattleService.Ranked competition = this.service.ranked(rankedId);
       if (competition != null) {
-         Component tooFew = this.tooFewFor(preparedTeam.team(), competition.battleType());
+         Component tooFew = this.describeSlotShortage(preparedTeam.team(), competition.battleType());
          if (tooFew != null) {
             return tooFew;
          }
@@ -132,20 +132,20 @@ final class BattleQueue {
 
       JsonObject join = BattleServerClient.msg("queue_join");
       join.addProperty("ranked", rankedId);
-      return this.send(participant, join, preparedTeam, rankedId);
+      return this.sendPreparedRequest(participant, join, preparedTeam, rankedId);
    }
 
    Component createRoom(
       ServerPlayer participant, String name, String password, String battleType, int level, int pick, boolean fullHeal, boolean hostEngine, boolean legality
    ) {
-      BattleQueue.Prepared preparedTeam;
+      BattleQueue.PreparedRoster preparedTeam;
       try {
-         preparedTeam = this.prepare(participant, !hostEngine, !hostEngine || legality);
-      } catch (BattleQueue.Refused failure) {
-         return failure.document;
+         preparedTeam = this.prepareRoster(participant, !hostEngine, !hostEngine || legality);
+      } catch (BattleQueue.QueuePreparationFailure failure) {
+         return failure.message;
       }
 
-      Component tooFew = this.tooFewFor(preparedTeam.team(), battleType);
+      Component tooFew = this.describeSlotShortage(preparedTeam.team(), battleType);
       if (tooFew != null) {
          return tooFew;
       } else {
@@ -158,19 +158,19 @@ final class BattleQueue {
          create.addProperty("fullHeal", fullHeal);
          create.addProperty("engine", hostEngine ? "host" : "server");
          create.addProperty("legality", !hostEngine || legality);
-         return this.send(participant, create, preparedTeam, "");
+         return this.sendPreparedRequest(participant, create, preparedTeam, "");
       }
    }
 
    Component joinRoom(ServerPlayer participant, String roomId, String password, String battleType, boolean hostEngine, boolean legality, String inviteCode) {
-      BattleQueue.Prepared preparedTeam;
+      BattleQueue.PreparedRoster preparedTeam;
       try {
-         preparedTeam = this.prepare(participant, !hostEngine, !hostEngine || legality);
-      } catch (BattleQueue.Refused failure) {
-         return failure.document;
+         preparedTeam = this.prepareRoster(participant, !hostEngine, !hostEngine || legality);
+      } catch (BattleQueue.QueuePreparationFailure failure) {
+         return failure.message;
       }
 
-      Component tooFew = this.tooFewFor(preparedTeam.team(), battleType);
+      Component tooFew = this.describeSlotShortage(preparedTeam.team(), battleType);
       if (tooFew != null) {
          return tooFew;
       } else {
@@ -181,7 +181,7 @@ final class BattleQueue {
             join.addProperty("inviteCode", inviteCode);
          }
 
-         return this.send(participant, join, preparedTeam, "");
+         return this.sendPreparedRequest(participant, join, preparedTeam, "");
       }
    }
 
@@ -263,7 +263,7 @@ final class BattleQueue {
       }
    }
 
-   private Component send(ServerPlayer participant, JsonObject request, BattleQueue.Prepared preparedTeam, String rankedId) {
+   private Component sendPreparedRequest(ServerPlayer participant, JsonObject request, BattleQueue.PreparedRoster preparedTeam, String rankedId) {
       BattleServerClient client = this.service.client();
       int ref = client.nextRef();
       request.addProperty("ref", ref);
@@ -394,18 +394,18 @@ final class BattleQueue {
       return root;
    }
 
-   private record Prepared(List<BattlePokemon> team, String packed, JsonArray meta) {
+   private record PreparedRoster(List<BattlePokemon> team, String packed, JsonArray meta) {
    }
 
    record QueuedTeam(UUID playerUuid, List<BattlePokemon> team, String packed, String rankedId) {
    }
 
-   private static final class Refused extends Exception {
-      final Component document;
+   private static final class QueuePreparationFailure extends Exception {
+      final Component message;
 
-      Refused(Component document) {
+      QueuePreparationFailure(Component message) {
          super(null, null, false, false);
-         this.document = document;
+         this.message = message;
       }
    }
 }

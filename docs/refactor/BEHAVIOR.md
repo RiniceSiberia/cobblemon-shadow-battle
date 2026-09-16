@@ -180,3 +180,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-service-error-rules（2026-09-16）
 
 认证与聊天错误码分别迁入 Kotlin `AuthenticationErrorRules` 和 `ChatErrorRules`。认证保持十二个账户错误键；聊天保持限速、未在战斗、禁用和未登录四个错误键；未知码继续使用服务端回退文本，`MUTED` 的永久/限时分支仍保持原位置和时长格式。两套规则不接受对方的业务错误码。证据为 `ServiceErrorRulesTest` 两项契约及 `D:/workspace/gradle-service-error-rules.log` 的 JDK21 离线 `clean build`，214 项测试、0 失败、0 错误；真实认证和聊天错误帧仍待联调。
+## B4-battle-queue-private-names（2026-09-16）
+
+`BattleQueue` 的私有队伍准备、槽位不足说明、已准备请求发送、准备结果和拒绝异常改为职责明确的名称。改动仅涉及私有符号，排队检查顺序、合法性判断、消息字段、引用登记和发送失败回滚均未改变。JDK21 离线全量测试 214 项通过，日志 `D:/workspace/gradle-battle-queue-private-names.log`；真实队伍数据和远端交互仍待联调。
