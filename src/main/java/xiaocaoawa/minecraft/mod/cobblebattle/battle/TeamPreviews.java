@@ -1,13 +1,13 @@
 package xiaocaoawa.minecraft.mod.cobblebattle.battle;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.github.rinicesiberia.shadowbattle.battle.PreviewPickValidation;
 import io.github.rinicesiberia.shadowbattle.battle.TeamPreviewRules;
 import io.github.rinicesiberia.shadowbattle.battle.TeamPreviewSession;
 import io.github.rinicesiberia.shadowbattle.battle.TeamPreviewSessionDirectory;
-import java.util.ArrayList;
+import io.github.rinicesiberia.shadowbattle.battle.TeamPreviewRosterDecoding;
+import io.github.rinicesiberia.shadowbattle.transport.TeamPreviewMessages;
 import java.util.List;
 import java.util.UUID;
 import java.util.Map.Entry;
@@ -51,8 +51,8 @@ final class TeamPreviews {
          }
 
          JsonObject rosters = document.getAsJsonObject("rosters");
-         List<TeamPreviewPayload.Slot> mine = readRoster(rosters, seat);
-         List<TeamPreviewPayload.Slot> theirs = readRoster(rosters, otherSeat(rosters, seat));
+         List<TeamPreviewPayload.Slot> mine = TeamPreviewRosterDecoding.roster(rosters, seat);
+         List<TeamPreviewPayload.Slot> theirs = TeamPreviewRosterDecoding.roster(rosters, TeamPreviewRosterDecoding.opponentSeat(rosters, seat));
          int pick = BattleServerClient.integer(document, "pick", mine.size());
          int lead = Math.max(1, BattleServerClient.integer(document, "lead", 1));
          long deadline = deadlineOf(document);
@@ -160,60 +160,7 @@ final class TeamPreviews {
    }
 
    private void send(String battleId, UUID participantUuid, List<Integer> picks) {
-      JsonArray array = new JsonArray();
-
-      for (int pick : picks) {
-         array.add(pick);
-      }
-
-      JsonObject msg = BattleServerClient.msg("preview_pick");
-      msg.addProperty("battleId", battleId);
-      msg.addProperty("player", participantUuid.toString());
-      msg.add("picks", array);
-      this.service.client().send(msg);
-   }
-
-   private static List<TeamPreviewPayload.Slot> readRoster(JsonObject rosters, String seat) {
-      List<TeamPreviewPayload.Slot> outputStream = new ArrayList<>();
-      if (rosters != null && seat != null) {
-         JsonElement element = rosters.get(seat);
-         if (element != null && element.isJsonArray()) {
-            for (JsonElement entry : element.getAsJsonArray()) {
-               if (entry.isJsonObject()) {
-                  JsonObject slot = entry.getAsJsonObject();
-                  outputStream.add(
-                     new TeamPreviewPayload.Slot(
-                        BattleServerClient.str(slot, "species", ""),
-                        BattleServerClient.integer(slot, "level", 1),
-                        BattleServerClient.str(slot, "gender", ""),
-                        BattleServerClient.bool(slot, "shiny", false),
-                        BattleServerClient.str(slot, "item", "")
-                     )
-                  );
-               }
-            }
-
-            return outputStream;
-         } else {
-            return outputStream;
-         }
-      } else {
-         return outputStream;
-      }
-   }
-
-   private static String otherSeat(JsonObject rosters, String seat) {
-      if (rosters == null) {
-         return null;
-      } else {
-         for (String key : rosters.keySet()) {
-            if (!key.equals(seat)) {
-               return key;
-            }
-         }
-
-         return null;
-      }
+      this.service.client().send(TeamPreviewMessages.pick(battleId, participantUuid, picks));
    }
 
    private static long deadlineOf(JsonObject document) {

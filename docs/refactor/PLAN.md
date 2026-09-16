@@ -126,3 +126,4 @@ B4-handshake-response（2026-09-16）：握手设置解码和图鉴缓存决策�
 B4-room-list-personalization（2026-09-16）：房间目录自有标记和交付摘要迁入 Kotlin，保持账号零、顺序、对象复用和 :own 规则；239 项离线测试通过。
 B4-connection-lifecycle-rules（2026-09-16）：连接启动、按需连接、最低空闲延迟和释放判定迁入 Kotlin，保持调度副作用位置；242 项离线测试通过。
 B4-chat-line-decoding（2026-09-16）：远端聊天消息字段解析迁入 Kotlin，保持空文本忽略、默认频道和无效UUID回退；245 项离线测试通过。
+B4-team-preview-roster（2026-09-16）：队伍预览阵容解码和选择消息编码迁入 Kotlin，保持槽位过滤、默认值、对手席位和选择顺序；248 项离线测试通过。

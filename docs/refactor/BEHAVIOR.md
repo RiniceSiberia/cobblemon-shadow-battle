@@ -216,3 +216,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-chat-line-decoding（2026-09-16）
 
 远端聊天行的字段解析迁入 Kotlin `ChatLineDecoding`。空文本继续直接忽略；缺少频道时回退 global；缺少或无效玩家 UUID 时使用零 UUID；uid、账号、名称、battleId 和文本保持原默认值与原文。`CrossServerBattleService` 继续负责战斗频道按镜像席位分发、其他频道向已登录玩家广播，服务器缺失时不发送。三项契约及 JDK21 离线 `clean build` 通过，245 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-chat-line-decoding.log`。真实聊天广播和战斗频道成员仍待联调。
+## B4-team-preview-roster（2026-09-16）
+
+队伍预览席位阵容解码迁入 Kotlin `TeamPreviewRosterDecoding`，选择消息构造迁入 `TeamPreviewMessages`。阵容继续过滤非对象槽位并保持物种、等级、性别、闪光、道具默认值；对手席位继续取对象顺序中第一个不同键；选择序号和字段顺序原样发送。玩家查找、无客户端默认选择、会话保存和状态分发仍在原链路。三项契约及 JDK21 离线 `clean build` 通过，248 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-team-preview-roster.log`。真实预览消息与客户端界面仍待联调。
