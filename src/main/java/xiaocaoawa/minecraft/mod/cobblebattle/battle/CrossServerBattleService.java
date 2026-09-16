@@ -56,6 +56,7 @@ import io.github.rinicesiberia.shadowbattle.battle.RoomListDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.RoomStateDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
 import io.github.rinicesiberia.shadowbattle.transport.BattleControlMessages;
+import io.github.rinicesiberia.shadowbattle.transport.PlayerIdentityPayload;
 
 public final class CrossServerBattleService {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle");
@@ -813,10 +814,7 @@ public final class CrossServerBattleService {
             JsonObject request = BattleServerClient.msg("leaderboard_query");
             request.addProperty("ref", ref);
             request.addProperty("ranked", chosen);
-            JsonObject who = new JsonObject();
-            who.addProperty("uuid", participant.getUUID().toString());
-            who.addProperty("name", participant.getGameProfile().getName());
-            request.add("player", who);
+            request.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
             this.requestLedger.bindMenu(ref, participant.getUUID());
             if (!this.client.send(request)) {
                this.requestLedger.removeMenu(ref);
@@ -1167,10 +1165,7 @@ public final class CrossServerBattleService {
          JsonObject request = BattleServerClient.msg("leaderboard_query");
          request.addProperty("ref", ref);
          request.addProperty("ranked", rankedId);
-         JsonObject who = new JsonObject();
-         who.addProperty("uuid", participant.getUUID().toString());
-         who.addProperty("name", participant.getGameProfile().getName());
-         request.add("player", who);
+         request.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
          this.requestLedger.bindLeaderboard(ref, participant.getUUID());
          if (!this.client.send(request)) {
             this.requestLedger.removeLeaderboard(ref);
@@ -1264,10 +1259,7 @@ public final class CrossServerBattleService {
             request.addProperty("ref", ref);
             request.addProperty("channel", "battle".equals(selectedConversation) ? "battle" : "global");
             request.addProperty("text", text);
-            JsonObject who = new JsonObject();
-            who.addProperty("uuid", participant.getUUID().toString());
-            who.addProperty("name", participant.getGameProfile().getName());
-            request.add("player", who);
+            request.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
             this.requestLedger.bindChat(ref, participant.getUUID());
             this.client.send(request);
          }

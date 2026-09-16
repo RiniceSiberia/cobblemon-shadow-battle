@@ -111,3 +111,5 @@ B4-room-state-decoding（2026-09-16）：将 CrossServerBattleService 的 room_s
 B4-room-list-decoding（2026-09-16）：将 room_list 房间数组字段解析迁入 Kotlin RoomListDecoding，保留缓存 unchanged 分支和交付顺序；通过 210 项离线测试。
 
 B4-leaderboard-decoding（2026-09-16）：将排行榜响应条目解析迁入 Kotlin LeaderboardDecoding，保留菜单回退和客户端发送顺序；通过 212 项离线测试。
+
+B4-player-identity-payload（2026-09-16）：将 `QueuePlayerPayload` 安全更名为 `PlayerIdentityPayload`，统一排队、房间、菜单、排行榜和聊天请求的玩家对象构造；通过 212 项离线测试。

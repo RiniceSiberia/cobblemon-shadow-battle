@@ -173,3 +173,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-leaderboard-decoding（2026-09-16）
 
 跨服排行榜响应的条目字段、	op 数组过滤、you 缺省对象和默认值迁入 Kotlin LeaderboardDecoding。CrossServerBattleService 保留 ref 领取、菜单回退和网络发送顺序。证据为 LeaderboardDecodingTest 两项契约及 D:/workspace/gradle-leaderboard-decoding-clean.log 的 JDK21 离线 clean build，212 项测试、0 失败、0 错误；真实排行榜响应和客户端展示仍待联调。
+
+## B4-player-identity-payload（2026-09-16）
+
+原排队专用命名的玩家协议对象更名为 `PlayerIdentityPayload`，并复用于菜单、排行榜和聊天请求。所有消息继续按 `uuid` 后 `name` 的顺序写入，名称文本不裁剪；排队、房间、菜单、排行榜和聊天请求的字段结构保持一致。证据为原两项 JSON 契约及 `D:/workspace/gradle-player-identity-payload.log` 的 JDK21 离线测试，212 项测试、0 失败、0 错误；真实跨服请求待联调。

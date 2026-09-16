@@ -25,7 +25,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.net.BattleServerClient;
 import io.github.rinicesiberia.shadowbattle.battle.QueueReferenceBook;
 import io.github.rinicesiberia.shadowbattle.battle.QueueRules;
 import io.github.rinicesiberia.shadowbattle.battle.QueueMessageRules;
-import io.github.rinicesiberia.shadowbattle.transport.QueuePlayerPayload;
+import io.github.rinicesiberia.shadowbattle.transport.PlayerIdentityPayload;
 
 final class BattleQueue {
    private final CrossServerBattleService service;
@@ -198,7 +198,7 @@ final class BattleQueue {
          int ref = client.nextRef();
          JsonObject lookup = BattleServerClient.msg("room_lookup");
          lookup.addProperty("ref", ref);
-         lookup.add("player", QueuePlayerPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
+         lookup.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
          lookup.addProperty("inviteCode", code);
          this.references.bindLookup(ref, participant.getUUID());
          if (!client.send(lookup)) {
@@ -231,7 +231,7 @@ final class BattleQueue {
       BattleServerClient client = this.service.client();
       JsonObject leave = BattleServerClient.msg("room_leave");
       leave.addProperty("ref", client.nextRef());
-      leave.add("player", QueuePlayerPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
+      leave.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
       client.send(leave);
       return null;
    }
@@ -241,7 +241,7 @@ final class BattleQueue {
       int ref = client.nextRef();
       JsonObject start = BattleServerClient.msg("room_start");
       start.addProperty("ref", ref);
-      start.add("player", QueuePlayerPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
+      start.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
       this.references.bindOwner(ref, participant.getUUID());
       if (!client.send(start)) {
          this.references.removeOwner(ref);
@@ -267,7 +267,7 @@ final class BattleQueue {
       BattleServerClient client = this.service.client();
       int ref = client.nextRef();
       request.addProperty("ref", ref);
-      request.add("player", QueuePlayerPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
+      request.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
       request.addProperty("team", preparedTeam.packed());
       request.add("teamMeta", preparedTeam.meta());
       this.references.putWaiting(new QueueReferenceBook.WaitingTeam(participant.getUUID(), preparedTeam.team(), preparedTeam.packed(), rankedId));
@@ -307,7 +307,7 @@ final class BattleQueue {
          BattleServerClient client = this.service.client();
          JsonObject leave = BattleServerClient.msg("queue_leave");
          leave.addProperty("ref", client.nextRef());
-         leave.add("player", QueuePlayerPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
+         leave.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
          client.send(leave);
          return null;
       }
@@ -318,7 +318,7 @@ final class BattleQueue {
          BattleServerClient client = this.service.client();
          if (client != null) {
             JsonObject leave = BattleServerClient.msg("queue_leave");
-            leave.add("player", QueuePlayerPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
+            leave.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
             client.send(leave);
          }
       }
