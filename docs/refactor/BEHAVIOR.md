@@ -189,3 +189,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-room-queue-requests（2026-09-16）
 
 房间创建和加入请求的固定字段构造迁入 Kotlin `RoomQueueRequests`。创建请求保持字段顺序，主机引擎写入 `host` 并尊重合法性选项，服务端引擎写入 `server` 且强制合法性检查；加入请求只在邀请码非空时写入 `inviteCode`。ref、玩家、队伍和队伍元数据仍由发送链路随后追加，顺序不变。三项协议契约及 JDK21 离线 `clean build` 通过，219 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-room-queue-requests.log`。真实房间服务往返仍待联调。
+## B4-queue-action-requests（2026-09-16）
+
+匹配加入/离开与房间查询/离开/开战请求迁入 Kotlin 协议构造器。主动离队继续包含 `ref`，断线离队继续省略 `ref`；玩家对象仍保持 `uuid`、`name` 顺序。房间动作保持 `t`、`ref`、`player` 顺序，查询请求随后追加 `inviteCode`。动态队伍字段仍由发送链路追加。三项新增契约连同既有房间请求契约通过；JDK21 离线 `clean build` 成功，222 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-queue-action-requests.log`。真实远端请求和断线竞态仍待联调。

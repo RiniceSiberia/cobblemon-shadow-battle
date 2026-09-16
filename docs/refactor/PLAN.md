@@ -117,3 +117,4 @@ B4-service-error-rules（2026-09-16）：认证与聊天错误码映射迁入两
 B4-battle-queue-private-names（2026-09-16）：重写 `BattleQueue` 私有准备、槽位、发送和异常符号名称，不改变公开 ABI 与业务顺序；214 项离线测试通过。
 B4-queue-rejection-message（2026-09-16）：队伍合法性拒绝消息投影迁入 Kotlin，保持顺序、槽位编号、翻译键和样式；216 项离线测试通过。
 B4-room-queue-requests（2026-09-16）：房间创建与加入请求固定字段迁入 Kotlin 协议构造器，保持字段顺序和引擎/合法性规则；219 项离线测试通过。
+B4-queue-action-requests（2026-09-16）：queue_join/queue_leave 与房间 lookup/leave/start 请求迁入 Kotlin 构造器，保持主动和断线离队的 ref 差异；222 项离线测试通过。

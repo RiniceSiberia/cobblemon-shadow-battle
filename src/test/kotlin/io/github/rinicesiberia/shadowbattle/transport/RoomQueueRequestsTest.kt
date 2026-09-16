@@ -1,5 +1,6 @@
 package io.github.rinicesiberia.shadowbattle.transport
 
+import java.util.UUID
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -31,5 +32,17 @@ class RoomQueueRequestsTest {
 
         assertFalse(direct.has("inviteCode"))
         assertEquals("{\"t\":\"room_join\",\"roomId\":\"r2\",\"password\":\"\",\"inviteCode\":\"code\"}", invited.toString())
+    }
+
+    @Test
+    fun `房间动作保持ref玩家和邀请码字段顺序`() {
+        val uuid = UUID(0L, 3L)
+
+        assertEquals(
+            "{\"t\":\"room_lookup\",\"ref\":7,\"player\":{\"uuid\":\"00000000-0000-0000-0000-000000000003\",\"name\":\"玩家\"},\"inviteCode\":\"abc\"}",
+            RoomQueueRequests.lookup(7, uuid, "玩家", "abc").toString()
+        )
+        assertEquals("room_leave", RoomQueueRequests.leave(8, uuid, "玩家").get("t").asString)
+        assertEquals("room_start", RoomQueueRequests.start(9, uuid, "玩家").get("t").asString)
     }
 }

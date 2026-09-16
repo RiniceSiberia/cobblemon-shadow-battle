@@ -1,6 +1,7 @@
 package io.github.rinicesiberia.shadowbattle.transport
 
 import com.google.gson.JsonObject
+import java.util.UUID
 import xiaocaoawa.minecraft.mod.cobblebattle.net.BattleServerClient
 
 /** 构造房间创建与加入请求的固定协议字段。 */
@@ -32,5 +33,21 @@ object RoomQueueRequests {
             addProperty("roomId", roomId)
             addProperty("password", password)
             if (inviteCode.isNotEmpty()) addProperty("inviteCode", inviteCode)
+        }
+
+    @JvmStatic
+    fun lookup(reference: Int, uuid: UUID, name: String, inviteCode: String): JsonObject =
+        playerRequest("room_lookup", reference, uuid, name).apply { addProperty("inviteCode", inviteCode) }
+
+    @JvmStatic
+    fun leave(reference: Int, uuid: UUID, name: String): JsonObject = playerRequest("room_leave", reference, uuid, name)
+
+    @JvmStatic
+    fun start(reference: Int, uuid: UUID, name: String): JsonObject = playerRequest("room_start", reference, uuid, name)
+
+    private fun playerRequest(type: String, reference: Int, uuid: UUID, name: String): JsonObject =
+        BattleServerClient.msg(type).apply {
+            addProperty("ref", reference)
+            add("player", PlayerIdentityPayload.create(uuid, name))
         }
 }
