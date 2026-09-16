@@ -165,3 +165,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-room-state-decoding（2026-09-16）
 
 跨服 oom_state 消息的玩家标识、房主/客人、观战者列表和默认字段解码迁入 Kotlin RoomStateDecoding。无效玩家标识继续忽略消息；缺少房主或客人时使用 NOBODY，非对象观战者继续过滤，ngine=host、ighting 和 youAre 的字段语义保持不变。证据为 RoomStateDecodingTest 三项契约及 D:/workspace/gradle-room-state-decoding-clean.log 的 JDK21 离线 clean build，207 项测试、0 失败、0 错误；真实服务端 oom_state 往返和客户端界面展示仍待联调。
+
+## B4-room-list-decoding（2026-09-16）
+
+跨服 oom_list 中房间对象的字段读取、默认值和非对象过滤迁入 Kotlin RoomListDecoding。缺少 ooms 或数组类型不符时继续得到空列表；房主引擎、战斗状态、观战人数、锁定和合法性字段保持原默认值及类型。CrossServerBattleService 的 unchanged 缓存分支、哈希和交付副作用保持原位置。证据为 RoomListDecodingTest 三项契约及 D:/workspace/gradle-room-list-decoding.log 的 JDK21 离线测试，210 项测试、0 失败、0 错误；真实房间列表响应和客户端刷新展示仍待联调。

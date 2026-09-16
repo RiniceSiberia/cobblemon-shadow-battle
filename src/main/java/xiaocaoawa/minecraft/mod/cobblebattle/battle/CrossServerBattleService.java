@@ -51,6 +51,7 @@ import io.github.rinicesiberia.shadowbattle.battle.BattleResultProjection;
 import io.github.rinicesiberia.shadowbattle.battle.BattleIdentifierParsing;
 import io.github.rinicesiberia.shadowbattle.battle.QueueErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.RoomDirectoryState;
+import io.github.rinicesiberia.shadowbattle.battle.RoomListDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.RoomStateDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
 import io.github.rinicesiberia.shadowbattle.transport.BattleControlMessages;
@@ -989,35 +990,7 @@ public final class CrossServerBattleService {
          rooms = current.getContent();
          hash = current.getHash();
       } else {
-         List<RoomListPayload.Room> decodedRooms = new ArrayList<>();
-
-         for (JsonElement el : document.has("rooms") && document.get("rooms").isJsonArray() ? document.getAsJsonArray("rooms") : new JsonArray()) {
-            if (el.isJsonObject()) {
-               JsonObject o = el.getAsJsonObject();
-               decodedRooms.add(
-                  new RoomListPayload.Room(
-                     BattleServerClient.str(o, "id", ""),
-                     BattleServerClient.str(o, "name", ""),
-                     BattleServerClient.str(o, "host", "?"),
-                     o.has("hostUid") && !o.get("hostUid").isJsonNull() ? o.get("hostUid").getAsLong() : 0L,
-                     BattleServerClient.str(o, "battleType", "singles"),
-                     BattleServerClient.integer(o, "level", -1),
-                     BattleServerClient.integer(o, "pick", 6),
-                     BattleServerClient.bool(o, "fullHeal", true),
-                     BattleServerClient.bool(o, "locked", false),
-                     BattleServerClient.str(o, "lead", ""),
-                     BattleServerClient.bool(o, "hasGuest", false),
-                     BattleServerClient.integer(o, "watchers", 0),
-                     false,
-                     "host".equals(BattleServerClient.str(o, "engine", "server")),
-                     BattleServerClient.bool(o, "fighting", false),
-                     BattleServerClient.bool(o, "legality", true)
-                  )
-               );
-            }
-         }
-
-         rooms = List.copyOf(decodedRooms);
+         rooms = RoomListDecoding.decodeRooms(document);
          hash = BattleServerClient.str(document, "hash", "");
       }
 
