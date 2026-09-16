@@ -125,3 +125,5 @@ B4-packed-moves (base eb73675)：远端招式装配迁入Kotlin PackedMoveAssemb
 B4-packed-stats (base 12b5411)：六维IV/EV装配迁入Kotlin PackedStatAssembly，保留HP/攻击/防御/特攻/特防/速度顺序。4项新测试覆盖空字段、维度错误、尾空值、上下界、非法整数和写入异常的部分副作用。JDK21离线clean build成功，9个任务全部执行，162项测试零失败；RemoteTeamCodec公开javap签名与原JAR一致。日志D:/workspace/gradle-packed-stats.log。真实Cobblemon对象及世界行为尚待验证。
 
 B4-remote-roster (base 30a0358)：RemoteTeamCodec剩余队伍解码、物种缓存、性格/能力/亲密度/太晶/HP设置及BattlePokemon包装迁入Kotlin RemoteRosterAssembly，Java只保留三个公开委托入口。5项新测试包含7组Java过滤/槽位编号差分、包装异常中止、可选属性Exception隔离/Error传播及公开入口无效输入。JDK21离线clean build成功，167项测试零失败，9个任务全部执行；公开ABI与原JAR一致。日志D:/workspace/gradle-remote-roster.log。实际注册对象、prop标记、召回动画和远端联调仍未验证。
+
+B4-npc-runtime (base 17520c5，2026-09-16)：MirrorNpc的实体创建/销毁、皮肤查询迁入Kotlin MirrorNpcRuntime；公开Java入口保留。MirrorStageLayout保持原Vec3几何和朝向；NpcSkinDelivery保持缓存命中同步应用、异步先缓存后主线程检查移除状态。新增5项测试，11组站位对照；全量172项通过，公开ABI一致，日志D:/workspace/gradle-npc-runtime-final.log。首次编译的可空模型错误已改为非空默认模型，空URL仍禁止加载；字节码审查发现头部旋转属性会直写字段，已恢复显式setYHeadRot。世界实体、Mojang查询和实际纹理仍待验证。原addFreshEntity/皮肤调度抛异常时的登记残留语义保留，未擅自增加回收。

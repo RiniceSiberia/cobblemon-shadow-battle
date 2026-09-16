@@ -1,5 +1,11 @@
 # 当前恢复状态
 
+B4-npc-runtime (base 17520c5，2026-09-16)：MirrorNpc的实体创建/销毁、皮肤查询迁入Kotlin MirrorNpcRuntime；公开Java入口保留。MirrorStageLayout保持原Vec3几何和朝向；NpcSkinDelivery保持缓存命中同步应用、异步先缓存后主线程检查移除状态。新增5项测试，11组站位对照；全量172项通过，公开ABI一致，日志D:/workspace/gradle-npc-runtime-final.log。首次编译的可空模型错误已改为非空默认模型，空URL仍禁止加载；字节码审查发现头部旋转属性会直写字段，已恢复显式setYHeadRot。世界实体、Mojang查询和实际纹理仍待验证。原addFreshEntity/皮肤调度抛异常时的登记残留语义保留，未擅自增加回收。
+
+下一批：Pokémon实体归属与遗留实体销毁。以下均为历史快照，全项目仍未完成。
+
+# 当前恢复状态
+
 B4-remote-roster (base 30a0358)：RemoteTeamCodec剩余队伍解码、物种缓存、性格/能力/亲密度/太晶/HP设置及BattlePokemon包装迁入Kotlin RemoteRosterAssembly，Java只保留三个公开委托入口。5项新测试包含7组Java过滤/槽位编号差分、包装异常中止、可选属性Exception隔离/Error传播及公开入口无效输入。JDK21离线clean build成功，167项测试零失败，9个任务全部执行；公开ABI与原JAR一致。日志D:/workspace/gradle-remote-roster.log。实际注册对象、prop标记、召回动画和远端联调仍未验证。
 
 本次连续完成四个批次：观战失败回收、招式装配、IV/EV装配、完整远端队伍实现迁移。恢复下一步：审查MirrorFactory与SpectatorFactory的实体构建、无localBattleId失败回收及prop/召回动作；再推进剩余客户端代码和完整符号统计。全项目仍未完成；90%命名覆盖、真实远端联调、IDEA人工导入、推送与最终清理仍待完成。部署配置保持用户要求的现状。
