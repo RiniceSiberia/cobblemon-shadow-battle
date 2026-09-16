@@ -57,6 +57,7 @@ import io.github.rinicesiberia.shadowbattle.battle.QueueErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.RankedCompetitionDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.RoomDirectoryState;
 import io.github.rinicesiberia.shadowbattle.battle.RoomListDecoding;
+import io.github.rinicesiberia.shadowbattle.battle.RoomListPersonalization;
 import io.github.rinicesiberia.shadowbattle.battle.RoomStateDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
 import io.github.rinicesiberia.shadowbattle.transport.BattleControlMessages;
@@ -935,39 +936,10 @@ public final class CrossServerBattleService {
          participantUuid,
          participant -> {
             long accountNumber = this.auth.uidOf(participant.getUUID());
-            List<RoomListPayload.Room> mine = new ArrayList<>(snapshot.getContent().size());
-            boolean own = false;
-
-            for (RoomListPayload.Room room : snapshot.getContent()) {
-               boolean ours = accountNumber != 0L && room.hostUid() == accountNumber;
-               own |= ours;
-               mine.add(
-                  ours
-                     ? new RoomListPayload.Room(
-                        room.id(),
-                        room.name(),
-                        room.host(),
-                        room.hostUid(),
-                        room.battleType(),
-                        room.level(),
-                        room.pick(),
-                        room.fullHeal(),
-                        room.locked(),
-                        room.lead(),
-                        room.hasGuest(),
-                        room.watchers(),
-                        true,
-                        room.hostEngine(),
-                        room.fighting(),
-                        room.legality()
-                     )
-                     : room
-               );
-            }
-
-            String stamp = snapshot.getHash() + (own ? ":own" : "");
+            RoomListPersonalization.Result personalized = RoomListPersonalization.apply(snapshot.getContent(), snapshot.getHash(), accountNumber);
+            String stamp = personalized.getDeliveryStamp();
             if (this.roomDirectory.shouldDeliver(participant.getUUID(), stamp, refresh)) {
-               if (CobbleBattleNetwork.sendRooms(participant, new RoomListPayload(mine, refresh))) {
+               if (CobbleBattleNetwork.sendRooms(participant, new RoomListPayload(personalized.getRooms(), refresh))) {
                   this.roomDirectory.recordDelivery(participant.getUUID(), stamp);
                }
             }

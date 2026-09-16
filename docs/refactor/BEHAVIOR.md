@@ -207,3 +207,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-handshake-response（2026-09-16）
 
 握手响应的图鉴、合法性、聊天、邮件、实例和物种计数字段迁入 Kotlin `HandshakeResponseDecoding`。缺失字段保持原默认值。图鉴决策保持原优先级：未就绪先使缓存失效；就绪且本地摘要非空并与远端相同则接受缓存；其余请求完整快照。排位读取、观察者上报、等待认证界面打开和日志顺序未改。三项契约及 JDK21 离线 `clean build` 通过，237 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-handshake-response.log`。真实远端握手和缓存文件仍待联调。
+## B4-room-list-personalization（2026-09-16）
+
+房间目录按接收者标记自有房间及生成交付摘要的逻辑迁入 Kotlin `RoomListPersonalization`。账号为零时不认领 hostUid 为零的房间；匹配账号的全部房间均复制为 `mine=true`，非自有房间继续复用原对象，顺序不变；存在任一自有房间时摘要追加 `:own`。缓存去重、网络发送成功后记录摘要的副作用保持原位置。两项契约及 JDK21 离线 `clean build` 通过，239 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-room-list-personalization.log`。真实账号状态和客户端房间列表仍待联调。
