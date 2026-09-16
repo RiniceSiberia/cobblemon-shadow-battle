@@ -8,8 +8,6 @@ import com.cobblemon.mod.common.battles.actor.PlayerBattleActor;
 import com.cobblemon.mod.common.net.messages.client.battle.BattleMakeChoicePacket;
 import com.cobblemon.mod.common.net.messages.client.battle.BattleQueueRequestPacket;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import net.minecraft.ChatFormatting;
 import org.slf4j.Logger;
@@ -18,27 +16,13 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import io.github.rinicesiberia.shadowbattle.battle.BattleChoiceRestrictions;
 import xiaocaoawa.minecraft.mod.cobblebattle.battle.CrossServerBattles;
 import xiaocaoawa.minecraft.mod.cobblebattle.lang.Msg;
 
 @Mixin({BattleActor.class})
 public class BattleActorMixin {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle");
-   private static final Map<String, String> COBBLEBATTLE$RULE_FOR_GIMMICK = Map.of(
-      "mega", "Mega Clause", "zmove", "Z-Move Clause", "max", "Dynamax Clause", "terastal", "Terastal Clause", "ultra", "Ultra Burst Clause"
-   );
-   private static final Map<String, String> COBBLEBATTLE$MESSAGE_FOR_GIMMICK = Map.of(
-      "mega",
-      "battle.banned.mega",
-      "zmove",
-      "battle.banned.zmove",
-      "max",
-      "battle.banned.dynamax",
-      "terastal",
-      "battle.banned.terastal",
-      "ultra",
-      "battle.banned.ultra"
-   );
 
    @Inject(
       method = {"setActionResponses"},
@@ -69,19 +53,15 @@ public class BattleActorMixin {
 
          for (ShowdownActionResponse response : responses) {
             if (response instanceof MoveActionResponse move) {
-               String gimmick = move.getGimmickID();
-               if (gimmick != null) {
-                  String rule = COBBLEBATTLE$RULE_FOR_GIMMICK.get(gimmick.toLowerCase(Locale.ROOT));
-                  if (rule != null && rules.contains(rule)) {
-                     actor.getResponses().clear();
-                     actor.setMustChoose(true);
-                     actor.sendUpdate(new BattleQueueRequestPacket(request));
-                     actor.sendUpdate(new BattleMakeChoicePacket());
-                     String key = COBBLEBATTLE$MESSAGE_FOR_GIMMICK.getOrDefault(gimmick.toLowerCase(Locale.ROOT), "battle.banned.gimmick");
-                     actor.sendMessage(Msg.of(ChatFormatting.RED, key));
-                     ci.cancel();
-                     return;
-                  }
+               String refusalKey = BattleChoiceRestrictions.refusalKey(move.getGimmickID(), rules);
+               if (refusalKey != null) {
+                  actor.getResponses().clear();
+                  actor.setMustChoose(true);
+                  actor.sendUpdate(new BattleQueueRequestPacket(request));
+                  actor.sendUpdate(new BattleMakeChoicePacket());
+                  actor.sendMessage(Msg.of(ChatFormatting.RED, refusalKey));
+                  ci.cancel();
+                  return;
                }
             }
          }

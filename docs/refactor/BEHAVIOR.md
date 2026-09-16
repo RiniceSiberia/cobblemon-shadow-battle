@@ -227,3 +227,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-queue-response-decoding（2026-09-16）
 
 房间对战详情、房间关闭、房间创建、排队确认、离队和等待位置六类响应迁入 Kotlin `QueueResponseDecoding`。详情继续在 fighting 为 true 时传空战斗类型，其他字段沿用原默认值；玩家字段继续使用 `UUID.fromString` 并传播无效值异常；等待位置继续直接读取 JSON 数值并传播错误类型异常。ref 引用仍在解析前领取，等待队伍清理、玩家消息、邀请码复制样式和 API 事件顺序保留在 Java 协调层。四项契约及 JDK21 离线 `clean build` 通过，256 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-queue-response-decoding.log`。真实跨服响应和并发竞态仍待联调。
+
+## B5-battle-choice-restrictions（2026-09-16）
+
+`BattleActorMixin` 中 Mega、Z-Move、Dynamax、Terastal 和 Ultra Burst 的条款匹配与提示键投影迁入 Kotlin `BattleChoiceRestrictions`。机制标识继续按根区域忽略大小写，规则条款仍精确匹配；空规则、未知机制和非玩家 actor 不取消选择。命中后仍依次清空已有响应、要求重新选择、发送队列请求与选择包、发送红色提示并取消回调，异常继续由原入口捕获和记录。三项规则契约、既有 Mixin 元数据契约及 JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-battle-choice-restrictions.log`。真实游戏内回调和发包顺序仍待验证，因此 Mixin 文件保持待验证。

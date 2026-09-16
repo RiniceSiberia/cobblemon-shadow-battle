@@ -129,3 +129,4 @@ B4-chat-line-decoding（2026-09-16）：远端聊天消息字段解析迁入 Kot
 B4-team-preview-roster（2026-09-16）：队伍预览阵容解码和选择消息编码迁入 Kotlin，保持槽位过滤、默认值、对手席位和选择顺序；248 项离线测试通过。
 B4-team-preview-events（2026-09-16）：队伍预览打开、状态和关闭事件解码迁入 Kotlin，保持必填字段、默认值、UUID 错误分支、准备状态合并和截止时间边界；252 项离线测试通过。
 B4-queue-response-decoding（2026-09-16）：排队和房间的六类响应字段迁入 Kotlin DTO，保持引用领取顺序、协议默认值、无效 UUID 与直接数值解析异常；256 项离线测试通过。
+B5-battle-choice-restrictions（2026-09-16）：BattleActor Mixin 的五种机制限制映射迁入 Kotlin，保持注入签名、响应扫描和取消副作用顺序；259 项离线测试通过，真实回调仍待游戏内验证。
