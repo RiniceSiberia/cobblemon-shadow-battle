@@ -51,6 +51,7 @@ import io.github.rinicesiberia.shadowbattle.battle.BattleResultProjection;
 import io.github.rinicesiberia.shadowbattle.battle.BattleIdentifierParsing;
 import io.github.rinicesiberia.shadowbattle.battle.AuthenticationErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.ChatErrorRules;
+import io.github.rinicesiberia.shadowbattle.battle.ConnectionLifecycleRules;
 import io.github.rinicesiberia.shadowbattle.battle.LeaderboardDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.HandshakeResponseDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.QueueErrorRules;
@@ -81,7 +82,6 @@ public final class CrossServerBattleService {
    private final Set<UUID> waitingChunksAuthOpens = ConcurrentHashMap.newKeySet();
    private ScheduledExecutorService idleTimer;
    private ScheduledFuture<?> idleDisconnect;
-   private static final int IDLE_DISCONNECT_MIN_SECONDS = 5;
    private final RoomDirectoryState<List<RoomListPayload.Room>> roomDirectory = new RoomDirectoryState<>();
    private volatile int chatObserversReported = -1;
    private volatile boolean chatEnabled = true;
@@ -130,7 +130,9 @@ public final class CrossServerBattleService {
    }
 
    private void ensureConnected() {
-      if (this.client != null && !this.client.isWanted() && this.client.refusedReason() == null) {
+      if (ConnectionLifecycleRules.shouldRequestConnection(
+         this.client != null, this.client != null && this.client.isWanted(), this.client == null ? null : this.client.refusedReason()
+      )) {
          this.client.connect();
       }
    }
@@ -164,7 +166,7 @@ public final class CrossServerBattleService {
       this.client = new BattleServerClient(this.config, this::onDocument, this::onConnected, this::onDisconnected);
       this.client.setOnConnectFailed(this::onConnectFailed);
       this.client.start();
-      if (this.config.keepConnectedWhenEmpty || server.getPlayerCount() > 0) {
+      if (ConnectionLifecycleRules.connectOnServerStart(this.config.keepConnectedWhenEmpty, server.getPlayerCount())) {
          this.client.connect();
       }
    }
@@ -222,10 +224,10 @@ public final class CrossServerBattleService {
             });
          }
 
-         long seconds = Math.max(5, this.config.idleDisconnectSeconds);
+         long seconds = ConnectionLifecycleRules.idleDelaySeconds(this.config.idleDisconnectSeconds);
          this.idleDisconnect = this.idleTimer.schedule(() -> this.onServerThread(() -> {
             MinecraftServer server = this.minecraftServer;
-            if (server != null && server.getPlayerCount() <= 0 && this.client != null && this.client.isWanted()) {
+            if (server != null && this.client != null && ConnectionLifecycleRules.shouldReleaseIdleConnection(server.getPlayerCount(), this.client.isWanted())) {
                LOGGER.info("No players online for {}s, letting the battle server connection go", seconds);
                this.client.disconnect("no players online");
             }

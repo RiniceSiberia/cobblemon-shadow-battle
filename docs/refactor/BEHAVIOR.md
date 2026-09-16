@@ -210,3 +210,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-room-list-personalization（2026-09-16）
 
 房间目录按接收者标记自有房间及生成交付摘要的逻辑迁入 Kotlin `RoomListPersonalization`。账号为零时不认领 hostUid 为零的房间；匹配账号的全部房间均复制为 `mine=true`，非自有房间继续复用原对象，顺序不变；存在任一自有房间时摘要追加 `:own`。缓存去重、网络发送成功后记录摘要的副作用保持原位置。两项契约及 JDK21 离线 `clean build` 通过，239 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-room-list-personalization.log`。真实账号状态和客户端房间列表仍待联调。
+## B4-connection-lifecycle-rules（2026-09-16）
+
+连接启动、按需连接和空闲释放的纯判定迁入 Kotlin `ConnectionLifecycleRules`。服务端启动仍在保活开启或存在在线玩家时连接；按需连接仍要求客户端存在、连接未被请求且没有拒绝原因；空闲延迟最低五秒；定时任务仍只在无人在线且连接仍被需要时主动断开。调度器创建、取消、线程切换和实际连接副作用保持原位置。三项契约及 JDK21 离线 `clean build` 通过，242 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-connection-lifecycle-rules.log`。真实计时、玩家进出和网络断开竞态仍待集成验证。
