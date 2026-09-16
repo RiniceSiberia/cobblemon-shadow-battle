@@ -1,17 +1,9 @@
-# 当前批次
-
-B4-match-opponent (base 2881468)：匹配对手解析迁入Kotlin MatchOpponentParsing。保留最后一个不同席位、仅解析最终对手、主机标志缺省/空值为false和非法最终UUID向外传播。4项新测试，全量188项通过，日志D:/workspace/gradle-match-opponent.log；实体建场继续待验证。
-
-下一步迁移MirrorFactory普通远端与双本地路径，保留领取队伍、失败回收和确认顺序。下方为上一批快照。
-
 # 当前恢复状态
 
-B4-mirror-sweep (base eaa604d)：MirrorLifecycleCleanup使用MirrorSweepSequence约束归属释放、服务端查找、延迟和主线程销毁顺序。4项新测试覆盖空快照、服务端缺失、零/负/正宽限时间、prop先于body及异常中止。JDK21离线clean build成功，184项测试（52套）零失败/错误/跳过，9任务全部执行；日志D:/workspace/gradle-mirror-sweep.log。MirrorNpc/MirrorPokemon/SpectatorFactory包内与公开可调用签名一致；javap差异仅静态初始化块迁入Kotlin。真实世界回收仍待验证。
+B4-matched-assembly (base 5c5127c)：MirrorFactory远端和双本地建场迁入Kotlin MatchedBattleAssembly，Java保留包内构造/build签名。LocalMatchClaims保留双次领取及第一次缺失仍领取第二次；构造异常回收仍在endConstruction后执行，缺失Mixin不额外forget，成功通知/API事件先于ack且不新增release。新增3项领取契约与2项构造边界测试；clean build后局部复核build均成功，全量193项通过。日志D:/workspace/gradle-matched-assembly.log及gradle-matched-assembly-final.log。包内可调用ABI与原JAR一致；真实NPC/BattleRegistry/远端匹配与事件副作用尚待集成验证。
 
-2026-09-16已完成NPC运行实现（f2b00cc）、Pokemon归属与遗留实体（d3e93c0）、观战会话与结束回收顺序四个批次。工作版本为本提交，逐文件验证内容哈希见FILES.csv。历史批次和失败证据保存在PLAN.md、BEHAVIOR.md及Git历史，不以旧的运行中描述作为当前状态。
+本次完成匹配对手解析和完整建场实现迁移。下一批核对并集中管理battle_ack/battle_abort协议帧，再继续BattleQueue和CrossServerBattleService剩余业务。
 
-下一批：继续MirrorFactory匹配建场的普通远端与双本地路径，约束构造失败/缺失Mixin/启动确认副作用；随后推进BattleQueue、CrossServerBattleService和剩余客户端迁移。恢复须先读AGENTS.md及四份台账，再核对Git差异与哈希。
+恢复先读AGENTS.md、PLAN.md、FILES.csv、BEHAVIOR.md，再核对实际Git差异、内容哈希与验证版本。使用JDK21执行./gradlew.bat --offline clean build --console=plain，日志放项目外。
 
-验证：设置JAVA_HOME=D:/.jdks/ms-21.0.7后执行./gradlew.bat --offline clean build --console=plain，日志放项目外，避免clean删除自身日志。当前184项测试零失败；Java仍有原有unchecked提示。公开MirrorNpc/MirrorPokemon接口保持原JAR签名。
-
-全项目未完成：90%可安全符号改名未达标；实际NPC/纹理、Pokemon回收、观战包和远端服务联调未覆盖；本次迁移后尚未重新启动双端，IDEA界面导入未人工验证；尚未推送和最终清理。用户要求暂保留部署配置，公开推送前仍需处理。
+整体仍未完成：90%命名覆盖、实际世界实体/Mixin与远端联调、IDEA人工验证、推送和清理未完成。部署配置按用户要求保留。历史批次见PLAN/BEHAVIOR与Git。

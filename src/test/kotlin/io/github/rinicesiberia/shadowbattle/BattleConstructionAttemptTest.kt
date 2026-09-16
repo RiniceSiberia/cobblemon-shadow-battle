@@ -9,6 +9,29 @@ import org.junit.jupiter.api.Test
 
 class BattleConstructionAttemptTest {
     @Test
+    fun `结束上下文失败时覆盖启动异常而不进入后续回收`() {
+        val finishFailure = IllegalArgumentException("finish")
+        val actual = assertThrows(IllegalArgumentException::class.java) {
+            BattleConstructionAttempt.captureFailure(
+                Runnable { throw IllegalStateException("start") },
+                Runnable { throw finishFailure },
+            )
+        }
+        assertSame(finishFailure, actual)
+    }
+
+    @Test
+    fun `普通匹配的失败回收只能发生在结束上下文之后`() {
+        val events = mutableListOf<String>()
+        val failure = BattleConstructionAttempt.captureFailure(
+            Runnable { events += "start"; throw IllegalStateException("start") },
+            Runnable { events += "finish" },
+        )
+        if (failure != null) events += "recover"
+        assertEquals(listOf("start", "finish", "recover"), events)
+    }
+
+    @Test
     fun `启动成功后结束构造上下文`() {
         val events = mutableListOf<String>()
 
