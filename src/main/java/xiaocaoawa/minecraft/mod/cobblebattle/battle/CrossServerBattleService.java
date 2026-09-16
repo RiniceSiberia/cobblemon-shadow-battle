@@ -59,6 +59,7 @@ import io.github.rinicesiberia.shadowbattle.battle.RoomStateDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
 import io.github.rinicesiberia.shadowbattle.transport.BattleControlMessages;
 import io.github.rinicesiberia.shadowbattle.transport.ServiceRequests;
+import io.github.rinicesiberia.shadowbattle.transport.ServiceProtocolMessages;
 
 public final class CrossServerBattleService {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle");
@@ -256,13 +257,12 @@ public final class CrossServerBattleService {
    }
 
    private void onConnected() {
-      JsonObject hello = BattleServerClient.msg("hello");
-      hello.addProperty("ref", this.client.nextRef());
-      hello.addProperty("protocol", 10);
-      hello.addProperty("token", this.config.authToken);
-      hello.addProperty("serverId", ServerIdentity.get());
-      hello.addProperty("modVersion", "1.0");
-      hello.addProperty("cobblemonVersion", Platform.isModLoaded("cobblemon") ? Platform.getMod("cobblemon").getVersion() : "unknown");
+      JsonObject hello = ServiceProtocolMessages.hello(
+         this.client.nextRef(),
+         this.config.authToken,
+         ServerIdentity.get(),
+         Platform.isModLoaded("cobblemon") ? Platform.getMod("cobblemon").getVersion() : "unknown"
+      );
       this.client.sendHandshake(hello);
    }
 
@@ -477,13 +477,8 @@ public final class CrossServerBattleService {
    }
 
    private void requestDex() {
-      JsonObject query = BattleServerClient.msg("dex_query");
-      query.addProperty("ref", this.client.nextRef());
       String cached = this.dex.cachedDigest();
-      if (cached != null) {
-         query.addProperty("have", cached);
-      }
-
+      JsonObject query = ServiceProtocolMessages.dexQuery(this.client.nextRef(), cached);
       this.client.send(query);
    }
 
@@ -660,9 +655,7 @@ public final class CrossServerBattleService {
             LOGGER.info("[{}] >> output {}", relay.remoteBattleId(), relay.line().replace("\n", " \\n "));
          }
 
-         JsonObject outputStream = BattleServerClient.msg("battle_output");
-         outputStream.addProperty("battleId", relay.remoteBattleId());
-         outputStream.addProperty("data", relay.line());
+         JsonObject outputStream = ServiceProtocolMessages.battleOutput(relay.remoteBattleId(), relay.line());
          this.client.send(outputStream);
       }
    }
@@ -774,9 +767,7 @@ public final class CrossServerBattleService {
             LOGGER.info("[{}] >> {}", relay.remoteBattleId(), relay.line());
          }
 
-         JsonObject choice = BattleServerClient.msg("choice");
-         choice.addProperty("battleId", relay.remoteBattleId());
-         choice.addProperty("line", relay.line());
+         JsonObject choice = ServiceProtocolMessages.choice(relay.remoteBattleId(), relay.line());
          this.client.send(choice);
       }
    }
@@ -936,12 +927,8 @@ public final class CrossServerBattleService {
             if (!this.roomDirectory.needsFetch()) {
                return null;
             } else {
-               JsonObject request = BattleServerClient.msg("room_list");
-               request.addProperty("ref", this.client.nextRef());
                RoomDirectoryState.Snapshot<List<RoomListPayload.Room>> current = this.roomDirectory.current();
-               if (current != null) {
-                  request.addProperty("hash", current.getHash());
-               }
+               JsonObject request = ServiceProtocolMessages.roomList(this.client.nextRef(), current == null ? null : current.getHash());
 
                if (!this.client.send(request)) {
                   this.roomDirectory.abandon(participant.getUUID());
@@ -1253,8 +1240,7 @@ public final class CrossServerBattleService {
       if (this.client != null && this.client.isHandshaken()) {
          int observers = this.auth.signedInPlayers().size();
          if (observers != this.chatObserversReported) {
-            JsonObject frame = BattleServerClient.msg("chat_watch");
-            frame.addProperty("watchers", observers);
+            JsonObject frame = ServiceProtocolMessages.chatWatch(observers);
             if (this.client.send(frame)) {
                this.chatObserversReported = observers;
             }

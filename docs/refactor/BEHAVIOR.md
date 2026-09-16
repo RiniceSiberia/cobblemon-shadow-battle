@@ -198,3 +198,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-service-requests（2026-09-16）
 
 菜单、排行榜与聊天请求构造迁入 Kotlin `ServiceRequests`，保持 `t/ref/ranked/player` 和 `t/ref/channel/text/player` 字段顺序；聊天频道仅精确 `battle` 保留，其余继续回退 `global`。`ServiceRequestLedger` 集中登记与发送：菜单和排行榜发送 false 时撤销引用，聊天发送 false 时按原行为保留引用，发送异常均传播并保留已登记状态。四项新增契约及 JDK21 离线 `clean build` 通过，228 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-service-requests.log`。真实服务响应和并发竞态仍待联调。
+## B4-service-protocol-messages（2026-09-16）
+
+握手、图鉴查询、房间目录查询、对战输出、选择转发和聊天观察者消息迁入 Kotlin `ServiceProtocolMessages`。握手保持协议版本 10、模组版本 1.0 和原字段顺序；图鉴摘要与房间哈希仅在存在时写入；对战与观察者消息保持原字段名和文本。配置中的接入值只作为调用参数传递，模板未改。三项协议契约及 JDK21 离线 `clean build` 通过，231 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-service-protocol-messages.log`。真实握手、图鉴和对战转发仍待远端联调。
