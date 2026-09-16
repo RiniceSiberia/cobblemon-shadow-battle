@@ -49,6 +49,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomStatePayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.ServerDexPayload;
 import io.github.rinicesiberia.shadowbattle.battle.BattleResultProjection;
 import io.github.rinicesiberia.shadowbattle.battle.BattleIdentifierParsing;
+import io.github.rinicesiberia.shadowbattle.battle.QueueErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.RoomDirectoryState;
 import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
 import io.github.rinicesiberia.shadowbattle.transport.BattleControlMessages;
@@ -521,15 +522,7 @@ public final class CrossServerBattleService {
                         if (owner != null) {
                            this.battleQueue.drop(owner);
 
-                           String roomKey = switch (code) {
-                              case "NO_SUCH_ROOM" -> "room.err.no_such";
-                              case "ROOM_LOCKED" -> "room.err.locked";
-                              case "BAD_INVITE_CODE" -> "room.err.bad_invite";
-                              case "OWN_ROOM" -> "room.err.own";
-                              case "NOT_ROOM_HOST" -> "room.err.not_host";
-                              case "ROOM_NOT_READY" -> "room.err.not_ready";
-                              default -> null;
-                           };
+                           String roomKey = QueueErrorRules.roomRefusalKey(code);
                            if (roomKey != null) {
                               this.tellParticipant(owner, Msg.of(ChatFormatting.RED, roomKey));
                               this.refreshRooms(owner);
@@ -565,14 +558,7 @@ public final class CrossServerBattleService {
    }
 
    private static Component describeLookupFailure(String code, String fallback) {
-      String key = switch (code) {
-         case "BAD_INVITE_CODE" -> "room.err.bad_invite";
-         case "NOT_LOGGED_IN" -> "queue.not_signed_in";
-         case "ALREADY_QUEUED" -> "queue.already_queued";
-         case "ALREADY_IN_BATTLE" -> "queue.already_in_battle";
-         case "DEX_NOT_READY" -> "queue.dex_not_ready";
-         default -> null;
-      };
+      String key = QueueErrorRules.lookupFailureKey(code);
       Component text = key == null ? Msg.of("queue.refused", fallback) : Msg.of(key);
       return text.copy().withStyle(ChatFormatting.RED);
    }

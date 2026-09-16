@@ -157,3 +157,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-queue-reference-cleanup（2026-09-16）
 
 玩家断线时，等待队伍仍被移除；若存在等待队伍，继续发送 queue_leave。新增清理会同时删除该玩家尚未领取的 owner/lookup 引用，避免断线后的迟到响应再次命中玩家；其他玩家的引用保持不变。QueueReferenceBookTest 新增断线引用回收契约，JDK21 离线 test 通过；真实连接断开和服务端响应竞态待验证。
+
+## B4-queue-error-rules（2026-09-16）
+
+房间拒绝码与邀请码查询失败码的翻译键映射迁入 Kotlin `QueueErrorRules`。房间拒绝继续覆盖 `NO_SUCH_ROOM`、`ROOM_LOCKED`、`BAD_INVITE_CODE`、`OWN_ROOM`、`NOT_ROOM_HOST`、`ROOM_NOT_READY`；查询失败继续覆盖 `BAD_INVITE_CODE`、`NOT_LOGGED_IN`、`ALREADY_QUEUED`、`ALREADY_IN_BATTLE`、`DEX_NOT_READY`，未知值仍由调用方使用原回退文本。认证和聊天错误保持原有独立映射，避免跨业务复用导致翻译键变化。证据为 `QueueErrorRulesTest` 两项契约及 `D:/workspace/gradle-queue-error-rules.log` 的 JDK21 离线 `clean build` 成功；真实服务端错误帧和客户端提示仍待联调。
