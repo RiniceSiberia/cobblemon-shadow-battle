@@ -24,6 +24,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.lang.Msg;
 import xiaocaoawa.minecraft.mod.cobblebattle.net.BattleServerClient;
 import io.github.rinicesiberia.shadowbattle.battle.QueueReferenceBook;
 import io.github.rinicesiberia.shadowbattle.battle.QueueRules;
+import io.github.rinicesiberia.shadowbattle.battle.QueueMessageRules;
 import io.github.rinicesiberia.shadowbattle.transport.QueuePlayerPayload;
 
 final class BattleQueue {
@@ -256,14 +257,7 @@ final class BattleQueue {
       this.references.drop(participantUuid);
       String why = BattleServerClient.str(document, "why", "");
 
-      String key = switch (why) {
-         case "host_left" -> "room.closed.host_left";
-         case "started" -> "room.closed.started";
-         case "banned" -> "room.closed.banned";
-         case "finished" -> "room.closed.finished";
-         case "gone" -> "room.closed.gone";
-         default -> null;
-      };
+      String key = QueueMessageRules.roomClosedKey(why);
       if (key != null) {
          this.service.tellParticipant(participantUuid, Msg.of(ChatFormatting.YELLOW, key));
       }
@@ -368,11 +362,7 @@ final class BattleQueue {
       if (BattleServerClient.bool(document, "wasQueued", false)) {
          String why = BattleServerClient.str(document, "why", "");
 
-         String key = switch (why) {
-            case "busy" -> "queue.left_busy";
-            case "banned" -> "queue.left_banned";
-            default -> "queue.left";
-         };
+         String key = QueueMessageRules.queueLeftKey(why);
          this.service.tellParticipant(participantUuid, Msg.of(ChatFormatting.YELLOW, key));
          this.service.onServerThreadWithParticipant(participantUuid, participant -> ApiEvents.queueLeft(participant, why));
       }

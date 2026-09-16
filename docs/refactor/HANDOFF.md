@@ -13,3 +13,5 @@ B4-battle-control-messages（2026-09-16）：统一确认/中止帧生成并完�
 B4-queue-rules（2026-09-16）：QueueRules 已迁入并接入 BattleQueue，测试构建成功。下一步继续排队发送/断线引用清理，或进入 payload 编码审计。
 
 B4-queue-player-payload（2026-09-16）：BattleQueue 的重复玩家 payload 已迁入 QueuePlayerPayload，2项契约通过，日志 D:/workspace/gradle-queue-player-payload.log。下一步继续引用释放和房间/匹配响应清理。
+
+B4-queue-message-rules（2026-09-16）：房间/队列原因映射已迁入 QueueMessageRules，测试通过，日志 D:/workspace/gradle-queue-message-rules.log。下一步继续引用回收和断线状态清理。

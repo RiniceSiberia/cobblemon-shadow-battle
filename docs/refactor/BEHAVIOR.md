@@ -149,3 +149,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-queue-player-payload（2026-09-16）
 
 排队、房间查询、离开、开战和断线请求继续发送 {uuid,name} 玩家对象，字段顺序为 uuid 后 name；UUID 使用标准文本，名称由 Gson 原样 JSON 编码，不做裁剪。两项 payload 契约及离线 test 构建通过，真实远端请求往返待验证。
+
+## B4-queue-message-rules（2026-09-16）
+
+房间关闭原因 host_left、started、banned、finished、gone 继续映射原翻译键，未知值不提示；队列离队 busy、banned 映射专用键，其他值回退 queue.left。两项规则测试及 JDK21 离线 test 通过，真实服务端响应待验证。

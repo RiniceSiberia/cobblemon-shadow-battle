@@ -101,3 +101,5 @@ B4-battle-control-messages (2026-09-16)：统一 `battle_ack` 与 `battle_abort`
 B4-queue-rules (2026-09-16)：将排队/房间队伍人数的 battleType 别名和槽位数量规则迁入 Kotlin QueueRules，保留 singles 默认值及大小写无关匹配；新增1项规则测试，BattleQueue 继续负责消息副作用。
 
 B4-queue-player-payload (2026-09-16)：将 queue/room 请求重复的玩家 JSON 对象构造迁入 Kotlin QueuePlayerPayload，保持 uuid/name 字段顺序和原始名称文本。
+
+B4-queue-message-rules (2026-09-16)：将房间关闭和队列离队原因到翻译键的映射迁入 Kotlin QueueMessageRules，保留未知原因回退和空值行为。
