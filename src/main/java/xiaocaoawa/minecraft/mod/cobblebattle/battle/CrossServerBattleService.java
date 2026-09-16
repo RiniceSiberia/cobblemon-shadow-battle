@@ -51,6 +51,7 @@ import io.github.rinicesiberia.shadowbattle.battle.BattleResultProjection;
 import io.github.rinicesiberia.shadowbattle.battle.BattleIdentifierParsing;
 import io.github.rinicesiberia.shadowbattle.battle.QueueErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.RoomDirectoryState;
+import io.github.rinicesiberia.shadowbattle.battle.RoomStateDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
 import io.github.rinicesiberia.shadowbattle.transport.BattleControlMessages;
 
@@ -921,53 +922,10 @@ public final class CrossServerBattleService {
    }
 
    private void onRoomState(JsonObject document) {
-      UUID who = BattleIdentifierParsing.uuidOrNull(BattleServerClient.str(document, "player", ""));
-      if (who != null) {
-         RoomStatePayload.Member host = readMember(document, "host");
-         boolean hasGuest = document.has("guest") && document.get("guest").isJsonObject();
-         RoomStatePayload.Member guest = hasGuest ? readMember(document, "guest") : RoomStatePayload.Member.NOBODY;
-         List<RoomStatePayload.Member> observers = new ArrayList<>();
-         if (document.has("watchers") && document.get("watchers").isJsonArray()) {
-            for (JsonElement el : document.getAsJsonArray("watchers")) {
-               if (el.isJsonObject()) {
-                  observers.add(memberOf(el.getAsJsonObject()));
-               }
-            }
-         }
-
-         RoomStatePayload state = new RoomStatePayload(
-            BattleServerClient.str(document, "roomId", ""),
-            BattleServerClient.str(document, "inviteCode", ""),
-            BattleServerClient.str(document, "name", ""),
-            BattleServerClient.bool(document, "locked", false),
-            BattleServerClient.str(document, "battleType", "singles"),
-            BattleServerClient.integer(document, "level", -1),
-            BattleServerClient.integer(document, "pick", 6),
-            BattleServerClient.bool(document, "fullHeal", true),
-            "host".equals(BattleServerClient.str(document, "engine", "server")),
-            BattleServerClient.bool(document, "legality", true),
-            BattleServerClient.bool(document, "fighting", false),
-            host,
-            hasGuest,
-            guest,
-            observers,
-            BattleServerClient.str(document, "youAre", "watcher")
-         );
-         this.withParticipant(who, participant -> CobbleBattleNetwork.sendRoomState(participant, state));
+      RoomStateDecoding.Result decoded = RoomStateDecoding.decode(document);
+      if (decoded != null) {
+         this.withParticipant(decoded.getParticipant(), participant -> CobbleBattleNetwork.sendRoomState(participant, decoded.getPayload()));
       }
-   }
-
-   private static RoomStatePayload.Member readMember(JsonObject document, String key) {
-      return document.has(key) && document.get(key).isJsonObject() ? memberOf(document.getAsJsonObject(key)) : RoomStatePayload.Member.NOBODY;
-   }
-
-   private static RoomStatePayload.Member memberOf(JsonObject o) {
-      return new RoomStatePayload.Member(
-         BattleServerClient.str(o, "name", "?"),
-         o.has("uid") ? o.get("uid").getAsLong() : 0L,
-         BattleServerClient.str(o, "lead", ""),
-         BattleServerClient.integer(o, "teamSize", 0)
-      );
    }
 
    private void onRoomClosed(JsonObject document) {

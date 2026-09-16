@@ -161,3 +161,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-queue-error-rules（2026-09-16）
 
 房间拒绝码与邀请码查询失败码的翻译键映射迁入 Kotlin `QueueErrorRules`。房间拒绝继续覆盖 `NO_SUCH_ROOM`、`ROOM_LOCKED`、`BAD_INVITE_CODE`、`OWN_ROOM`、`NOT_ROOM_HOST`、`ROOM_NOT_READY`；查询失败继续覆盖 `BAD_INVITE_CODE`、`NOT_LOGGED_IN`、`ALREADY_QUEUED`、`ALREADY_IN_BATTLE`、`DEX_NOT_READY`，未知值仍由调用方使用原回退文本。认证和聊天错误保持原有独立映射，避免跨业务复用导致翻译键变化。证据为 `QueueErrorRulesTest` 两项契约及 `D:/workspace/gradle-queue-error-rules.log` 的 JDK21 离线 `clean build` 成功；真实服务端错误帧和客户端提示仍待联调。
+
+## B4-room-state-decoding（2026-09-16）
+
+跨服 oom_state 消息的玩家标识、房主/客人、观战者列表和默认字段解码迁入 Kotlin RoomStateDecoding。无效玩家标识继续忽略消息；缺少房主或客人时使用 NOBODY，非对象观战者继续过滤，ngine=host、ighting 和 youAre 的字段语义保持不变。证据为 RoomStateDecodingTest 三项契约及 D:/workspace/gradle-room-state-decoding-clean.log 的 JDK21 离线 clean build，207 项测试、0 失败、0 错误；真实服务端 oom_state 往返和客户端界面展示仍待联调。

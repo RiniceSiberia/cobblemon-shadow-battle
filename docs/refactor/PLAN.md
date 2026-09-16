@@ -105,3 +105,5 @@ B4-queue-player-payload (2026-09-16)：将 queue/room 请求重复的玩家 JSON
 B4-queue-message-rules (2026-09-16)：将房间关闭和队列离队原因到翻译键的映射迁入 Kotlin QueueMessageRules，保留未知原因回退和空值行为。
 
 B4-queue-reference-cleanup (2026-09-16)：为 QueueReferenceBook 增加按玩家回收等待队伍、房主引用和房间查询引用的统一入口；断线时先记录是否排队，再清理全部迟到响应引用，保留 queue_leave 发送条件。
+
+B4-room-state-decoding（2026-09-16）：将 CrossServerBattleService 的 room_state 结构解码迁入 Kotlin RoomStateDecoding，保留默认值、对象过滤和无效玩家忽略行为；通过 207 项离线测试。
