@@ -8,7 +8,8 @@ import com.cobblemon.mod.common.battles.BattleSide;
 import com.cobblemon.mod.common.battles.actor.PlayerBattleActor;
 import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
 import com.cobblemon.mod.common.entity.npc.NPCEntity;
-import com.google.gson.JsonElement;
+import io.github.rinicesiberia.shadowbattle.battle.MatchOpponent;
+import io.github.rinicesiberia.shadowbattle.battle.MatchOpponentParsing;
 import com.google.gson.JsonObject;
 import java.util.List;
 import java.util.UUID;
@@ -59,26 +60,18 @@ final class MirrorFactory {
       String myParticipantRaw = BattleServerClient.str(document, "yourPlayer", null);
       if (remoteBattleId != null && mySeat != null && myParticipantRaw != null) {
          UUID myParticipantUuid = UUID.fromString(myParticipantRaw);
-         JsonObject opponentSeat = null;
-
-         for (JsonElement element : document.getAsJsonArray("seats")) {
-            JsonObject seat = element.getAsJsonObject();
-            if (!mySeat.equals(seat.get("showdownId").getAsString())) {
-               opponentSeat = seat;
-            }
-         }
-
-         if (opponentSeat == null) {
+         MatchOpponent opponent = MatchOpponentParsing.find(document, mySeat);
+         if (opponent == null) {
             LOGGER.error("match_found did not describe an opponent seat");
             this.service.tellParticipant(myParticipantUuid, Msg.of(ChatFormatting.RED, "battle.setup_failed"));
             this.service.sendAbort(remoteBattleId, "no opponent seat");
          } else {
-            String opponentSeatId = opponentSeat.get("showdownId").getAsString();
-            JsonObject opponentParticipant = opponentSeat.getAsJsonObject("player");
-            UUID opponentUuid = UUID.fromString(opponentParticipant.get("uuid").getAsString());
-            String opponentName = opponentParticipant.get("name").getAsString();
-            String opponentServerId = opponentSeat.get("serverId").getAsString();
-            boolean sourceOfTruth = document.has("authoritative") && !document.get("authoritative").isJsonNull() && document.get("authoritative").getAsBoolean();
+            JsonObject opponentSeat = opponent.getDescription();
+            String opponentSeatId = opponent.getSeatId();
+            UUID opponentUuid = opponent.getPlayerId();
+            String opponentName = opponent.getName();
+            String opponentServerId = opponent.getServerId();
+            boolean sourceOfTruth = opponent.getAuthoritative();
             if (!opponentServerId.equals(ServerIdentity.get())) {
                BattleQueue.QueuedTeam mine = this.service.battleQueue().claim(myParticipantUuid);
                if (mine == null) {
