@@ -26,6 +26,7 @@ import io.github.rinicesiberia.shadowbattle.battle.QueueRejectionMessage;
 import io.github.rinicesiberia.shadowbattle.battle.QueueRules;
 import io.github.rinicesiberia.shadowbattle.battle.QueueMessageRules;
 import io.github.rinicesiberia.shadowbattle.transport.PlayerIdentityPayload;
+import io.github.rinicesiberia.shadowbattle.transport.RoomQueueRequests;
 
 final class BattleQueue {
    private final CrossServerBattleService service;
@@ -149,15 +150,7 @@ final class BattleQueue {
       if (tooFew != null) {
          return tooFew;
       } else {
-         JsonObject create = BattleServerClient.msg("room_create");
-         create.addProperty("name", name);
-         create.addProperty("password", password);
-         create.addProperty("battleType", battleType);
-         create.addProperty("level", level);
-         create.addProperty("pick", pick);
-         create.addProperty("fullHeal", fullHeal);
-         create.addProperty("engine", hostEngine ? "host" : "server");
-         create.addProperty("legality", !hostEngine || legality);
+         JsonObject create = RoomQueueRequests.create(name, password, battleType, level, pick, fullHeal, hostEngine, legality);
          return this.sendPreparedRequest(participant, create, preparedTeam, "");
       }
    }
@@ -174,13 +167,7 @@ final class BattleQueue {
       if (tooFew != null) {
          return tooFew;
       } else {
-         JsonObject join = BattleServerClient.msg("room_join");
-         join.addProperty("roomId", roomId);
-         join.addProperty("password", password);
-         if (!inviteCode.isEmpty()) {
-            join.addProperty("inviteCode", inviteCode);
-         }
-
+         JsonObject join = RoomQueueRequests.join(roomId, password, inviteCode);
          return this.sendPreparedRequest(participant, join, preparedTeam, "");
       }
    }

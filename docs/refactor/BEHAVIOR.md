@@ -186,3 +186,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-queue-rejection-message（2026-09-16）
 
 队伍合法性拒绝列表到玩家消息的投影迁入 Kotlin `QueueRejectionMessage`。拒绝项保持输入顺序，槽位继续从零基转为一基显示，六种拒绝类型沿用原翻译键与详情参数，消息继续由红色标题、黄色槽位和灰色页脚组成。队伍加入与兼容性检查共用同一入口。两项契约覆盖顺序、槽位和全部拒绝类型；JDK21 离线 `clean build` 通过，216 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-queue-rejection-message.log`。真实 Pokémon 名称组件和客户端渲染仍待游戏内验证。
+## B4-room-queue-requests（2026-09-16）
+
+房间创建和加入请求的固定字段构造迁入 Kotlin `RoomQueueRequests`。创建请求保持字段顺序，主机引擎写入 `host` 并尊重合法性选项，服务端引擎写入 `server` 且强制合法性检查；加入请求只在邀请码非空时写入 `inviteCode`。ref、玩家、队伍和队伍元数据仍由发送链路随后追加，顺序不变。三项协议契约及 JDK21 离线 `clean build` 通过，219 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-room-queue-requests.log`。真实房间服务往返仍待联调。

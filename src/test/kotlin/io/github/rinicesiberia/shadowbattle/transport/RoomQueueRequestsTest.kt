@@ -1,0 +1,35 @@
+package io.github.rinicesiberia.shadowbattle.transport
+
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+
+class RoomQueueRequestsTest {
+    @Test
+    fun `创建房间保持字段顺序和主机引擎合法性规则`() {
+        val request = RoomQueueRequests.create("名称", "密码", "doubles", 50, 4, false, true, false)
+
+        assertEquals(
+            "{\"t\":\"room_create\",\"name\":\"名称\",\"password\":\"密码\",\"battleType\":\"doubles\",\"level\":50,\"pick\":4,\"fullHeal\":false,\"engine\":\"host\",\"legality\":false}",
+            request.toString()
+        )
+    }
+
+    @Test
+    fun `服务端引擎强制启用合法性检查`() {
+        val request = RoomQueueRequests.create("room", "", "singles", -1, 6, true, false, false)
+
+        assertEquals("server", request.get("engine").asString)
+        assertTrue(request.get("legality").asBoolean)
+    }
+
+    @Test
+    fun `加入房间仅在邀请码非空时写入字段`() {
+        val direct = RoomQueueRequests.join("r1", "p", "")
+        val invited = RoomQueueRequests.join("r2", "", "code")
+
+        assertFalse(direct.has("inviteCode"))
+        assertEquals("{\"t\":\"room_join\",\"roomId\":\"r2\",\"password\":\"\",\"inviteCode\":\"code\"}", invited.toString())
+    }
+}
