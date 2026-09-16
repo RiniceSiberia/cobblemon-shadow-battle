@@ -153,3 +153,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-queue-message-rules（2026-09-16）
 
 房间关闭原因 host_left、started、banned、finished、gone 继续映射原翻译键，未知值不提示；队列离队 busy、banned 映射专用键，其他值回退 queue.left。两项规则测试及 JDK21 离线 test 通过，真实服务端响应待验证。
+
+## B4-queue-reference-cleanup（2026-09-16）
+
+玩家断线时，等待队伍仍被移除；若存在等待队伍，继续发送 queue_leave。新增清理会同时删除该玩家尚未领取的 owner/lookup 引用，避免断线后的迟到响应再次命中玩家；其他玩家的引用保持不变。QueueReferenceBookTest 新增断线引用回收契约，JDK21 离线 test 通过；真实连接断开和服务端响应竞态待验证。

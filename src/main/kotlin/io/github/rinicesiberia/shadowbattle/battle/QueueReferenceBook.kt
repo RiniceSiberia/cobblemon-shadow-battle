@@ -4,7 +4,7 @@ import com.cobblemon.mod.common.battles.pokemon.BattlePokemon
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-/** 管理排队请求、房间查询和房主引用，保证发送失败时引用可回收。 */
+/** 管理排队请求、房间查询和房主引用，保证发送失败及玩家离线时引用可回收。 */
 class QueueReferenceBook {
     data class WaitingTeam(
         val participant: UUID,
@@ -28,4 +28,12 @@ class QueueReferenceBook {
     fun bindLookup(ref: Int, participant: UUID) { lookups[ref] = participant }
     fun removeOwner(ref: Int) { owners.remove(ref) }
     fun removeLookup(ref: Int) { lookups.remove(ref) }
+
+    /** 删除玩家的等待队伍及所有尚未收到响应的引用，并返回其是否仍在等待队列。 */
+    fun forgetParticipant(participant: UUID): Boolean {
+        val wasWaiting = waiting.remove(participant) != null
+        owners.entries.removeIf { it.value == participant }
+        lookups.entries.removeIf { it.value == participant }
+        return wasWaiting
+    }
 }

@@ -103,3 +103,5 @@ B4-queue-rules (2026-09-16)：将排队/房间队伍人数的 battleType 别名�
 B4-queue-player-payload (2026-09-16)：将 queue/room 请求重复的玩家 JSON 对象构造迁入 Kotlin QueuePlayerPayload，保持 uuid/name 字段顺序和原始名称文本。
 
 B4-queue-message-rules (2026-09-16)：将房间关闭和队列离队原因到翻译键的映射迁入 Kotlin QueueMessageRules，保留未知原因回退和空值行为。
+
+B4-queue-reference-cleanup (2026-09-16)：为 QueueReferenceBook 增加按玩家回收等待队伍、房主引用和房间查询引用的统一入口；断线时先记录是否排队，再清理全部迟到响应引用，保留 queue_leave 发送条件。

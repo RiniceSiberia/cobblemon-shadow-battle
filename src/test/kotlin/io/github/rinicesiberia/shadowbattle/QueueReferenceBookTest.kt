@@ -26,6 +26,26 @@ class QueueReferenceBookTest {
     }
 
     @Test
+    fun `forget participant removes waiting and late response references`() {
+        val book = QueueReferenceBook()
+        val participant = UUID.fromString("00000000-0000-0000-0000-000000000002")
+        val other = UUID.fromString("00000000-0000-0000-0000-000000000003")
+        book.putWaiting(QueueReferenceBook.WaitingTeam(participant, emptyList(), "", ""))
+        book.bindOwner(1, participant)
+        book.bindLookup(2, participant)
+        book.bindOwner(3, other)
+        book.bindLookup(4, other)
+
+        assertTrue(book.forgetParticipant(participant))
+        assertFalse(book.contains(participant))
+        assertNull(book.owner(1))
+        assertNull(book.lookup(2))
+        assertEquals(other, book.owner(3))
+        assertEquals(other, book.lookup(4))
+        assertFalse(book.forgetParticipant(participant))
+    }
+
+    @Test
     fun `clear removes all pending state`() {
         val book = QueueReferenceBook()
         val participant = UUID.randomUUID()

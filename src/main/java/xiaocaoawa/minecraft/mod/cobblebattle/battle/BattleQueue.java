@@ -314,7 +314,7 @@ final class BattleQueue {
    }
 
    void onParticipantDisconnect(ServerPlayer participant) {
-      if (this.references.claim(participant.getUUID()) != null) {
+      if (this.references.forgetParticipant(participant.getUUID())) {
          BattleServerClient client = this.service.client();
          if (client != null) {
             JsonObject leave = BattleServerClient.msg("queue_leave");
