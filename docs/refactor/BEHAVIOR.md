@@ -223,3 +223,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-team-preview-events（2026-09-16）
 
 队伍预览打开、状态和关闭事件的字段解析迁入 Kotlin `TeamPreviewEventDecoding`。打开事件继续区分缺少必填字段与无效玩家 UUID，阵容、选择数量、首发数量、对手信息沿用原默认值；远端截止时间仅在未来十分钟内采用，否则以第二次取时加一分钟。状态事件继续按自身席位赋值并对其他席位执行逻辑或，非原始值视为 false；关闭原因缺失时仍为 `closed`。会话登记、无客户端默认选择、网络发送、关闭清理和提示顺序保持在 Java 协调层。四项契约及 JDK21 离线 `clean build` 通过，252 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-team-preview-events.log`。真实远端预览往返和客户端界面仍待联调。
+
+## B4-queue-response-decoding（2026-09-16）
+
+房间对战详情、房间关闭、房间创建、排队确认、离队和等待位置六类响应迁入 Kotlin `QueueResponseDecoding`。详情继续在 fighting 为 true 时传空战斗类型，其他字段沿用原默认值；玩家字段继续使用 `UUID.fromString` 并传播无效值异常；等待位置继续直接读取 JSON 数值并传播错误类型异常。ref 引用仍在解析前领取，等待队伍清理、玩家消息、邀请码复制样式和 API 事件顺序保留在 Java 协调层。四项契约及 JDK21 离线 `clean build` 通过，256 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-queue-response-decoding.log`。真实跨服响应和并发竞态仍待联调。

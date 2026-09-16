@@ -25,6 +25,7 @@ import io.github.rinicesiberia.shadowbattle.battle.QueueReferenceBook;
 import io.github.rinicesiberia.shadowbattle.battle.QueueRejectionMessage;
 import io.github.rinicesiberia.shadowbattle.battle.QueueRules;
 import io.github.rinicesiberia.shadowbattle.battle.QueueMessageRules;
+import io.github.rinicesiberia.shadowbattle.battle.QueueResponseDecoding;
 import io.github.rinicesiberia.shadowbattle.transport.PlayerIdentityPayload;
 import io.github.rinicesiberia.shadowbattle.transport.QueueRequests;
 import io.github.rinicesiberia.shadowbattle.transport.RoomQueueRequests;
@@ -195,13 +196,11 @@ final class BattleQueue {
    void onRoomBattleDetails(JsonObject document) {
       UUID participantUuid = this.claimLookupRef(document.get("ref"));
       if (participantUuid != null) {
-         String roomId = BattleServerClient.str(document, "id", "");
-         String inviteCode = BattleServerClient.str(document, "inviteCode", "");
-         String battleType = BattleServerClient.bool(document, "fighting", false) ? "" : BattleServerClient.str(document, "battleType", "singles");
-         boolean hostEngine = "host".equals(BattleServerClient.str(document, "engine", "server"));
-         boolean legality = BattleServerClient.bool(document, "legality", true);
+         QueueResponseDecoding.RoomBattleDetails details = QueueResponseDecoding.roomBattleDetails(document);
          this.service.onServerThreadWithParticipant(participantUuid, participant -> {
-            Component refusal = this.joinRoom(participant, roomId, "", battleType, hostEngine, legality, inviteCode);
+            Component refusal = this.joinRoom(
+               participant, details.getRoomId(), "", details.getBattleType(), details.getHostEngine(), details.getLegality(), details.getInviteCode()
+            );
             if (refusal != null) {
                this.service.tellParticipant(participantUuid, refusal);
             }
@@ -229,13 +228,12 @@ final class BattleQueue {
 
    void onRoomClosed(JsonObject document) {
       this.claimRefOwner(document.get("ref"));
-      UUID participantUuid = UUID.fromString(BattleServerClient.str(document, "player", ""));
-      this.references.drop(participantUuid);
-      String why = BattleServerClient.str(document, "why", "");
+      QueueResponseDecoding.RoomClosed closed = QueueResponseDecoding.roomClosed(document);
+      this.references.drop(closed.getParticipant());
 
-      String key = QueueMessageRules.roomClosedKey(why);
+      String key = QueueMessageRules.roomClosedKey(closed.getReason());
       if (key != null) {
-         this.service.tellParticipant(participantUuid, Msg.of(ChatFormatting.YELLOW, key));
+         this.service.tellParticipant(closed.getParticipant(), Msg.of(ChatFormatting.YELLOW, key));
       }
    }
 
@@ -258,17 +256,15 @@ final class BattleQueue {
 
    void onRoomCreated(JsonObject document) {
       this.claimRefOwner(document.get("ref"));
-      UUID participantUuid = UUID.fromString(BattleServerClient.str(document, "player", ""));
-      String name = BattleServerClient.str(document, "name", "");
-      this.service.tellParticipant(participantUuid, Msg.of(ChatFormatting.GREEN, "room.created", name));
-      String inviteCode = BattleServerClient.str(document, "inviteCode", "");
-      if (!inviteCode.isEmpty()) {
+      QueueResponseDecoding.RoomCreated created = QueueResponseDecoding.roomCreated(document);
+      this.service.tellParticipant(created.getParticipant(), Msg.of(ChatFormatting.GREEN, "room.created", created.getName()));
+      if (!created.getInviteCode().isEmpty()) {
          this.service
             .tellParticipant(
-               participantUuid,
-               Msg.of(ChatFormatting.AQUA, "room.invite_code", inviteCode)
+               created.getParticipant(),
+               Msg.of(ChatFormatting.AQUA, "room.invite_code", created.getInviteCode())
                   .withStyle(
-                     style -> style.withClickEvent(new ClickEvent(Action.COPY_TO_CLIPBOARD, inviteCode))
+                     style -> style.withClickEvent(new ClickEvent(Action.COPY_TO_CLIPBOARD, created.getInviteCode()))
                         .withHoverEvent(new HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Msg.of("room.invite_copy_hint")))
                   )
             );
@@ -314,37 +310,37 @@ final class BattleQueue {
 
    void onQueueAck(JsonObject document) {
       this.claimRefOwner(document.get("ref"));
-      UUID participantUuid = UUID.fromString(BattleServerClient.str(document, "player", ""));
-      int waiting = BattleServerClient.integer(document, "waiting", 1);
-      String competition = BattleServerClient.str(document, "rankedName", "");
+      QueueResponseDecoding.QueueAccepted accepted = QueueResponseDecoding.queueAccepted(document);
       this.service
          .tellParticipant(
-            participantUuid,
-            competition.isEmpty()
-               ? Msg.of(ChatFormatting.GREEN, "queue.acked", waiting)
-               : Msg.of(ChatFormatting.GREEN, "queue.acked_ranked", competition, waiting)
+            accepted.getParticipant(),
+            accepted.getCompetitionName().isEmpty()
+               ? Msg.of(ChatFormatting.GREEN, "queue.acked", accepted.getWaiting())
+               : Msg.of(ChatFormatting.GREEN, "queue.acked_ranked", accepted.getCompetitionName(), accepted.getWaiting())
          );
-      String rankedId = BattleServerClient.str(document, "ranked", "");
-      this.service.onServerThreadWithParticipant(participantUuid, participant -> ApiEvents.queueJoined(participant, rankedId, competition, waiting));
+      this.service.onServerThreadWithParticipant(
+         accepted.getParticipant(),
+         participant -> ApiEvents.queueJoined(participant, accepted.getCompetitionId(), accepted.getCompetitionName(), accepted.getWaiting())
+      );
    }
 
    void onQueueLeft(JsonObject document) {
-      UUID participantUuid = UUID.fromString(BattleServerClient.str(document, "player", ""));
-      this.references.drop(participantUuid);
-      if (BattleServerClient.bool(document, "wasQueued", false)) {
-         String why = BattleServerClient.str(document, "why", "");
-
-         String key = QueueMessageRules.queueLeftKey(why);
-         this.service.tellParticipant(participantUuid, Msg.of(ChatFormatting.YELLOW, key));
-         this.service.onServerThreadWithParticipant(participantUuid, participant -> ApiEvents.queueLeft(participant, why));
+      QueueResponseDecoding.QueueDeparted departed = QueueResponseDecoding.queueDeparted(document);
+      this.references.drop(departed.getParticipant());
+      if (departed.getWasQueued()) {
+         String key = QueueMessageRules.queueLeftKey(departed.getReason());
+         this.service.tellParticipant(departed.getParticipant(), Msg.of(ChatFormatting.YELLOW, key));
+         this.service.onServerThreadWithParticipant(
+            departed.getParticipant(), participant -> ApiEvents.queueLeft(participant, departed.getReason())
+         );
       }
    }
 
    void onQueueWait(JsonObject document) {
-      UUID participantUuid = UUID.fromString(BattleServerClient.str(document, "player", ""));
-      int position = document.has("position") ? document.get("position").getAsInt() : 0;
-      int waiting = document.has("waiting") ? document.get("waiting").getAsInt() : 0;
-      this.service.tellParticipant(participantUuid, Msg.of(ChatFormatting.YELLOW, "queue.waiting", position, waiting));
+      QueueResponseDecoding.QueuePosition position = QueueResponseDecoding.queuePosition(document);
+      this.service.tellParticipant(
+         position.getParticipant(), Msg.of(ChatFormatting.YELLOW, "queue.waiting", position.getPosition(), position.getWaiting())
+      );
    }
 
    private record PreparedRoster(List<BattlePokemon> team, String packed, JsonArray meta) {

@@ -128,3 +128,4 @@ B4-connection-lifecycle-rules（2026-09-16）：连接启动、按需连接、�
 B4-chat-line-decoding（2026-09-16）：远端聊天消息字段解析迁入 Kotlin，保持空文本忽略、默认频道和无效UUID回退；245 项离线测试通过。
 B4-team-preview-roster（2026-09-16）：队伍预览阵容解码和选择消息编码迁入 Kotlin，保持槽位过滤、默认值、对手席位和选择顺序；248 项离线测试通过。
 B4-team-preview-events（2026-09-16）：队伍预览打开、状态和关闭事件解码迁入 Kotlin，保持必填字段、默认值、UUID 错误分支、准备状态合并和截止时间边界；252 项离线测试通过。
+B4-queue-response-decoding（2026-09-16）：排队和房间的六类响应字段迁入 Kotlin DTO，保持引用领取顺序、协议默认值、无效 UUID 与直接数值解析异常；256 项离线测试通过。
