@@ -53,6 +53,7 @@ import io.github.rinicesiberia.shadowbattle.battle.AuthenticationErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.ChatErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.LeaderboardDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.QueueErrorRules;
+import io.github.rinicesiberia.shadowbattle.battle.RankedCompetitionDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.RoomDirectoryState;
 import io.github.rinicesiberia.shadowbattle.battle.RoomListDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.RoomStateDecoding;
@@ -433,41 +434,7 @@ public final class CrossServerBattleService {
 
    private void readRanked(JsonObject document) {
       this.ranked.clear();
-      JsonArray offered = document.has("ranked") && document.get("ranked").isJsonArray() ? document.getAsJsonArray("ranked") : null;
-      if (offered != null) {
-         for (JsonElement el : offered) {
-            if (el.isJsonObject()) {
-               JsonObject o = el.getAsJsonObject();
-               String id = BattleServerClient.str(o, "id", "");
-               if (!id.isEmpty()) {
-                  List<String> rules = new ArrayList<>();
-                  if (o.has("ruleSet") && o.get("ruleSet").isJsonArray()) {
-                     for (JsonElement rule : o.getAsJsonArray("ruleSet")) {
-                        if (rule.isJsonPrimitive()) {
-                           rules.add(rule.getAsString());
-                        }
-                     }
-                  }
-
-                  this.ranked
-                     .put(
-                        id,
-                        new CrossServerBattleService.Ranked(
-                           id,
-                           BattleServerClient.str(o, "name", id),
-                           BattleServerClient.str(o, "battleType", "singles"),
-                           BattleServerClient.integer(o, "slotsPerActor", 1),
-                           BattleServerClient.integer(o, "adjustLevel", -1),
-                           BattleServerClient.bool(o, "fullHeal", false),
-                           BattleServerClient.str(o, "winScore", "1"),
-                           BattleServerClient.str(o, "failScore", "1"),
-                           List.copyOf(rules)
-                        )
-                     );
-               }
-            }
-         }
-      }
+      this.ranked.putAll(RankedCompetitionDecoding.decode(document));
 
       if (this.ranked.isEmpty()) {
          LOGGER.warn("The battle server offers no ranked competitions - nobody can queue. Its ranked/ folder is empty, or every file in it was refused.");

@@ -201,3 +201,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-service-protocol-messages（2026-09-16）
 
 握手、图鉴查询、房间目录查询、对战输出、选择转发和聊天观察者消息迁入 Kotlin `ServiceProtocolMessages`。握手保持协议版本 10、模组版本 1.0 和原字段顺序；图鉴摘要与房间哈希仅在存在时写入；对战与观察者消息保持原字段名和文本。配置中的接入值只作为调用参数传递，模板未改。三项协议契约及 JDK21 离线 `clean build` 通过，231 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-service-protocol-messages.log`。真实握手、图鉴和对战转发仍待远端联调。
+## B4-ranked-decoding（2026-09-16）
+
+远端排位赛配置解析迁入 Kotlin `RankedCompetitionDecoding`。非对象、空标识条目继续忽略；字段保持原默认值；规则数组只接受 JSON 原始值并按顺序转成文本；重复标识继续由后项覆盖，同时保留首次插入位置。`CrossServerBattleService` 保留清空、日志和后续菜单使用。三项契约及 JDK21 离线 `clean build` 通过，234 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-ranked-decoding.log`。真实服务端 ranked 配置仍待联调。

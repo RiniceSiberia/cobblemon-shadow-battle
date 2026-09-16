@@ -121,3 +121,4 @@ B4-queue-action-requests（2026-09-16）：queue_join/queue_leave 与房间 look
 B4-queue-send-rollback（2026-09-16）：集中查询、房主与等待队伍请求的登记和发送失败回滚，保持异常传播及残留语义；224 项离线测试通过。
 B4-service-requests（2026-09-16）：菜单、排行榜和聊天请求迁入 Kotlin 构造器，请求台账集中发送失败回滚并保留聊天失败残留语义；228 项离线测试通过。
 B4-service-protocol-messages（2026-09-16）：握手、图鉴、房间目录、对战转发和观察者协议消息迁入 Kotlin，保留字段顺序与可选缓存字段；231 项离线测试通过。
+B4-ranked-decoding（2026-09-16）：远端排位赛配置解析迁入 Kotlin，保持过滤、默认值、规则顺序和重复标识覆盖；234 项离线测试通过。
