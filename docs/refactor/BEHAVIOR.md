@@ -169,3 +169,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-room-list-decoding（2026-09-16）
 
 跨服 oom_list 中房间对象的字段读取、默认值和非对象过滤迁入 Kotlin RoomListDecoding。缺少 ooms 或数组类型不符时继续得到空列表；房主引擎、战斗状态、观战人数、锁定和合法性字段保持原默认值及类型。CrossServerBattleService 的 unchanged 缓存分支、哈希和交付副作用保持原位置。证据为 RoomListDecodingTest 三项契约及 D:/workspace/gradle-room-list-decoding.log 的 JDK21 离线测试，210 项测试、0 失败、0 错误；真实房间列表响应和客户端刷新展示仍待联调。
+
+## B4-leaderboard-decoding（2026-09-16）
+
+跨服排行榜响应的条目字段、	op 数组过滤、you 缺省对象和默认值迁入 Kotlin LeaderboardDecoding。CrossServerBattleService 保留 ref 领取、菜单回退和网络发送顺序。证据为 LeaderboardDecodingTest 两项契约及 D:/workspace/gradle-leaderboard-decoding-clean.log 的 JDK21 离线 clean build，212 项测试、0 失败、0 错误；真实排行榜响应和客户端展示仍待联调。

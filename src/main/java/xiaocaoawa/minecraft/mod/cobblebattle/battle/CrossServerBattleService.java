@@ -49,6 +49,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomStatePayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.ServerDexPayload;
 import io.github.rinicesiberia.shadowbattle.battle.BattleResultProjection;
 import io.github.rinicesiberia.shadowbattle.battle.BattleIdentifierParsing;
+import io.github.rinicesiberia.shadowbattle.battle.LeaderboardDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.QueueErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.RoomDirectoryState;
 import io.github.rinicesiberia.shadowbattle.battle.RoomListDecoding;
@@ -1195,40 +1196,10 @@ public final class CrossServerBattleService {
       } else {
          UUID asker = this.claimLeaderboardRef(document.get("ref"));
          if (asker != null) {
-            List<LeaderboardPayload.Entry> top = new ArrayList<>();
-
-            for (JsonElement el : document.has("top") && document.get("top").isJsonArray() ? document.getAsJsonArray("top") : new JsonArray()) {
-               if (el.isJsonObject()) {
-                  top.add(entryOf(el.getAsJsonObject()));
-               }
-            }
-
-            LeaderboardPayload.Entry you = document.has("you") && document.get("you").isJsonObject()
-               ? entryOf(document.getAsJsonObject("you"))
-               : LeaderboardPayload.Entry.NONE;
-            LeaderboardPayload board = new LeaderboardPayload(
-               BattleServerClient.str(document, "ranked", ""),
-               BattleServerClient.str(document, "name", ""),
-               BattleServerClient.integer(document, "players", 0),
-               top,
-               you
-            );
+            LeaderboardPayload board = LeaderboardDecoding.decode(document);
             this.withParticipant(asker, player -> CobbleBattleNetwork.sendLeaderboard(player, board));
          }
       }
-   }
-
-   private static LeaderboardPayload.Entry entryOf(JsonObject o) {
-      return new LeaderboardPayload.Entry(
-         BattleServerClient.integer(o, "rank", 0),
-         o.has("uid") ? o.get("uid").getAsLong() : 0L,
-         BattleServerClient.str(o, "name", "?"),
-         o.has("score") ? o.get("score").getAsLong() : 0L,
-         BattleServerClient.integer(o, "wins", 0),
-         BattleServerClient.integer(o, "losses", 0),
-         BattleServerClient.integer(o, "streak", 0),
-         BattleServerClient.str(o, "favourite", "")
-      );
    }
 
    private void fireBattleEnded(MirrorBattle mirror, JsonObject document, String reason) {
