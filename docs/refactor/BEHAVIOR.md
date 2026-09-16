@@ -177,3 +177,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-player-identity-payload（2026-09-16）
 
 原排队专用命名的玩家协议对象更名为 `PlayerIdentityPayload`，并复用于菜单、排行榜和聊天请求。所有消息继续按 `uuid` 后 `name` 的顺序写入，名称文本不裁剪；排队、房间、菜单、排行榜和聊天请求的字段结构保持一致。证据为原两项 JSON 契约及 `D:/workspace/gradle-player-identity-payload.log` 的 JDK21 离线测试，212 项测试、0 失败、0 错误；真实跨服请求待联调。
+## B4-service-error-rules（2026-09-16）
+
+认证与聊天错误码分别迁入 Kotlin `AuthenticationErrorRules` 和 `ChatErrorRules`。认证保持十二个账户错误键；聊天保持限速、未在战斗、禁用和未登录四个错误键；未知码继续使用服务端回退文本，`MUTED` 的永久/限时分支仍保持原位置和时长格式。两套规则不接受对方的业务错误码。证据为 `ServiceErrorRulesTest` 两项契约及 `D:/workspace/gradle-service-error-rules.log` 的 JDK21 离线 `clean build`，214 项测试、0 失败、0 错误；真实认证和聊天错误帧仍待联调。

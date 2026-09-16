@@ -113,3 +113,4 @@ B4-room-list-decoding（2026-09-16）：将 room_list 房间数组字段解析�
 B4-leaderboard-decoding（2026-09-16）：将排行榜响应条目解析迁入 Kotlin LeaderboardDecoding，保留菜单回退和客户端发送顺序；通过 212 项离线测试。
 
 B4-player-identity-payload（2026-09-16）：将 `QueuePlayerPayload` 安全更名为 `PlayerIdentityPayload`，统一排队、房间、菜单、排行榜和聊天请求的玩家对象构造；通过 212 项离线测试。
+B4-service-error-rules（2026-09-16）：认证与聊天错误码映射迁入两个独立 Kotlin 规则，保持未知码回退和静音特殊分支；通过 214 项离线测试。

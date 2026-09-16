@@ -49,6 +49,8 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomStatePayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.ServerDexPayload;
 import io.github.rinicesiberia.shadowbattle.battle.BattleResultProjection;
 import io.github.rinicesiberia.shadowbattle.battle.BattleIdentifierParsing;
+import io.github.rinicesiberia.shadowbattle.battle.AuthenticationErrorRules;
+import io.github.rinicesiberia.shadowbattle.battle.ChatErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.LeaderboardDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.QueueErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.RoomDirectoryState;
@@ -606,21 +608,7 @@ public final class CrossServerBattleService {
    }
 
    private static Component describeAuthFailure(String code, String fallback) {
-      String key = switch (code) {
-         case "BAD_CREDENTIALS" -> "auth.err.bad_credentials";
-         case "BAD_EMAIL" -> "auth.err.bad_email";
-         case "BAD_CODE" -> "auth.err.bad_code";
-         case "EMAIL_EXISTS" -> "auth.err.email_taken";
-         case "CODE_TOO_SOON" -> "auth.err.code_too_soon";
-         case "SMTP_FAILED" -> "auth.err.smtp_failed";
-         case "BAD_ACCOUNT_ID" -> "auth.err.bad_id";
-         case "ACCOUNT_EXISTS" -> "auth.err.taken";
-         case "BAD_PASSWORD" -> "auth.err.bad_password";
-         case "ACCOUNT_IN_USE" -> "auth.err.in_use";
-         case "NOT_ACCOUNT_OWNER" -> "auth.err.not_owner";
-         case "TOO_MANY_ATTEMPTS" -> "auth.err.too_many";
-         default -> null;
-      };
+      String key = AuthenticationErrorRules.translationKey(code);
       Component text = key == null ? Component.literal(fallback) : Msg.of(key);
       return text.copy().withStyle(ChatFormatting.RED);
    }
@@ -1233,13 +1221,7 @@ public final class CrossServerBattleService {
          Component muted = left == 0L ? Msg.of("chat.err.muted_permanent") : Msg.of("chat.err.muted_for", describeDuration(left));
          return muted.copy().withStyle(ChatFormatting.RED);
       } else {
-         String key = switch (code) {
-            case "CHAT_TOO_FAST" -> "chat.err.too_fast";
-            case "NOT_IN_BATTLE" -> "chat.err.not_in_battle";
-            case "CHAT_DISABLED" -> "chat.err.disabled";
-            case "NOT_LOGGED_IN" -> "queue.not_signed_in";
-            default -> null;
-         };
+         String key = ChatErrorRules.translationKey(code);
          Component text = key == null ? Component.literal(fallback) : Msg.of(key);
          return text.copy().withStyle(ChatFormatting.RED);
       }
