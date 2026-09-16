@@ -9,3 +9,5 @@ B4-matched-assembly (base 5c5127c)：MirrorFactory远端和双本地建场迁入
 整体仍未完成：90%命名覆盖、实际世界实体/Mixin与远端联调、IDEA人工验证、推送和清理未完成。部署配置按用户要求保留。历史批次见PLAN/BEHAVIOR与Git。
 
 B4-battle-control-messages（2026-09-16）：统一确认/中止帧生成并完成调用方替换。`BattleControlMessages` 和三处调用已完成；测试 XML 统计为 196 项、0 失败、0 错误、55 套。日志 `D:/workspace/gradle-battle-control.log`，当前需提交本批次。下一步审查 `BattleQueue` 与 `CrossServerBattleService` 的断线、房间关闭、队列释放和匹配响应清理，并补协议 payload 边界测试。`CrossServerBattleService`、实体/Mixin、真实网络和远端服务仍待集成验证。
+
+B4-queue-rules（2026-09-16）：QueueRules 已迁入并接入 BattleQueue，测试构建成功。下一步继续排队发送/断线引用清理，或进入 payload 编码审计。

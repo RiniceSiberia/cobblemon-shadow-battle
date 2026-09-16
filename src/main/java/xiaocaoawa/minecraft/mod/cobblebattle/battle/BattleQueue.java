@@ -23,6 +23,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.dex.RemoteDex;
 import xiaocaoawa.minecraft.mod.cobblebattle.lang.Msg;
 import xiaocaoawa.minecraft.mod.cobblebattle.net.BattleServerClient;
 import io.github.rinicesiberia.shadowbattle.battle.QueueReferenceBook;
+import io.github.rinicesiberia.shadowbattle.battle.QueueRules;
 
 final class BattleQueue {
    private final CrossServerBattleService service;
@@ -100,19 +101,9 @@ final class BattleQueue {
       }
    }
 
-   private static int slotsOf(String battleType) {
-      String var1 = battleType == null ? "" : battleType.toLowerCase(Locale.ROOT);
-
-      return switch (var1) {
-         case "doubles", "double", "double_battle" -> 2;
-         case "triples", "triple", "triple_battle" -> 3;
-         default -> 1;
-      };
-   }
-
    private Component tooFewFor(List<BattlePokemon> roster, String battleType) {
       if (battleType != null && !battleType.isEmpty()) {
-         int slots = slotsOf(battleType);
+         int slots = QueueRules.requiredSlots(battleType);
          return roster.size() >= slots
             ? null
             : Msg.of(ChatFormatting.RED, "queue.too_few", Msg.raw("room.type." + battleType.toLowerCase(Locale.ROOT)), slots, roster.size());

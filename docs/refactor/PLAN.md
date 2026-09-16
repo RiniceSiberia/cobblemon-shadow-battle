@@ -97,3 +97,5 @@ B4-match-opponent (base 2881468)：匹配对手解析迁入Kotlin MatchOpponentP
 B4-matched-assembly (base 5c5127c)：MirrorFactory远端和双本地建场迁入Kotlin MatchedBattleAssembly，Java保留包内构造/build签名。LocalMatchClaims保留双次领取及第一次缺失仍领取第二次；构造异常回收仍在endConstruction后执行，缺失Mixin不额外forget，成功通知/API事件先于ack且不新增release。新增3项领取契约与2项构造边界测试；clean build后局部复核build均成功，全量193项通过。日志D:/workspace/gradle-matched-assembly.log及gradle-matched-assembly-final.log。包内可调用ABI与原JAR一致；真实NPC/BattleRegistry/远端匹配与事件副作用尚待集成验证。
 
 B4-battle-control-messages (2026-09-16)：统一 `battle_ack` 与 `battle_abort` 帧生成入口，保留键顺序、协议文本、JSON 空值和发送时机。`MatchedBattleAssembly`、`SpectatorSessions`、`CrossServerBattleService` 改用 `BattleControlMessages`；新增3项消息契约。当前构建验证覆盖纯消息和调用方编译，真实跨服服务端确认/中止往返仍待联调。
+
+B4-queue-rules (2026-09-16)：将排队/房间队伍人数的 battleType 别名和槽位数量规则迁入 Kotlin QueueRules，保留 singles 默认值及大小写无关匹配；新增1项规则测试，BattleQueue 继续负责消息副作用。

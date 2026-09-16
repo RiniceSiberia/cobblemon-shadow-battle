@@ -141,3 +141,7 @@ B4-matched-assembly (base 5c5127c)：MirrorFactory远端和双本地建场迁入
 ## B4-battle-control-messages（2026-09-16）
 
 对战建场确认帧仍为 `{"t":"battle_ack","battleId":...}`，中止帧仍为 `{"t":"battle_abort","battleId":...,"reason":...}`。字段按既有顺序写入，null 继续编码为 JSON null，文本不裁剪；每次调用创建独立对象。匹配建场和观战建场在成功通知及 API 事件之后发送确认，断线或玩家离开时沿用原中止原因。证据为 `BattleControlMessagesTest` 三项契约及 2026-09-16 JDK21 离线 clean build；真实远端确认/中止响应尚未验证。
+
+## B4-queue-rules（2026-09-16）
+
+QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/double/double_battle 返回2，对 triples/triple/triple_battle 返回3，使用 ROOT 小写规则。BattleQueue 的提示键、队伍数量比较和消息参数顺序不变。证据为 QueueRulesTest 及 D:/workspace/gradle-queue-rules.log 的测试通过；真实队伍构建和远端房间交互仍待验证。
