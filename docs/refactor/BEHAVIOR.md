@@ -192,3 +192,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-queue-action-requests（2026-09-16）
 
 匹配加入/离开与房间查询/离开/开战请求迁入 Kotlin 协议构造器。主动离队继续包含 `ref`，断线离队继续省略 `ref`；玩家对象仍保持 `uuid`、`name` 顺序。房间动作保持 `t`、`ref`、`player` 顺序，查询请求随后追加 `inviteCode`。动态队伍字段仍由发送链路追加。三项新增契约连同既有房间请求契约通过；JDK21 离线 `clean build` 成功，222 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-queue-action-requests.log`。真实远端请求和断线竞态仍待联调。
+## B4-queue-send-rollback（2026-09-16）
+
+`QueueReferenceBook` 集中执行查询、房主操作和等待队伍三类“先登记再发送”流程。发送返回 false 时，查询只撤销 lookup，房主操作只撤销 owner，队伍请求同时撤销 waiting 与 owner；发送抛出异常时保持原实现语义，异常继续传播且已登记状态保留。`BattleQueue` 三处发送路径接入该事务边界。新增两项契约覆盖成功、false 和异常；JDK21 离线 `clean build` 成功，224 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-queue-send-rollback.log`。真实套接字失败和并发响应仍待联调。

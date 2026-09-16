@@ -184,9 +184,7 @@ final class BattleQueue {
          BattleServerClient client = this.service.client();
          int ref = client.nextRef();
          JsonObject lookup = RoomQueueRequests.lookup(ref, participant.getUUID(), participant.getGameProfile().getName(), code);
-         this.references.bindLookup(ref, participant.getUUID());
-         if (!client.send(lookup)) {
-            this.references.removeLookup(ref);
+         if (!this.references.sendLookup(ref, participant.getUUID(), () -> client.send(lookup))) {
             return Msg.of(ChatFormatting.RED, "queue.send_failed");
          } else {
             return null;
@@ -222,9 +220,7 @@ final class BattleQueue {
       BattleServerClient client = this.service.client();
       int ref = client.nextRef();
       JsonObject start = RoomQueueRequests.start(ref, participant.getUUID(), participant.getGameProfile().getName());
-      this.references.bindOwner(ref, participant.getUUID());
-      if (!client.send(start)) {
-         this.references.removeOwner(ref);
+      if (!this.references.sendOwner(ref, participant.getUUID(), () -> client.send(start))) {
          return Msg.of(ChatFormatting.RED, "queue.send_failed");
       } else {
          return null;
@@ -250,11 +246,10 @@ final class BattleQueue {
       request.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
       request.addProperty("team", preparedTeam.packed());
       request.add("teamMeta", preparedTeam.meta());
-      this.references.putWaiting(new QueueReferenceBook.WaitingTeam(participant.getUUID(), preparedTeam.team(), preparedTeam.packed(), rankedId));
-      this.references.bindOwner(ref, participant.getUUID());
-      if (!client.send(request)) {
-         this.references.drop(participant.getUUID());
-         this.references.removeOwner(ref);
+      QueueReferenceBook.WaitingTeam waiting = new QueueReferenceBook.WaitingTeam(
+         participant.getUUID(), preparedTeam.team(), preparedTeam.packed(), rankedId
+      );
+      if (!this.references.sendWaiting(waiting, ref, () -> client.send(request))) {
          return Msg.of(ChatFormatting.RED, "queue.send_failed");
       } else {
          return null;

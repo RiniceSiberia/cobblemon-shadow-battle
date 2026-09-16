@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class QueueReferenceBookTest {
@@ -57,5 +58,43 @@ class QueueReferenceBookTest {
         assertFalse(book.contains(participant))
         assertNull(book.owner(1))
         assertNull(book.lookup(2))
+    }
+
+    @Test
+    fun `发送false撤销对应引用且成功保留到响应领取`() {
+        val book = QueueReferenceBook()
+        val participant = UUID(0L, 5L)
+        val team = QueueReferenceBook.WaitingTeam(participant, emptyList(), "packed", "ranked")
+
+        assertFalse(book.sendLookup(1, participant) { false })
+        assertNull(book.lookup(1))
+        assertFalse(book.sendOwner(2, participant) { false })
+        assertNull(book.owner(2))
+        assertFalse(book.sendWaiting(team, 3) { false })
+        assertFalse(book.contains(participant))
+        assertNull(book.owner(3))
+
+        assertTrue(book.sendWaiting(team, 4) { true })
+        assertTrue(book.contains(participant))
+        assertEquals(participant, book.owner(4))
+    }
+
+    @Test
+    fun `发送异常继续传播并保留已登记状态`() {
+        val book = QueueReferenceBook()
+        val participant = UUID(0L, 6L)
+        val failure = IllegalStateException("send")
+
+        assertThrows(IllegalStateException::class.java) {
+            book.sendLookup(7, participant) { throw failure }
+        }
+        assertEquals(participant, book.lookup(7))
+
+        val team = QueueReferenceBook.WaitingTeam(participant, emptyList(), "", "")
+        assertThrows(IllegalStateException::class.java) {
+            book.sendWaiting(team, 8) { throw failure }
+        }
+        assertTrue(book.contains(participant))
+        assertEquals(participant, book.owner(8))
     }
 }
