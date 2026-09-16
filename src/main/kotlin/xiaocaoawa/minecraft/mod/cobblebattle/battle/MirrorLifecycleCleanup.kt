@@ -1,9 +1,12 @@
 package xiaocaoawa.minecraft.mod.cobblebattle.battle
 
 import com.cobblemon.mod.common.battles.BattleRegistry
-import io.github.rinicesiberia.shadowbattle.battle.CleanupTiming
+import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
+import io.github.rinicesiberia.shadowbattle.battle.MirrorSweepSequence
+import io.github.rinicesiberia.shadowbattle.battle.MirrorSweepTarget
 import net.minecraft.network.chat.Component
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 
 /** 负责镜像对战结束后的索引、实体与参与者通知清理。 */
@@ -13,33 +16,28 @@ internal class MirrorLifecycleCleanup(
     fun sweepEntities(mirror: MirrorBattle, delayMs: Long) {
         val bodies = mirror.takeBodies()
         val props = mirror.takeProps()
-        if (bodies.isEmpty() && props.isEmpty()) return
-
-        for (body in bodies) {
-            val actor = body.actor()
-            if (actor != null) MirrorPokemon.release(actor.mirrorTeam())
-        }
-
-        val server = service.server() ?: return
-        val sweep = Runnable {
-            server.execute {
-                for (entity in props) {
-                    if (!entity.isRemoved) entity.discard()
-                }
-
-                for (body in bodies) {
-                    val actor = body.actor()
-                    if (actor != null) {
-                        for (battlePokemon in actor.mirrorTeam()) {
-                            val entity = battlePokemon.entity
-                            if (entity != null && !entity.isRemoved) entity.discard()
-                        }
-                    }
-                    MirrorNpc.despawn(body.npc())
-                }
+        MirrorSweepSequence.arrange(bodies, props, delayMs, object : MirrorSweepTarget<MirrorBattle.Body, PokemonEntity> {
+            override fun releaseRoster(body: MirrorBattle.Body) {
+                body.actor()?.let { MirrorPokemon.release(it.mirrorTeam()) }
             }
-        }
-        CleanupTiming.schedule(delayMs, sweep) { delay, work ->
+
+            override fun mainThread(): Executor? = service.server()
+
+            override fun discardProp(prop: PokemonEntity) {
+                if (!prop.isRemoved) prop.discard()
+            }
+
+            override fun discardBody(body: MirrorBattle.Body) {
+                val actor = body.actor()
+                if (actor != null) {
+                    for (battlePokemon in actor.mirrorTeam()) {
+                        val entity = battlePokemon.entity
+                        if (entity != null && !entity.isRemoved) entity.discard()
+                    }
+                }
+                MirrorNpc.despawn(body.npc())
+            }
+        }) { delay, work ->
             CompletableFuture.runAsync(work, CompletableFuture.delayedExecutor(delay, TimeUnit.MILLISECONDS))
         }
     }
