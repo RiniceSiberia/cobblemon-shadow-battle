@@ -119,3 +119,4 @@ B4-queue-rejection-message（2026-09-16）：队伍合法性拒绝消息投影�
 B4-room-queue-requests（2026-09-16）：房间创建与加入请求固定字段迁入 Kotlin 协议构造器，保持字段顺序和引擎/合法性规则；219 项离线测试通过。
 B4-queue-action-requests（2026-09-16）：queue_join/queue_leave 与房间 lookup/leave/start 请求迁入 Kotlin 构造器，保持主动和断线离队的 ref 差异；222 项离线测试通过。
 B4-queue-send-rollback（2026-09-16）：集中查询、房主与等待队伍请求的登记和发送失败回滚，保持异常传播及残留语义；224 项离线测试通过。
+B4-service-requests（2026-09-16）：菜单、排行榜和聊天请求迁入 Kotlin 构造器，请求台账集中发送失败回滚并保留聊天失败残留语义；228 项离线测试通过。

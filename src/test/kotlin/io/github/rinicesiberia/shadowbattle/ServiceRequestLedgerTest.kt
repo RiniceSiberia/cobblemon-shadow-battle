@@ -3,6 +3,9 @@ package io.github.rinicesiberia.shadowbattle
 import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -48,5 +51,28 @@ class ServiceRequestLedgerTest {
 
         assertNull(ledger.claimMenu(3))
         assertNull(ledger.claimLeaderboard(4))
+    }
+
+    @Test
+    fun `发送事务按通道保留或撤销引用`() {
+        val ledger = ServiceRequestLedger()
+        assertFalse(ledger.sendMenu(10, participant) { false })
+        assertNull(ledger.claimMenu(10))
+        assertFalse(ledger.sendLeaderboard(11, participant) { false })
+        assertNull(ledger.claimLeaderboard(11))
+
+        assertFalse(ledger.sendChat(12, participant) { false })
+        assertEquals(participant, ledger.claimChat(12))
+        assertTrue(ledger.sendMenu(13, participant) { true })
+        assertEquals(participant, ledger.claimMenu(13))
+    }
+
+    @Test
+    fun `发送异常传播并保留预先登记引用`() {
+        val ledger = ServiceRequestLedger()
+        assertThrows(IllegalStateException::class.java) {
+            ledger.sendLeaderboard(14, participant) { throw IllegalStateException("send") }
+        }
+        assertEquals(participant, ledger.claimLeaderboard(14))
     }
 }

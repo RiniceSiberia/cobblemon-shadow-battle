@@ -195,3 +195,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-queue-send-rollback（2026-09-16）
 
 `QueueReferenceBook` 集中执行查询、房主操作和等待队伍三类“先登记再发送”流程。发送返回 false 时，查询只撤销 lookup，房主操作只撤销 owner，队伍请求同时撤销 waiting 与 owner；发送抛出异常时保持原实现语义，异常继续传播且已登记状态保留。`BattleQueue` 三处发送路径接入该事务边界。新增两项契约覆盖成功、false 和异常；JDK21 离线 `clean build` 成功，224 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-queue-send-rollback.log`。真实套接字失败和并发响应仍待联调。
+## B4-service-requests（2026-09-16）
+
+菜单、排行榜与聊天请求构造迁入 Kotlin `ServiceRequests`，保持 `t/ref/ranked/player` 和 `t/ref/channel/text/player` 字段顺序；聊天频道仅精确 `battle` 保留，其余继续回退 `global`。`ServiceRequestLedger` 集中登记与发送：菜单和排行榜发送 false 时撤销引用，聊天发送 false 时按原行为保留引用，发送异常均传播并保留已登记状态。四项新增契约及 JDK21 离线 `clean build` 通过，228 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-service-requests.log`。真实服务响应和并发竞态仍待联调。

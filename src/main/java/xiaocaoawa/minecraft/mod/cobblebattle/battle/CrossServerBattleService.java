@@ -58,7 +58,7 @@ import io.github.rinicesiberia.shadowbattle.battle.RoomListDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.RoomStateDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
 import io.github.rinicesiberia.shadowbattle.transport.BattleControlMessages;
-import io.github.rinicesiberia.shadowbattle.transport.PlayerIdentityPayload;
+import io.github.rinicesiberia.shadowbattle.transport.ServiceRequests;
 
 public final class CrossServerBattleService {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle");
@@ -799,13 +799,8 @@ public final class CrossServerBattleService {
          } else {
             String chosen = this.hasRanked(this.config().defaultRanked) ? this.config().defaultRanked : competitions.get(0).id();
             int ref = this.client.nextRef();
-            JsonObject request = BattleServerClient.msg("leaderboard_query");
-            request.addProperty("ref", ref);
-            request.addProperty("ranked", chosen);
-            request.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
-            this.requestLedger.bindMenu(ref, participant.getUUID());
-            if (!this.client.send(request)) {
-               this.requestLedger.removeMenu(ref);
+            JsonObject request = ServiceRequests.leaderboard(ref, chosen, participant.getUUID(), participant.getGameProfile().getName());
+            if (!this.requestLedger.sendMenu(ref, participant.getUUID(), () -> this.client.send(request))) {
                return this.sendMainMenu(participant, "");
             } else {
                return null;
@@ -1150,13 +1145,8 @@ public final class CrossServerBattleService {
          return this.notConnected("auth.not_connected");
       } else {
          int ref = this.client.nextRef();
-         JsonObject request = BattleServerClient.msg("leaderboard_query");
-         request.addProperty("ref", ref);
-         request.addProperty("ranked", rankedId);
-         request.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
-         this.requestLedger.bindLeaderboard(ref, participant.getUUID());
-         if (!this.client.send(request)) {
-            this.requestLedger.removeLeaderboard(ref);
+         JsonObject request = ServiceRequests.leaderboard(ref, rankedId, participant.getUUID(), participant.getGameProfile().getName());
+         if (!this.requestLedger.sendLeaderboard(ref, participant.getUUID(), () -> this.client.send(request))) {
             return Msg.of(ChatFormatting.RED, "auth.send_failed");
          } else {
             return null;
@@ -1236,14 +1226,9 @@ public final class CrossServerBattleService {
          } else if (!this.chatEnabled) {
             this.tellParticipant(participant.getUUID(), Msg.of(ChatFormatting.RED, "chat.err.disabled"));
          } else {
-            JsonObject request = BattleServerClient.msg("chat_send");
             int ref = this.client.nextRef();
-            request.addProperty("ref", ref);
-            request.addProperty("channel", "battle".equals(selectedConversation) ? "battle" : "global");
-            request.addProperty("text", text);
-            request.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
-            this.requestLedger.bindChat(ref, participant.getUUID());
-            this.client.send(request);
+            JsonObject request = ServiceRequests.chat(ref, selectedConversation, text, participant.getUUID(), participant.getGameProfile().getName());
+            this.requestLedger.sendChat(ref, participant.getUUID(), () -> this.client.send(request));
          }
       }
    }
