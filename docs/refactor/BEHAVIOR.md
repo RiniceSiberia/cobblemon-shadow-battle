@@ -204,3 +204,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-ranked-decoding（2026-09-16）
 
 远端排位赛配置解析迁入 Kotlin `RankedCompetitionDecoding`。非对象、空标识条目继续忽略；字段保持原默认值；规则数组只接受 JSON 原始值并按顺序转成文本；重复标识继续由后项覆盖，同时保留首次插入位置。`CrossServerBattleService` 保留清空、日志和后续菜单使用。三项契约及 JDK21 离线 `clean build` 通过，234 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-ranked-decoding.log`。真实服务端 ranked 配置仍待联调。
+## B4-handshake-response（2026-09-16）
+
+握手响应的图鉴、合法性、聊天、邮件、实例和物种计数字段迁入 Kotlin `HandshakeResponseDecoding`。缺失字段保持原默认值。图鉴决策保持原优先级：未就绪先使缓存失效；就绪且本地摘要非空并与远端相同则接受缓存；其余请求完整快照。排位读取、观察者上报、等待认证界面打开和日志顺序未改。三项契约及 JDK21 离线 `clean build` 通过，237 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-handshake-response.log`。真实远端握手和缓存文件仍待联调。

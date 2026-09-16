@@ -52,6 +52,7 @@ import io.github.rinicesiberia.shadowbattle.battle.BattleIdentifierParsing;
 import io.github.rinicesiberia.shadowbattle.battle.AuthenticationErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.ChatErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.LeaderboardDecoding;
+import io.github.rinicesiberia.shadowbattle.battle.HandshakeResponseDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.QueueErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.RankedCompetitionDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.RoomDirectoryState;
@@ -380,23 +381,19 @@ public final class CrossServerBattleService {
 
    private void onHelloAck(JsonObject document) {
       this.client.setHandshaken(true);
-      boolean dexReady = BattleServerClient.bool(document, "dexReady", false);
+      HandshakeResponseDecoding.Settings settings = HandshakeResponseDecoding.decode(document);
       this.readRanked(document);
-      this.dex.setStrictBaseStats(BattleServerClient.bool(document, "strictBaseStats", true));
+      this.dex.setStrictBaseStats(settings.getStrictBaseStats());
       this.dex
          .setTeamRules(
-            BattleServerClient.bool(document, "strictAbilities", false),
-            BattleServerClient.bool(document, "strictMoves", false),
-            BattleServerClient.integer(document, "maxEvPerStat", 0),
-            BattleServerClient.integer(document, "maxEvTotal", 0),
-            BattleServerClient.integer(document, "maxIv", 0)
+            settings.getStrictAbilities(), settings.getStrictMoves(), settings.getMaxEvPerStat(), settings.getMaxEvTotal(), settings.getMaxIv()
          );
-      this.chatEnabled = BattleServerClient.bool(document, "chatEnabled", true);
+      this.chatEnabled = settings.getChatEnabled();
       if (!this.chatEnabled) {
          LOGGER.info("The battle server has chat switched off; the chat panel stays hidden");
       }
 
-      this.emailEnabled = BattleServerClient.bool(document, "emailEnabled", false);
+      this.emailEnabled = settings.getEmailEnabled();
       if (!this.emailEnabled) {
          LOGGER.info("The battle server has no mailer; the account screen stays on account names");
       }
@@ -404,24 +401,21 @@ public final class CrossServerBattleService {
       LOGGER.info(
          "Handshake complete with battle server instance '{}' (dex {}, {} species)",
          new Object[]{
-            BattleServerClient.str(document, "instance", "?"), dexReady ? "ready" : "NOT ready", BattleServerClient.integer(document, "speciesCount", 0)
+            settings.getInstance(), settings.getDexReady() ? "ready" : "NOT ready", settings.getSpeciesCount()
          }
       );
       this.reportChatObservers();
       this.openWaitingChunksAuth();
-      if (!dexReady) {
+      HandshakeResponseDecoding.DexAction dexAction = HandshakeResponseDecoding.decideDex(settings, this.dex.cachedDigest());
+      if (dexAction == HandshakeResponseDecoding.DexAction.Invalidate.INSTANCE) {
          this.dex.invalidate("the battle server has no dex");
          LOGGER.warn(
             "The battle server has no dex yet. Cross-server battles stay unavailable until it has one - the Cobblemon jar belongs in its cobblemon/ folder."
          );
+      } else if (dexAction instanceof HandshakeResponseDecoding.DexAction.AcceptCached cached) {
+         this.dex.accept(unchangedDex(cached.getDigest()));
       } else {
-         String cached = this.dex.cachedDigest();
-         String theirs = BattleServerClient.str(document, "dexDigest", "");
-         if (cached != null && cached.equals(theirs)) {
-            this.dex.accept(unchangedDex(cached));
-         } else {
-            this.requestDex();
-         }
+         this.requestDex();
       }
    }
 
