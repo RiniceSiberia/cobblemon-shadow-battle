@@ -137,3 +137,7 @@ B4-mirror-sweep (base eaa604d)：MirrorLifecycleCleanup使用MirrorSweepSequence
 B4-match-opponent (base 2881468)：匹配对手解析迁入Kotlin MatchOpponentParsing。保留最后一个不同席位、仅解析最终对手、主机标志缺省/空值为false和非法最终UUID向外传播。4项新测试，全量188项通过，日志D:/workspace/gradle-match-opponent.log；实体建场继续待验证。
 
 B4-matched-assembly (base 5c5127c)：MirrorFactory远端和双本地建场迁入Kotlin MatchedBattleAssembly，Java保留包内构造/build签名。LocalMatchClaims保留双次领取及第一次缺失仍领取第二次；构造异常回收仍在endConstruction后执行，缺失Mixin不额外forget，成功通知/API事件先于ack且不新增release。新增3项领取契约与2项构造边界测试；clean build后局部复核build均成功，全量193项通过。日志D:/workspace/gradle-matched-assembly.log及gradle-matched-assembly-final.log。包内可调用ABI与原JAR一致；真实NPC/BattleRegistry/远端匹配与事件副作用尚待集成验证。
+
+## B4-battle-control-messages（2026-09-16）
+
+对战建场确认帧仍为 `{"t":"battle_ack","battleId":...}`，中止帧仍为 `{"t":"battle_abort","battleId":...,"reason":...}`。字段按既有顺序写入，null 继续编码为 JSON null，文本不裁剪；每次调用创建独立对象。匹配建场和观战建场在成功通知及 API 事件之后发送确认，断线或玩家离开时沿用原中止原因。证据为 `BattleControlMessagesTest` 三项契约及 2026-09-16 JDK21 离线 clean build；真实远端确认/中止响应尚未验证。

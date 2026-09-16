@@ -11,6 +11,7 @@ import io.github.rinicesiberia.shadowbattle.battle.LocalMatchClaims
 import io.github.rinicesiberia.shadowbattle.battle.MatchOpponent
 import io.github.rinicesiberia.shadowbattle.battle.MatchOpponentParsing
 import io.github.rinicesiberia.shadowbattle.battle.TeamSelection
+import io.github.rinicesiberia.shadowbattle.transport.BattleControlMessages
 import net.minecraft.ChatFormatting
 import org.slf4j.LoggerFactory
 import xiaocaoawa.minecraft.mod.cobblebattle.api.BattleInfo
@@ -192,9 +193,7 @@ class MatchedBattleAssembly(private val service: CrossServerBattleService) {
     }
 
     private fun acknowledge(battleId: String) {
-        val acknowledgement = BattleServerClient.msg("battle_ack")
-        acknowledgement.addProperty("battleId", battleId)
-        service.client().send(acknowledgement)
+        service.client().send(BattleControlMessages.acknowledgement(battleId))
     }
 
     private companion object {

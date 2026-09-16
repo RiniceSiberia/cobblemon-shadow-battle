@@ -10,6 +10,7 @@ import io.github.rinicesiberia.shadowbattle.battle.BattleConstructionAttempt
 import io.github.rinicesiberia.shadowbattle.battle.BattleFormatResolver
 import io.github.rinicesiberia.shadowbattle.battle.SpectatorTeamLayout
 import io.github.rinicesiberia.shadowbattle.battle.SpectatorTeams
+import io.github.rinicesiberia.shadowbattle.transport.BattleControlMessages
 import net.minecraft.ChatFormatting
 import net.minecraft.server.level.ServerPlayer
 import org.slf4j.LoggerFactory
@@ -48,9 +49,7 @@ class SpectatorSessions(private val service: CrossServerBattleService) {
         }
         val mirror = build(document, remoteBattleId, player) ?: return
         attach(mirror, player)
-        val acknowledgement = BattleServerClient.msg("battle_ack")
-        acknowledgement.addProperty("battleId", remoteBattleId)
-        service.client().send(acknowledgement)
+        service.client().send(BattleControlMessages.acknowledgement(remoteBattleId))
         mirror.release()
     }
 

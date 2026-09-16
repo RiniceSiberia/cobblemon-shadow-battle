@@ -51,6 +51,7 @@ import io.github.rinicesiberia.shadowbattle.battle.BattleResultProjection;
 import io.github.rinicesiberia.shadowbattle.battle.BattleIdentifierParsing;
 import io.github.rinicesiberia.shadowbattle.battle.RoomDirectoryState;
 import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
+import io.github.rinicesiberia.shadowbattle.transport.BattleControlMessages;
 
 public final class CrossServerBattleService {
    private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle");
@@ -803,10 +804,7 @@ public final class CrossServerBattleService {
    }
 
    void sendAbort(String remoteBattleId, String reason) {
-      JsonObject abort = BattleServerClient.msg("battle_abort");
-      abort.addProperty("battleId", remoteBattleId);
-      abort.addProperty("reason", reason);
-      this.client.send(abort);
+      this.client.send(BattleControlMessages.abort(remoteBattleId, reason));
    }
 
    public AuthService auth() {
