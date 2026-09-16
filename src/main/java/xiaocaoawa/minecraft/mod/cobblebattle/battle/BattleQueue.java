@@ -16,13 +16,13 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.ClickEvent.Action;
 import net.minecraft.server.level.ServerPlayer;
 import xiaocaoawa.minecraft.mod.cobblebattle.dex.RemoteDex;
 import xiaocaoawa.minecraft.mod.cobblebattle.lang.Msg;
 import xiaocaoawa.minecraft.mod.cobblebattle.net.BattleServerClient;
 import io.github.rinicesiberia.shadowbattle.battle.QueueReferenceBook;
+import io.github.rinicesiberia.shadowbattle.battle.QueueRejectionMessage;
 import io.github.rinicesiberia.shadowbattle.battle.QueueRules;
 import io.github.rinicesiberia.shadowbattle.battle.QueueMessageRules;
 import io.github.rinicesiberia.shadowbattle.transport.PlayerIdentityPayload;
@@ -95,7 +95,7 @@ final class BattleQueue {
             }
 
             if (!violations.isEmpty()) {
-               throw new BattleQueue.QueuePreparationFailure(describeViolations(violations));
+               throw new BattleQueue.QueuePreparationFailure(QueueRejectionMessage.compose(violations));
             } else {
                return new BattleQueue.PreparedRoster(roster, BattleRegistry.INSTANCE.packTeam(roster), dex.describeTeam(plain));
             }
@@ -336,7 +336,7 @@ final class BattleQueue {
             violations.addAll(this.service.dex().check(roster.get(i).getEffectedPokemon(), i));
          }
 
-         return (Component)(violations.isEmpty() ? Msg.of(ChatFormatting.GREEN, "check.all_ok", roster.size()) : describeViolations(violations));
+         return (Component)(violations.isEmpty() ? Msg.of(ChatFormatting.GREEN, "check.all_ok", roster.size()) : QueueRejectionMessage.compose(violations));
       }
    }
 
@@ -373,25 +373,6 @@ final class BattleQueue {
       int position = document.has("position") ? document.get("position").getAsInt() : 0;
       int waiting = document.has("waiting") ? document.get("waiting").getAsInt() : 0;
       this.service.tellParticipant(participantUuid, Msg.of(ChatFormatting.YELLOW, "queue.waiting", position, waiting));
-   }
-
-   private static Component describeViolations(List<RemoteDex.Rejection> violations) {
-      MutableComponent root = Msg.of(ChatFormatting.RED, "reject.header").copy();
-
-      for (RemoteDex.Rejection rejection : violations) {
-         Component body = switch (rejection.kind()) {
-            case UNKNOWN_SPECIES -> Msg.compose("reject.unknown_species");
-            case BASE_STAT_MISMATCH -> Msg.compose("reject.stat_mismatch", rejection.detail());
-            case ILLEGAL_ABILITY -> Msg.compose("reject.illegal_ability", rejection.detail());
-            case ILLEGAL_MOVE -> Msg.compose("reject.illegal_move", rejection.detail());
-            case EV_OVER_CAP -> Msg.compose("reject.ev_over_cap", rejection.detail());
-            case IV_OVER_CAP -> Msg.compose("reject.iv_over_cap", rejection.detail());
-         };
-         root.append(Msg.compose(ChatFormatting.YELLOW, "reject.slot", rejection.slot() + 1, rejection.pokemon()).append(" ").append(body));
-      }
-
-      root.append(Msg.of(ChatFormatting.GRAY, "reject.footer"));
-      return root;
    }
 
    private record PreparedRoster(List<BattlePokemon> team, String packed, JsonArray meta) {

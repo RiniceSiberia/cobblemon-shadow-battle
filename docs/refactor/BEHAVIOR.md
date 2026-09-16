@@ -183,3 +183,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-battle-queue-private-names（2026-09-16）
 
 `BattleQueue` 的私有队伍准备、槽位不足说明、已准备请求发送、准备结果和拒绝异常改为职责明确的名称。改动仅涉及私有符号，排队检查顺序、合法性判断、消息字段、引用登记和发送失败回滚均未改变。JDK21 离线全量测试 214 项通过，日志 `D:/workspace/gradle-battle-queue-private-names.log`；真实队伍数据和远端交互仍待联调。
+## B4-queue-rejection-message（2026-09-16）
+
+队伍合法性拒绝列表到玩家消息的投影迁入 Kotlin `QueueRejectionMessage`。拒绝项保持输入顺序，槽位继续从零基转为一基显示，六种拒绝类型沿用原翻译键与详情参数，消息继续由红色标题、黄色槽位和灰色页脚组成。队伍加入与兼容性检查共用同一入口。两项契约覆盖顺序、槽位和全部拒绝类型；JDK21 离线 `clean build` 通过，216 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-queue-rejection-message.log`。真实 Pokémon 名称组件和客户端渲染仍待游戏内验证。
