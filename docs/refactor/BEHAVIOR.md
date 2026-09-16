@@ -145,3 +145,7 @@ B4-matched-assembly (base 5c5127c)：MirrorFactory远端和双本地建场迁入
 ## B4-queue-rules（2026-09-16）
 
 QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/double/double_battle 返回2，对 triples/triple/triple_battle 返回3，使用 ROOT 小写规则。BattleQueue 的提示键、队伍数量比较和消息参数顺序不变。证据为 QueueRulesTest 及 D:/workspace/gradle-queue-rules.log 的测试通过；真实队伍构建和远端房间交互仍待验证。
+
+## B4-queue-player-payload（2026-09-16）
+
+排队、房间查询、离开、开战和断线请求继续发送 {uuid,name} 玩家对象，字段顺序为 uuid 后 name；UUID 使用标准文本，名称由 Gson 原样 JSON 编码，不做裁剪。两项 payload 契约及离线 test 构建通过，真实远端请求往返待验证。

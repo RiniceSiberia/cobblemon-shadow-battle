@@ -99,3 +99,5 @@ B4-matched-assembly (base 5c5127c)：MirrorFactory远端和双本地建场迁入
 B4-battle-control-messages (2026-09-16)：统一 `battle_ack` 与 `battle_abort` 帧生成入口，保留键顺序、协议文本、JSON 空值和发送时机。`MatchedBattleAssembly`、`SpectatorSessions`、`CrossServerBattleService` 改用 `BattleControlMessages`；新增3项消息契约。当前构建验证覆盖纯消息和调用方编译，真实跨服服务端确认/中止往返仍待联调。
 
 B4-queue-rules (2026-09-16)：将排队/房间队伍人数的 battleType 别名和槽位数量规则迁入 Kotlin QueueRules，保留 singles 默认值及大小写无关匹配；新增1项规则测试，BattleQueue 继续负责消息副作用。
+
+B4-queue-player-payload (2026-09-16)：将 queue/room 请求重复的玩家 JSON 对象构造迁入 Kotlin QueuePlayerPayload，保持 uuid/name 字段顺序和原始名称文本。
