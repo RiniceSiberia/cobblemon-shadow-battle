@@ -51,6 +51,7 @@ import io.github.rinicesiberia.shadowbattle.battle.BattleResultProjection;
 import io.github.rinicesiberia.shadowbattle.battle.BattleIdentifierParsing;
 import io.github.rinicesiberia.shadowbattle.battle.AuthenticationErrorRules;
 import io.github.rinicesiberia.shadowbattle.battle.ChatErrorRules;
+import io.github.rinicesiberia.shadowbattle.battle.ChatLineDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.ConnectionLifecycleRules;
 import io.github.rinicesiberia.shadowbattle.battle.LeaderboardDecoding;
 import io.github.rinicesiberia.shadowbattle.battle.HandshakeResponseDecoding;
@@ -1020,22 +1021,13 @@ public final class CrossServerBattleService {
    }
 
    private void onChat(JsonObject document) {
-      String selectedConversation = BattleServerClient.str(document, "channel", "global");
-      String text = BattleServerClient.str(document, "text", "");
-      if (!text.isEmpty()) {
-         UUID sender = BattleIdentifierParsing.uuidOrNull(BattleServerClient.str(document, "player", ""));
-         ChatLinePayload line = new ChatLinePayload(
-            selectedConversation,
-            document.has("uid") ? document.get("uid").getAsLong() : 0L,
-            BattleServerClient.str(document, "id", ""),
-            BattleServerClient.str(document, "name", "?"),
-            sender == null ? new UUID(0L, 0L) : sender,
-            text
-         );
+      ChatLineDecoding.Result decoded = ChatLineDecoding.decode(document);
+      if (decoded != null) {
+         ChatLinePayload line = decoded.getPayload();
          MinecraftServer server = this.server();
          if (server != null) {
-            if ("battle".equals(selectedConversation)) {
-               MirrorBattle mirror = CrossServerBattles.byRemoteId(BattleServerClient.str(document, "battleId", ""));
+            if ("battle".equals(decoded.getChannel())) {
+               MirrorBattle mirror = CrossServerBattles.byRemoteId(decoded.getBattleId());
                if (mirror != null) {
                   for (UUID seated : mirror.localPlayers()) {
                      this.withParticipant(seated, participant -> CobbleBattleNetwork.sendChatLine(participant, line));

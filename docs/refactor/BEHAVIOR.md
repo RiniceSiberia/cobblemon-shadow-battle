@@ -213,3 +213,6 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B4-connection-lifecycle-rules（2026-09-16）
 
 连接启动、按需连接和空闲释放的纯判定迁入 Kotlin `ConnectionLifecycleRules`。服务端启动仍在保活开启或存在在线玩家时连接；按需连接仍要求客户端存在、连接未被请求且没有拒绝原因；空闲延迟最低五秒；定时任务仍只在无人在线且连接仍被需要时主动断开。调度器创建、取消、线程切换和实际连接副作用保持原位置。三项契约及 JDK21 离线 `clean build` 通过，242 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-connection-lifecycle-rules.log`。真实计时、玩家进出和网络断开竞态仍待集成验证。
+## B4-chat-line-decoding（2026-09-16）
+
+远端聊天行的字段解析迁入 Kotlin `ChatLineDecoding`。空文本继续直接忽略；缺少频道时回退 global；缺少或无效玩家 UUID 时使用零 UUID；uid、账号、名称、battleId 和文本保持原默认值与原文。`CrossServerBattleService` 继续负责战斗频道按镜像席位分发、其他频道向已登录玩家广播，服务器缺失时不发送。三项契约及 JDK21 离线 `clean build` 通过，245 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-chat-line-decoding.log`。真实聊天广播和战斗频道成员仍待联调。
