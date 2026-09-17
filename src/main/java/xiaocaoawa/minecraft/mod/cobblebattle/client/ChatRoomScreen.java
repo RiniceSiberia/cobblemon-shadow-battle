@@ -10,244 +10,244 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 public final class ChatRoomScreen extends Screen {
-   private static final ResourceLocation BASE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/base.png");
-   private static final ResourceLocation SCREEN = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/screen_1.png");
-   private static final int WIDTH = 345;
-   private static final int HEIGHT = 207;
-   private static final int HOLE_X = 18;
-   private static final int HOLE_Y = 13;
-   private static final int HOLE_W = 309;
-   private static final int HOLE_H = 183;
-   private static final int TITLE_X = 24;
-   private static final int TITLE_Y = 15;
-   private static final int TAB_X = 110;
-   private static final int TAB_W = 40;
-   private static final int TAB_H = 10;
-   private static final int TAB_Y = 14;
-   private static final int LIST_X = 22;
-   private static final int LIST_Y = 27;
-   private static final int LIST_W = 301;
-   private static final int LIST_H = 150;
-   private static final int INPUT_Y = 180;
-   private static final int INPUT_H = 12;
-   private static final int INPUT_W = 250;
-   private static final int PAD = 4;
-   private static final int FACE = 8;
-   private static final int BUBBLE_MAX_W = 180;
-   private static final int LINE_H = 10;
-   private static final int NAME_H = 10;
-   private static final int GAP = 4;
-   private static final int TITLE_COLOUR = -1;
-   private static final int TAB_ON = -1426063361;
-   private static final int TAB_OFF = 1157627903;
-   private static final int NAME_COLOUR = -1;
-   private static final int NAME_SHADE = -15451066;
-   private static final int BUBBLE = -12937546;
-   private static final int BUBBLE_MINE = -13664356;
-   private static final int BUBBLE_TEXT = -1;
-   private static final int INPUT_FILL = -721409;
-   private static final int INPUT_EDGE = -8460315;
-   private static final int INPUT_TEXT = -15451066;
-   private EditBox input;
-   private int originX;
-   private int originY;
-   private int scrollOffsets;
+   private static final ResourceLocation FRAME_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/base.png");
+   private static final ResourceLocation CHAT_SCREEN_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/screen_1.png");
+   private static final int PANEL_WIDTH = 345;
+   private static final int PANEL_HEIGHT = 207;
+   private static final int CONTENT_LEFT_OFFSET = 18;
+   private static final int CONTENT_TOP_OFFSET = 13;
+   private static final int CONTENT_WIDTH = 309;
+   private static final int CONTENT_HEIGHT = 183;
+   private static final int TITLE_LEFT_OFFSET = 24;
+   private static final int TITLE_TOP_OFFSET = 15;
+   private static final int TABS_LEFT_OFFSET = 110;
+   private static final int TAB_WIDTH = 40;
+   private static final int TAB_HEIGHT = 10;
+   private static final int TABS_TOP_OFFSET = 14;
+   private static final int MESSAGE_LIST_LEFT_OFFSET = 22;
+   private static final int MESSAGE_LIST_TOP_OFFSET = 27;
+   private static final int MESSAGE_LIST_WIDTH = 301;
+   private static final int MESSAGE_LIST_HEIGHT = 150;
+   private static final int INPUT_TOP_OFFSET = 180;
+   private static final int INPUT_HEIGHT = 12;
+   private static final int INPUT_WIDTH = 250;
+   private static final int CONTENT_PADDING = 4;
+   private static final int FACE_SIZE = 8;
+   private static final int MAX_BUBBLE_WIDTH = 180;
+   private static final int MESSAGE_LINE_HEIGHT = 10;
+   private static final int SENDER_NAME_HEIGHT = 10;
+   private static final int MESSAGE_GAP = 4;
+   private static final int TITLE_COLOR = -1;
+   private static final int ACTIVE_TAB_COLOR = -1426063361;
+   private static final int INACTIVE_TAB_COLOR = 1157627903;
+   private static final int SENDER_NAME_COLOR = -1;
+   private static final int SELECTED_TAB_TEXT_COLOR = -15451066;
+   private static final int REMOTE_BUBBLE_COLOR = -12937546;
+   private static final int LOCAL_BUBBLE_COLOR = -13664356;
+   private static final int MESSAGE_TEXT_COLOR = -1;
+   private static final int INPUT_FILL_COLOR = -721409;
+   private static final int INPUT_BORDER_COLOR = -8460315;
+   private static final int INPUT_TEXT_COLOR = -15451066;
+   private EditBox messageInput;
+   private int panelLeft;
+   private int panelTop;
+   private int scrollOffsetPixels;
 
    public ChatRoomScreen() {
       super(Component.translatable("cobblebattle.chatroom.title"));
    }
 
    protected void init() {
-      this.originX = (this.width - 345) / 2;
-      this.originY = (this.height - 207) / 2;
-      String was = this.input == null ? "" : this.input.getValue();
-      this.input = new EditBox(this.font, this.originX + 22 + 4, this.originY + 180 + 2, 242, 10, Component.empty());
-      this.input.setBordered(false);
-      this.input.setTextColor(-15451066);
-      this.input.setMaxLength(200);
-      this.input.setValue(was);
-      this.addWidget(this.input);
-      this.setInitialFocus(this.input);
+      this.panelLeft = (this.width - 345) / 2;
+      this.panelTop = (this.height - 207) / 2;
+      String preservedDraft = this.messageInput == null ? "" : this.messageInput.getValue();
+      this.messageInput = new EditBox(this.font, this.panelLeft + 22 + 4, this.panelTop + 180 + 2, 242, 10, Component.empty());
+      this.messageInput.setBordered(false);
+      this.messageInput.setTextColor(-15451066);
+      this.messageInput.setMaxLength(200);
+      this.messageInput.setValue(preservedDraft);
+      this.addWidget(this.messageInput);
+      this.setInitialFocus(this.messageInput);
    }
 
    public boolean isPauseScreen() {
       return false;
    }
 
-   public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-      this.renderBackground(graphics, mouseX, mouseY, partialTick);
-      graphics.blit(SCREEN, this.originX, this.originY, 0.0F, 0.0F, 345, 207, 345, 207);
-      Backdrop.draw(graphics, this.originX, this.originY);
-      int left = this.originX + 18;
-      int top = this.originY + 13;
-      graphics.enableScissor(left, top, left + 309, top + 183);
+   public void render(GuiGraphics canvas, int pointerX, int pointerY, float frameDelta) {
+      this.renderBackground(canvas, pointerX, pointerY, frameDelta);
+      canvas.blit(CHAT_SCREEN_TEXTURE, this.panelLeft, this.panelTop, 0.0F, 0.0F, 345, 207, 345, 207);
+      Backdrop.draw(canvas, this.panelLeft, this.panelTop);
+      int clipLeft = this.panelLeft + 18;
+      int clipTop = this.panelTop + 13;
+      canvas.enableScissor(clipLeft, clipTop, clipLeft + 309, clipTop + 183);
 
       try {
-         this.drawHeader(graphics, mouseX, mouseY);
-         this.drawMessages(graphics);
-         this.drawInput(graphics);
-         BackButton.draw(graphics, this.font, this.originX, this.originY, mouseX, mouseY);
+         this.renderHeader(canvas, pointerX, pointerY);
+         this.renderMessages(canvas);
+         this.renderInputBackground(canvas);
+         BackButton.draw(canvas, this.font, this.panelLeft, this.panelTop, pointerX, pointerY);
       } finally {
-         graphics.disableScissor();
+         canvas.disableScissor();
       }
 
-      this.input.render(graphics, mouseX, mouseY, partialTick);
-      graphics.blit(BASE, this.originX, this.originY, 0.0F, 0.0F, 345, 207, 345, 207);
+      this.messageInput.render(canvas, pointerX, pointerY, frameDelta);
+      canvas.blit(FRAME_TEXTURE, this.panelLeft, this.panelTop, 0.0F, 0.0F, 345, 207, 345, 207);
    }
 
-   private void drawHeader(GuiGraphics graphics, int mouseX, int mouseY) {
-      Ui.draw(graphics, this.font, this.getTitle(), this.originX + 24, this.originY + 15, -1, true);
-      this.drawTab(graphics, 0, Component.translatable("cobblebattle.chat.tab.global"), ChatState.channel() == ChatLog.Channel.GLOBAL, mouseX, mouseY);
-      this.drawTab(graphics, 1, Component.translatable("cobblebattle.chat.tab.battle"), ChatState.channel() == ChatLog.Channel.BATTLE, mouseX, mouseY);
+   private void renderHeader(GuiGraphics canvas, int pointerX, int pointerY) {
+      Ui.draw(canvas, this.font, this.getTitle(), this.panelLeft + 24, this.panelTop + 15, -1, true);
+      this.renderChannelTab(canvas, 0, Component.translatable("cobblebattle.chat.tab.global"), ChatState.channel() == ChatLog.Channel.GLOBAL, pointerX, pointerY);
+      this.renderChannelTab(canvas, 1, Component.translatable("cobblebattle.chat.tab.battle"), ChatState.channel() == ChatLog.Channel.BATTLE, pointerX, pointerY);
    }
 
-   private void drawTab(GuiGraphics graphics, int index, Component label, boolean on, int mouseX, int mouseY) {
-      int x = this.originX + 110 + index * 44;
-      int y = this.originY + 14;
-      boolean hover = mouseX >= x && mouseX < x + 40 && mouseY >= y && mouseY < y + 10;
-      graphics.fill(x, y, x + 40, y + 10, !on && !hover ? 1157627903 : -1426063361);
-      Ui.drawCentered(graphics, this.font, label, x + 20, y + 1, on ? -15451066 : -1);
+   private void renderChannelTab(GuiGraphics canvas, int channelIndex, Component tabLabel, boolean selected, int pointerX, int pointerY) {
+      int elementLeft = this.panelLeft + 110 + channelIndex * 44;
+      int messageTop = this.panelTop + 14;
+      boolean pointerOver = pointerX >= elementLeft && pointerX < elementLeft + 40 && pointerY >= messageTop && pointerY < messageTop + 10;
+      canvas.fill(elementLeft, messageTop, elementLeft + 40, messageTop + 10, !selected && !pointerOver ? 1157627903 : -1426063361);
+      Ui.drawCentered(canvas, this.font, tabLabel, elementLeft + 20, messageTop + 1, selected ? -15451066 : -1);
    }
 
-   private void drawMessages(GuiGraphics graphics) {
-      int left = this.originX + 22;
-      int top = this.originY + 27;
-      int right = left + 301;
-      int bottom = top + 150;
-      graphics.enableScissor(left, top, right, bottom);
+   private void renderMessages(GuiGraphics canvas) {
+      int clipLeft = this.panelLeft + 22;
+      int clipTop = this.panelTop + 27;
+      int clipRight = clipLeft + 301;
+      int clipBottom = clipTop + 150;
+      canvas.enableScissor(clipLeft, clipTop, clipRight, clipBottom);
 
       try {
-         List<ChatLog.Line> lines = ChatLog.lines(ChatState.channel());
-         if (lines.isEmpty() || !ChatState.enabled()) {
-            Component empty = !ChatState.enabled()
+         List<ChatLog.Line> chatLines = ChatLog.lines(ChatState.channel());
+         if (chatLines.isEmpty() || !ChatState.enabled()) {
+            Component emptyStateMessage = !ChatState.enabled()
                ? Component.translatable("cobblebattle.chat.disabled")
                : (
                   ChatState.channel() == ChatLog.Channel.BATTLE && !ChatState.inBattle()
                      ? Component.translatable("cobblebattle.chat.not_in_battle")
                      : Component.translatable("cobblebattle.chat.empty")
                );
-            Ui.drawCentered(graphics, this.font, empty, left + 150, top + 75 - 4, -1);
+            Ui.drawCentered(canvas, this.font, emptyStateMessage, clipLeft + 150, clipTop + 75 - 4, -1);
             return;
          }
 
-         List<ChatRoomScreen.Bubble> bubbles = new ArrayList<>(lines.size());
-         int total = 0;
+         List<ChatRoomScreen.MessageBubble> messageBubbles = new ArrayList<>(chatLines.size());
+         int contentHeight = 0;
 
-         for (ChatLog.Line line : lines) {
-            ChatRoomScreen.Bubble bubble = this.layout(line);
-            bubbles.add(bubble);
-            total += bubble.height() + 4;
+         for (ChatLog.Line chatLine : chatLines) {
+            ChatRoomScreen.MessageBubble laidOutBubble = this.layoutMessageBubble(chatLine);
+            messageBubbles.add(laidOutBubble);
+            contentHeight += laidOutBubble.height() + 4;
          }
 
-         int maxScrollOffsets = Math.max(0, total - 150);
-         if (this.scrollOffsets > maxScrollOffsets) {
-            this.scrollOffsets = maxScrollOffsets;
+         int maxScrollOffsetPixels = Math.max(0, contentHeight - 150);
+         if (this.scrollOffsetPixels > maxScrollOffsetPixels) {
+            this.scrollOffsetPixels = maxScrollOffsetPixels;
          }
 
-         int y = bottom - 4 + this.scrollOffsets - total;
+         int messageTop = clipBottom - 4 + this.scrollOffsetPixels - contentHeight;
 
-         for (ChatRoomScreen.Bubble bubble : bubbles) {
-            if (y + bubble.height() >= top && y <= bottom) {
-               this.drawBubble(graphics, bubble, left, right, y);
+         for (ChatRoomScreen.MessageBubble visibleBubble : messageBubbles) {
+            if (messageTop + visibleBubble.height() >= clipTop && messageTop <= clipBottom) {
+               this.renderMessageBubble(canvas, visibleBubble, clipLeft, clipRight, messageTop);
             }
 
-            y += bubble.height() + 4;
+            messageTop += visibleBubble.height() + 4;
          }
       } finally {
-         graphics.disableScissor();
+         canvas.disableScissor();
       }
    }
 
-   private ChatRoomScreen.Bubble layout(ChatLog.Line line) {
-      boolean mine = ChatState.uid() != 0L && line.uid() == ChatState.uid();
-      List<String> rows = ChatPanel.wrap(this.font, line.text(), 172);
-      int width = 0;
+   private ChatRoomScreen.MessageBubble layoutMessageBubble(ChatLog.Line chatLine) {
+      boolean sentByViewer = ChatState.uid() != 0L && chatLine.uid() == ChatState.uid();
+      List<String> wrappedRows = ChatPanel.wrap(this.font, chatLine.text(), 172);
+      int bubbleWidth = 0;
 
-      for (String row : rows) {
-         width = Math.max(width, Ui.width(this.font, row));
+      for (String wrappedLine : wrappedRows) {
+         bubbleWidth = Math.max(bubbleWidth, Ui.width(this.font, wrappedLine));
       }
 
-      width += 8;
-      int height = 10 + rows.size() * 10 + 8 - 2;
-      return new ChatRoomScreen.Bubble(line, mine, rows, width, height);
+      bubbleWidth += 8;
+      int bubbleHeight = 10 + wrappedRows.size() * 10 + 8 - 2;
+      return new ChatRoomScreen.MessageBubble(chatLine, sentByViewer, wrappedRows, bubbleWidth, bubbleHeight);
    }
 
-   private void drawBubble(GuiGraphics graphics, ChatRoomScreen.Bubble bubble, int left, int right, int y) {
-      ChatLog.Line line = bubble.line();
-      String name = line.name();
-      int nameWidth = Ui.width(this.font, name);
-      int bubbleTop = y + 10;
-      if (bubble.mine()) {
-         int faceX = right - 4 - 8;
-         ChatPanel.drawFace(graphics, line.sender(), faceX, y);
-         Ui.draw(graphics, this.font, name, faceX - 3 - nameWidth, y, -1, true);
-         int bx = faceX - 3 - bubble.width();
-         graphics.fill(bx, bubbleTop, bx + bubble.width(), bubbleTop + bubble.height() - 10, -13664356);
-         this.drawRows(graphics, bubble, bx + 4, bubbleTop + 4 - 1);
+   private void renderMessageBubble(GuiGraphics canvas, ChatRoomScreen.MessageBubble laidOutBubble, int clipLeft, int clipRight, int messageTop) {
+      ChatLog.Line chatLine = laidOutBubble.line();
+      String senderName = chatLine.name();
+      int senderNameWidth = Ui.width(this.font, senderName);
+      int bubbleBodyTop = messageTop + 10;
+      if (laidOutBubble.mine()) {
+         int localFaceLeft = clipRight - 4 - 8;
+         ChatPanel.drawFace(canvas, chatLine.sender(), localFaceLeft, messageTop);
+         Ui.draw(canvas, this.font, senderName, localFaceLeft - 3 - senderNameWidth, messageTop, -1, true);
+         int localBubbleLeft = localFaceLeft - 3 - laidOutBubble.width();
+         canvas.fill(localBubbleLeft, bubbleBodyTop, localBubbleLeft + laidOutBubble.width(), bubbleBodyTop + laidOutBubble.height() - 10, -13664356);
+         this.renderWrappedRows(canvas, laidOutBubble, localBubbleLeft + 4, bubbleBodyTop + 4 - 1);
       } else {
-         int faceX = left + 4;
-         ChatPanel.drawFace(graphics, line.sender(), faceX, y);
-         Ui.draw(graphics, this.font, name, faceX + 8 + 3, y, -1, true);
-         int bx = faceX + 8 + 3;
-         graphics.fill(bx, bubbleTop, bx + bubble.width(), bubbleTop + bubble.height() - 10, -12937546);
-         this.drawRows(graphics, bubble, bx + 4, bubbleTop + 4 - 1);
+         int remoteFaceLeft = clipLeft + 4;
+         ChatPanel.drawFace(canvas, chatLine.sender(), remoteFaceLeft, messageTop);
+         Ui.draw(canvas, this.font, senderName, remoteFaceLeft + 8 + 3, messageTop, -1, true);
+         int remoteBubbleLeft = remoteFaceLeft + 8 + 3;
+         canvas.fill(remoteBubbleLeft, bubbleBodyTop, remoteBubbleLeft + laidOutBubble.width(), bubbleBodyTop + laidOutBubble.height() - 10, -12937546);
+         this.renderWrappedRows(canvas, laidOutBubble, remoteBubbleLeft + 4, bubbleBodyTop + 4 - 1);
       }
    }
 
-   private void drawRows(GuiGraphics graphics, ChatRoomScreen.Bubble bubble, int x, int y) {
-      for (String row : bubble.rows()) {
-         Ui.draw(graphics, this.font, row, x, y, -1, false);
-         y += 10;
+   private void renderWrappedRows(GuiGraphics canvas, ChatRoomScreen.MessageBubble laidOutBubble, int elementLeft, int messageTop) {
+      for (String wrappedLine : laidOutBubble.rows()) {
+         Ui.draw(canvas, this.font, wrappedLine, elementLeft, messageTop, -1, false);
+         messageTop += 10;
       }
    }
 
-   private void drawInput(GuiGraphics graphics) {
-      int x = this.originX + 22;
-      int y = this.originY + 180;
-      graphics.fill(x - 1, y - 1, x + 250 + 1, y + 12 + 1, -8460315);
-      graphics.fill(x, y, x + 250, y + 12, -721409);
+   private void renderInputBackground(GuiGraphics canvas) {
+      int elementLeft = this.panelLeft + 22;
+      int messageTop = this.panelTop + 180;
+      canvas.fill(elementLeft - 1, messageTop - 1, elementLeft + 250 + 1, messageTop + 12 + 1, -8460315);
+      canvas.fill(elementLeft, messageTop, elementLeft + 250, messageTop + 12, -721409);
    }
 
-   private void send() {
-      String text = this.input.getValue().trim();
-      if (!text.isEmpty() && ChatState.enabled()) {
-         ChatScreenHandler.send(ChatState.channel(), text);
-         this.input.setValue("");
-         this.scrollOffsets = 0;
+   private void submitMessage() {
+      String messageText = this.messageInput.getValue().trim();
+      if (!messageText.isEmpty() && ChatState.enabled()) {
+         ChatScreenHandler.send(ChatState.channel(), messageText);
+         this.messageInput.setValue("");
+         this.scrollOffsetPixels = 0;
       }
    }
 
-   public boolean mouseClicked(double mouseX, double mouseY, int button) {
-      if (button == 0) {
-         if (BackButton.contains(this.originX, this.originY, mouseX, mouseY)) {
+   public boolean mouseClicked(double pointerX, double pointerY, int mouseButton) {
+      if (mouseButton == 0) {
+         if (BackButton.contains(this.panelLeft, this.panelTop, pointerX, pointerY)) {
             ServerDex.requestMain();
             return true;
          }
 
-         for (int i = 0; i < 2; i++) {
-            int x = this.originX + 110 + i * 44;
-            int y = this.originY + 14;
-            if (mouseX >= x && mouseX < x + 40 && mouseY >= y && mouseY < y + 10) {
-               ChatState.select(i == 0 ? ChatLog.Channel.GLOBAL : ChatLog.Channel.BATTLE);
-               this.scrollOffsets = 0;
+         for (int channelIndex = 0; channelIndex < 2; channelIndex++) {
+            int elementLeft = this.panelLeft + 110 + channelIndex * 44;
+            int messageTop = this.panelTop + 14;
+            if (pointerX >= elementLeft && pointerX < elementLeft + 40 && pointerY >= messageTop && pointerY < messageTop + 10) {
+               ChatState.select(channelIndex == 0 ? ChatLog.Channel.GLOBAL : ChatLog.Channel.BATTLE);
+               this.scrollOffsetPixels = 0;
                return true;
             }
          }
       }
 
-      return super.mouseClicked(mouseX, mouseY, button);
+      return super.mouseClicked(pointerX, pointerY, mouseButton);
    }
 
-   public boolean mouseScrolled(double mouseX, double mouseY, double amountX, double amountY) {
-      this.scrollOffsets = Math.max(0, this.scrollOffsets + (int)Math.signum(amountY) * 10 * 2);
+   public boolean mouseScrolled(double pointerX, double pointerY, double horizontalScroll, double verticalScroll) {
+      this.scrollOffsetPixels = Math.max(0, this.scrollOffsetPixels + (int)Math.signum(verticalScroll) * 10 * 2);
       return true;
    }
 
-   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-      if (keyCode != 257 && keyCode != 335) {
-         return super.keyPressed(keyCode, scanCode, modifiers);
+   public boolean keyPressed(int pressedKeyCode, int physicalScanCode, int modifierMask) {
+      if (pressedKeyCode != 257 && pressedKeyCode != 335) {
+         return super.keyPressed(pressedKeyCode, physicalScanCode, modifierMask);
       } else {
-         this.send();
+         this.submitMessage();
          return true;
       }
    }
@@ -256,6 +256,6 @@ public final class ChatRoomScreen extends Screen {
       Minecraft.getInstance().setScreen(null);
    }
 
-   private record Bubble(ChatLog.Line line, boolean mine, List<String> rows, int width, int height) {
+   private record MessageBubble(ChatLog.Line line, boolean mine, List<String> rows, int width, int height) {
    }
 }

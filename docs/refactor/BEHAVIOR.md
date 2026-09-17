@@ -259,3 +259,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B6-room-screen-symbols（2026-09-17）
 
 `RoomScreen` 的布局常量、房间状态、玩家画像与首发模型缓存、席位和观察者绘制、邀请码复制及开战控制声明完成语义改名。公开构造、`update`、`roomId` 和 Screen 覆写保持；离开与开战动作值、按钮条件、邀请码剪贴板、实体姿态、坐标和颜色数值未改变。JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-room-screen-symbols.log`；当前 javac 快照为 97 个文件、4277 个声明、0 个分析错误，精确匹配不到该文件的基线安全原名。真实房间按钮、实体渲染和服务端响应仍待游戏内联调。
+
+## B6-chat-room-symbols（2026-09-17）
+
+`ChatRoomScreen` 的布局与颜色常量、消息输入、频道标签、消息列表、气泡布局、头像与文本绘制、滚动和提交入口完成语义改名，内部 `Bubble` 类型改为 `MessageBubble`。Screen 公开覆写保持；频道选择、200字符限制、文本裁剪、换行宽度、滚动步长、发送后清空和返回主界面的行为未改变。JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-chat-room-symbols.log`；当前 javac 快照为 97 个文件、4277 个声明、0 个分析错误，精确匹配不到该文件的基线安全原名。真实聊天输入、滚动、频道切换和远端发送仍待客户端联调。
