@@ -12,210 +12,210 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.MenuActionPayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.OpenMainMenuPayload;
 
 public final class RankedScreen extends Screen {
-   private static final ResourceLocation BASE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/base.png");
-   private static final ResourceLocation SCREEN = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/screen_1.png");
-   private static final int WIDTH = 345;
-   private static final int HEIGHT = 207;
-   private static final int HOLE_X = 18;
-   private static final int HOLE_Y = 13;
-   private static final int HOLE_W = 309;
-   private static final int HOLE_H = 183;
-   private static final int TAB_X = 24;
-   private static final int TAB_Y = 15;
-   private static final int TAB_W = 60;
-   private static final int LIST_X = 22;
-   private static final int LIST_Y = 30;
-   private static final int LIST_W = 100;
-   private static final int LIST_ROW_H = 14;
-   private static final int LIST_ROWS = 11;
-   private static final int PANEL_X = 128;
-   private static final int PANEL_Y = 30;
-   private static final int PANEL_W = 195;
-   private static final int PANEL_H = 138;
-   private static final int BUTTON_Y = 174;
-   private static final int BUTTON_H = 16;
-   private static final int BUTTON_W = 90;
-   private static final int FILL = 1728053247;
-   private static final int FILL_HOVER = -1711276033;
-   private static final int FILL_ON = -1426063361;
-   private static final int EDGE = -1426063361;
-   private static final int TEXT = -1;
-   private static final int TEXT_SOFT = -1770753;
-   private static final int INK = -15451066;
-   private final Screen parent;
-   private final List<OpenMainMenuPayload.RankedInfo> competitions;
-   private int chosen;
-   private int firstRow;
-   private int originX;
-   private int originY;
+   private static final ResourceLocation RANKED_FRAME_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/base.png");
+   private static final ResourceLocation RANKED_CONTENT_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/screen_1.png");
+   private static final int SCREEN_WIDTH = 345;
+   private static final int SCREEN_HEIGHT = 207;
+   private static final int CONTENT_LEFT_OFFSET = 18;
+   private static final int CONTENT_TOP_OFFSET = 13;
+   private static final int CONTENT_WIDTH = 309;
+   private static final int CONTENT_HEIGHT = 183;
+   private static final int TAB_LEFT_OFFSET = 24;
+   private static final int TAB_TOP_OFFSET = 15;
+   private static final int TAB_WIDTH = 60;
+   private static final int LIST_LEFT_OFFSET = 22;
+   private static final int LIST_TOP_OFFSET = 30;
+   private static final int LIST_WIDTH = 100;
+   private static final int LIST_ROW_HEIGHT = 14;
+   private static final int VISIBLE_LIST_ROWS = 11;
+   private static final int DETAIL_PANEL_LEFT_OFFSET = 128;
+   private static final int DETAIL_PANEL_TOP_OFFSET = 30;
+   private static final int DETAIL_PANEL_WIDTH = 195;
+   private static final int DETAIL_PANEL_HEIGHT = 138;
+   private static final int ACTION_BUTTON_TOP_OFFSET = 174;
+   private static final int ACTION_BUTTON_HEIGHT = 16;
+   private static final int ACTION_BUTTON_WIDTH = 90;
+   private static final int BACKGROUND_FILL_COLOR = 1728053247;
+   private static final int HOVER_FILL_COLOR = -1711276033;
+   private static final int SELECTED_FILL_COLOR = -1426063361;
+   private static final int BORDER_COLOR = -1426063361;
+   private static final int PRIMARY_TEXT_COLOR = -1;
+   private static final int SECONDARY_TEXT_COLOR = -1770753;
+   private static final int EMPHASIS_TEXT_COLOR = -15451066;
+   private final Screen previousScreen;
+   private final List<OpenMainMenuPayload.RankedInfo> rankedCompetitions;
+   private int selectedCompetitionIndex;
+   private int visibleListStart;
+   private int screenLeft;
+   private int screenTop;
 
-   public RankedScreen(Screen parent, List<OpenMainMenuPayload.RankedInfo> competitions) {
+   public RankedScreen(Screen previousScreen, List<OpenMainMenuPayload.RankedInfo> rankedCompetitions) {
       super(Component.translatable("cobblebattle.ranked.title"));
-      this.parent = parent;
-      this.competitions = competitions;
+      this.previousScreen = previousScreen;
+      this.rankedCompetitions = rankedCompetitions;
    }
 
    protected void init() {
-      this.originX = (this.width - 345) / 2;
-      this.originY = (this.height - 207) / 2;
+      this.screenLeft = (this.width - 345) / 2;
+      this.screenTop = (this.height - 207) / 2;
    }
 
    public boolean isPauseScreen() {
       return false;
    }
 
-   private OpenMainMenuPayload.RankedInfo current() {
-      return this.competitions.isEmpty() ? null : this.competitions.get(Math.min(this.chosen, this.competitions.size() - 1));
+   private OpenMainMenuPayload.RankedInfo selectedCompetition() {
+      return this.rankedCompetitions.isEmpty() ? null : this.rankedCompetitions.get(Math.min(this.selectedCompetitionIndex, this.rankedCompetitions.size() - 1));
    }
 
-   public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-      super.render(graphics, mouseX, mouseY, partialTick);
-      graphics.blit(SCREEN, this.originX, this.originY, 0.0F, 0.0F, 345, 207, 345, 207);
-      Backdrop.draw(graphics, this.originX, this.originY);
-      int left = this.originX + 18;
-      int top = this.originY + 13;
-      graphics.enableScissor(left, top, left + 309, top + 183);
+   public void render(GuiGraphics canvas, int pointerX, int pointerY, float frameDelta) {
+      super.render(canvas, pointerX, pointerY, frameDelta);
+      canvas.blit(RANKED_CONTENT_TEXTURE, this.screenLeft, this.screenTop, 0.0F, 0.0F, 345, 207, 345, 207);
+      Backdrop.draw(canvas, this.screenLeft, this.screenTop);
+      int regionLeft = this.screenLeft + 18;
+      int regionTop = this.screenTop + 13;
+      canvas.enableScissor(regionLeft, regionTop, regionLeft + 309, regionTop + 183);
 
       try {
-         BackButton.draw(graphics, this.font, this.originX, this.originY, mouseX, mouseY);
-         Component page = this.getTitle().copy().withStyle(style -> style.withFont(CobblemonResources.INSTANCE.getDEFAULT_LARGE()).withBold(true));
-         Ui.draw(graphics, this.font, page, this.originX + 322 - Ui.width(this.font, page), this.originY + 14, -1, true);
-         this.drawList(graphics, mouseX, mouseY);
-         this.drawDetails(graphics, mouseX, mouseY);
+         BackButton.draw(canvas, this.font, this.screenLeft, this.screenTop, pointerX, pointerY);
+         Component titleLabel = this.getTitle().copy().withStyle(textStyle -> textStyle.withFont(CobblemonResources.INSTANCE.getDEFAULT_LARGE()).withBold(true));
+         Ui.draw(canvas, this.font, titleLabel, this.screenLeft + 322 - Ui.width(this.font, titleLabel), this.screenTop + 14, -1, true);
+         this.renderCompetitionList(canvas, pointerX, pointerY);
+         this.renderCompetitionDetails(canvas, pointerX, pointerY);
       } finally {
-         graphics.disableScissor();
+         canvas.disableScissor();
       }
 
-      graphics.blit(BASE, this.originX, this.originY, 0.0F, 0.0F, 345, 207, 345, 207);
+      canvas.blit(RANKED_FRAME_TEXTURE, this.screenLeft, this.screenTop, 0.0F, 0.0F, 345, 207, 345, 207);
    }
 
-   private void drawList(GuiGraphics graphics, int mouseX, int mouseY) {
-      int x = this.originX + 22;
-      if (this.competitions.isEmpty()) {
-         Ui.draw(graphics, this.font, Component.translatable("cobblebattle.room.no_rules"), x + 4, this.originY + 30 + 4, -1770753, false);
+   private void renderCompetitionList(GuiGraphics canvas, int pointerX, int pointerY) {
+      int coordinateX = this.screenLeft + 22;
+      if (this.rankedCompetitions.isEmpty()) {
+         Ui.draw(canvas, this.font, Component.translatable("cobblebattle.room.no_rules"), coordinateX + 4, this.screenTop + 30 + 4, -1770753, false);
       } else {
-         for (int i = 0; i < 11; i++) {
-            int index = this.firstRow + i;
-            if (index >= this.competitions.size()) {
+         for (int visibleRowIndex = 0; visibleRowIndex < 11; visibleRowIndex++) {
+            int competitionIndex = this.visibleListStart + visibleRowIndex;
+            if (competitionIndex >= this.rankedCompetitions.size()) {
                break;
             }
 
-            int y = this.originY + 30 + i * 14;
-            boolean on = index == this.chosen;
-            boolean hover = mouseX >= x && mouseX < x + 100 && mouseY >= y && mouseY < y + 14;
-            graphics.fill(x, y, x + 100, y + 14 - 1, on ? -1426063361 : (hover ? -1711276033 : 1728053247));
-            OpenMainMenuPayload.RankedInfo battleDetails = this.competitions.get(index);
-            String shown = battleDetails.name().isEmpty() ? battleDetails.id() : battleDetails.name();
-            graphics.enableScissor(x + 3, y, x + 100 - 3, y + 14);
-            Ui.draw(graphics, this.font, shown, x + 4, y + 3, on ? -15451066 : -1, !on);
-            graphics.disableScissor();
+            int coordinateY = this.screenTop + 30 + visibleRowIndex * 14;
+            boolean isSelected = competitionIndex == this.selectedCompetitionIndex;
+            boolean isHovered = pointerX >= coordinateX && pointerX < coordinateX + 100 && pointerY >= coordinateY && pointerY < coordinateY + 14;
+            canvas.fill(coordinateX, coordinateY, coordinateX + 100, coordinateY + 14 - 1, isSelected ? -1426063361 : (isHovered ? -1711276033 : 1728053247));
+            OpenMainMenuPayload.RankedInfo battleDetails = this.rankedCompetitions.get(competitionIndex);
+            String displayedName = battleDetails.name().isEmpty() ? battleDetails.id() : battleDetails.name();
+            canvas.enableScissor(coordinateX + 3, coordinateY, coordinateX + 100 - 3, coordinateY + 14);
+            Ui.draw(canvas, this.font, displayedName, coordinateX + 4, coordinateY + 3, isSelected ? -15451066 : -1, !isSelected);
+            canvas.disableScissor();
          }
       }
    }
 
-   private void drawDetails(GuiGraphics graphics, int mouseX, int mouseY) {
-      int px = this.originX + 128;
-      int py = this.originY + 30;
-      graphics.fill(px, py, px + 195, py + 138, 1728053247);
-      graphics.fill(px, py, px + 195, py + 1, -1426063361);
-      graphics.fill(px, py + 138 - 1, px + 195, py + 138, -1426063361);
-      graphics.fill(px, py, px + 1, py + 138, -1426063361);
-      graphics.fill(px + 195 - 1, py, px + 195, py + 138, -1426063361);
-      OpenMainMenuPayload.RankedInfo battleDetails = this.current();
+   private void renderCompetitionDetails(GuiGraphics canvas, int pointerX, int pointerY) {
+      int detailPanelLeft = this.screenLeft + 128;
+      int detailPanelTop = this.screenTop + 30;
+      canvas.fill(detailPanelLeft, detailPanelTop, detailPanelLeft + 195, detailPanelTop + 138, 1728053247);
+      canvas.fill(detailPanelLeft, detailPanelTop, detailPanelLeft + 195, detailPanelTop + 1, -1426063361);
+      canvas.fill(detailPanelLeft, detailPanelTop + 138 - 1, detailPanelLeft + 195, detailPanelTop + 138, -1426063361);
+      canvas.fill(detailPanelLeft, detailPanelTop, detailPanelLeft + 1, detailPanelTop + 138, -1426063361);
+      canvas.fill(detailPanelLeft + 195 - 1, detailPanelTop, detailPanelLeft + 195, detailPanelTop + 138, -1426063361);
+      OpenMainMenuPayload.RankedInfo battleDetails = this.selectedCompetition();
       if (battleDetails != null) {
-         int x = px + 8;
-         int y = py + 6;
-         Component name = Component.literal(battleDetails.name().isEmpty() ? battleDetails.id() : battleDetails.name())
-            .withStyle(style -> style.withFont(CobblemonResources.INSTANCE.getDEFAULT_LARGE()).withBold(true));
-         Ui.draw(graphics, this.font, name, x, y, -1, true);
-         y += 14;
-         Ui.draw(graphics, this.font, Component.translatable("cobblebattle.ranked.id", new Object[]{battleDetails.id()}), x, y, -1770753, false);
-         y += 12;
-         Ui.draw(graphics, this.font, Component.translatable("cobblebattle.ranked.type", new Object[]{battleDetails.battleType(), battleDetails.slots()}), x, y, -1770753, false);
-         y += 10;
-         Component level = battleDetails.adjustLevel() > 0
+         int coordinateX = detailPanelLeft + 8;
+         int coordinateY = detailPanelTop + 6;
+         Component competitionName = Component.literal(battleDetails.name().isEmpty() ? battleDetails.id() : battleDetails.name())
+            .withStyle(textStyle -> textStyle.withFont(CobblemonResources.INSTANCE.getDEFAULT_LARGE()).withBold(true));
+         Ui.draw(canvas, this.font, competitionName, coordinateX, coordinateY, -1, true);
+         coordinateY += 14;
+         Ui.draw(canvas, this.font, Component.translatable("cobblebattle.ranked.id", new Object[]{battleDetails.id()}), coordinateX, coordinateY, -1770753, false);
+         coordinateY += 12;
+         Ui.draw(canvas, this.font, Component.translatable("cobblebattle.ranked.type", new Object[]{battleDetails.battleType(), battleDetails.slots()}), coordinateX, coordinateY, -1770753, false);
+         coordinateY += 10;
+         Component levelLabel = battleDetails.adjustLevel() > 0
             ? Component.translatable("cobblebattle.ranked.level", new Object[]{battleDetails.adjustLevel()})
             : Component.translatable("cobblebattle.ranked.level_free");
-         Ui.draw(graphics, this.font, level, x, y, -1770753, false);
-         y += 10;
+         Ui.draw(canvas, this.font, levelLabel, coordinateX, coordinateY, -1770753, false);
+         coordinateY += 10;
          Ui.draw(
-            graphics,
+            canvas,
             this.font,
             Component.translatable(battleDetails.fullHeal() ? "cobblebattle.ranked.full_heal" : "cobblebattle.ranked.no_heal"),
-            x,
-            y,
+            coordinateX,
+            coordinateY,
             -1770753,
             false
          );
-         y += 10;
+         coordinateY += 10;
          Ui.draw(
-            graphics, this.font, Component.translatable("cobblebattle.ranked.score", new Object[]{battleDetails.winScore(), battleDetails.failScore()}), x, y, -1770753, false
+            canvas, this.font, Component.translatable("cobblebattle.ranked.score", new Object[]{battleDetails.winScore(), battleDetails.failScore()}), coordinateX, coordinateY, -1770753, false
          );
-         y += 12;
-         Ui.draw(graphics, this.font, Component.translatable("cobblebattle.ranked.rules"), x, y, -1, true);
-         y += 10;
-         String rules = battleDetails.rules().isEmpty() ? Component.translatable("cobblebattle.ranked.no_rules").getString() : String.join(", ", battleDetails.rules());
-         graphics.enableScissor(px, y, px + 195, py + 138 - 2);
+         coordinateY += 12;
+         Ui.draw(canvas, this.font, Component.translatable("cobblebattle.ranked.rules"), coordinateX, coordinateY, -1, true);
+         coordinateY += 10;
+         String rulesText = battleDetails.rules().isEmpty() ? Component.translatable("cobblebattle.ranked.no_rules").getString() : String.join(", ", battleDetails.rules());
+         canvas.enableScissor(detailPanelLeft, coordinateY, detailPanelLeft + 195, detailPanelTop + 138 - 2);
 
-         for (String row : ChatPanel.wrap(this.font, rules, 179)) {
-            Ui.draw(graphics, this.font, row, x, y, -1770753, false);
-            y += 10;
+         for (String wrappedRule : ChatPanel.wrap(this.font, rulesText, 179)) {
+            Ui.draw(canvas, this.font, wrappedRule, coordinateX, coordinateY, -1770753, false);
+            coordinateY += 10;
          }
 
-         graphics.disableScissor();
-         this.drawButton(graphics, mouseX, mouseY, px, this.originY + 174, Component.translatable("cobblebattle.ranked.queue"));
-         this.drawButton(graphics, mouseX, mouseY, px + 195 - 90, this.originY + 174, Component.translatable("cobblebattle.ranked.leaderboard"));
+         canvas.disableScissor();
+         this.renderActionButton(canvas, pointerX, pointerY, detailPanelLeft, this.screenTop + 174, Component.translatable("cobblebattle.ranked.queue"));
+         this.renderActionButton(canvas, pointerX, pointerY, detailPanelLeft + 195 - 90, this.screenTop + 174, Component.translatable("cobblebattle.ranked.leaderboard"));
       }
    }
 
-   private void drawButton(GuiGraphics graphics, int mouseX, int mouseY, int x, int y, Component label) {
-      boolean hover = mouseX >= x && mouseX < x + 90 && mouseY >= y && mouseY < y + 16;
-      graphics.fill(x, y, x + 90, y + 16, hover ? -1711276033 : 1728053247);
-      graphics.fill(x, y, x + 90, y + 1, -1426063361);
-      graphics.fill(x, y + 16 - 1, x + 90, y + 16, -1426063361);
-      graphics.fill(x, y, x + 1, y + 16, -1426063361);
-      graphics.fill(x + 90 - 1, y, x + 90, y + 16, -1426063361);
-      Ui.drawCentered(graphics, this.font, label, x + 45, y + 4, -1);
+   private void renderActionButton(GuiGraphics canvas, int pointerX, int pointerY, int coordinateX, int coordinateY, Component buttonLabel) {
+      boolean isHovered = pointerX >= coordinateX && pointerX < coordinateX + 90 && pointerY >= coordinateY && pointerY < coordinateY + 16;
+      canvas.fill(coordinateX, coordinateY, coordinateX + 90, coordinateY + 16, isHovered ? -1711276033 : 1728053247);
+      canvas.fill(coordinateX, coordinateY, coordinateX + 90, coordinateY + 1, -1426063361);
+      canvas.fill(coordinateX, coordinateY + 16 - 1, coordinateX + 90, coordinateY + 16, -1426063361);
+      canvas.fill(coordinateX, coordinateY, coordinateX + 1, coordinateY + 16, -1426063361);
+      canvas.fill(coordinateX + 90 - 1, coordinateY, coordinateX + 90, coordinateY + 16, -1426063361);
+      Ui.drawCentered(canvas, this.font, buttonLabel, coordinateX + 45, coordinateY + 4, -1);
    }
 
-   private boolean inBack(double mouseX, double mouseY) {
-      return BackButton.contains(this.originX, this.originY, mouseX, mouseY);
+   private boolean isBackButtonHit(double pointerX, double pointerY) {
+      return BackButton.contains(this.screenLeft, this.screenTop, pointerX, pointerY);
    }
 
-   public boolean mouseClicked(double mouseX, double mouseY, int button) {
-      if (button == 0) {
-         if (this.inBack(mouseX, mouseY)) {
+   public boolean mouseClicked(double pointerX, double pointerY, int clickButton) {
+      if (clickButton == 0) {
+         if (this.isBackButtonHit(pointerX, pointerY)) {
             this.onClose();
             return true;
          }
 
-         int lx = this.originX + 22;
+         int listRegionLeft = this.screenLeft + 22;
 
-         for (int i = 0; i < 11; i++) {
-            int index = this.firstRow + i;
-            if (index >= this.competitions.size()) {
+         for (int visibleRowIndex = 0; visibleRowIndex < 11; visibleRowIndex++) {
+            int competitionIndex = this.visibleListStart + visibleRowIndex;
+            if (competitionIndex >= this.rankedCompetitions.size()) {
                break;
             }
 
-            int y = this.originY + 30 + i * 14;
-            if (mouseX >= lx && mouseX < lx + 100 && mouseY >= y && mouseY < y + 14) {
-               this.chosen = index;
+            int coordinateY = this.screenTop + 30 + visibleRowIndex * 14;
+            if (pointerX >= listRegionLeft && pointerX < listRegionLeft + 100 && pointerY >= coordinateY && pointerY < coordinateY + 14) {
+               this.selectedCompetitionIndex = competitionIndex;
                return true;
             }
          }
 
-         OpenMainMenuPayload.RankedInfo battleDetails = this.current();
+         OpenMainMenuPayload.RankedInfo battleDetails = this.selectedCompetition();
          if (battleDetails != null) {
-            int px = this.originX + 128;
-            int by = this.originY + 174;
-            if (mouseX >= px && mouseX < px + 90 && mouseY >= by && mouseY < by + 16) {
+            int detailPanelLeft = this.screenLeft + 128;
+            int actionButtonTop = this.screenTop + 174;
+            if (pointerX >= detailPanelLeft && pointerX < detailPanelLeft + 90 && pointerY >= actionButtonTop && pointerY < actionButtonTop + 16) {
                NetworkManager.sendToServer(new MenuActionPayload("queue", battleDetails.id()));
                Minecraft.getInstance().setScreen(null);
                return true;
             }
 
-            int bx = px + 195 - 90;
-            if (mouseX >= bx && mouseX < bx + 90 && mouseY >= by && mouseY < by + 16) {
+            int leaderboardButtonLeft = detailPanelLeft + 195 - 90;
+            if (pointerX >= leaderboardButtonLeft && pointerX < leaderboardButtonLeft + 90 && pointerY >= actionButtonTop && pointerY < actionButtonTop + 16) {
                ServerDex.rememberRanked(battleDetails.id());
                ServerDex.requestLeaderboard();
                return true;
@@ -223,16 +223,16 @@ public final class RankedScreen extends Screen {
          }
       }
 
-      return super.mouseClicked(mouseX, mouseY, button);
+      return super.mouseClicked(pointerX, pointerY, clickButton);
    }
 
-   public boolean mouseScrolled(double mouseX, double mouseY, double amountX, double amountY) {
-      int max = Math.max(0, this.competitions.size() - 11);
-      this.firstRow = Math.max(0, Math.min(max, this.firstRow - (int)Math.signum(amountY)));
+   public boolean mouseScrolled(double pointerX, double pointerY, double horizontalScrollAmount, double verticalScrollAmount) {
+      int maximumOffset = Math.max(0, this.rankedCompetitions.size() - 11);
+      this.visibleListStart = Math.max(0, Math.min(maximumOffset, this.visibleListStart - (int)Math.signum(verticalScrollAmount)));
       return true;
    }
 
    public void onClose() {
-      Minecraft.getInstance().setScreen(this.parent);
+      Minecraft.getInstance().setScreen(this.previousScreen);
    }
 }

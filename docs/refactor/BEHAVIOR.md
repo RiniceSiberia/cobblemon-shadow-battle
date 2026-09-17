@@ -267,3 +267,4 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B6-chat-panel-symbols（2026-09-17）
 
 `ChatPanel` 的面板边界、频道标签缩放、可见消息行、发送者名称命中区域、滚动提示、头像纹理和 Unicode 换行声明完成语义改名，内部 `NameBox` 与 `Row` 分别改为 `SenderHitArea` 与 `VisualMessageRow`。公开静态入口和常量保持；面板坐标、频道命中区、四行窗口、颜色与纹理数值、代码点换行和本地玩家皮肤优先级未改变。JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-chat-panel-symbols.log`；当前 javac 快照为 97 个文件、4277 个声明、0 个分析错误，精确匹配不到该文件的 98 个基线安全原名。真实 HUD 点击、滚动、头像和战斗日志避让仍待客户端验证。
+B6-ranked-screen-symbols（2026-09-17）：排位界面固定纹理尺寸居中，列表滚动边界、选中项、详情规则换行、返回命中、排队请求和排行榜请求顺序保持不变。验证：JDK21 离线 clean build 成功，259 项测试通过，javac 符号分析 0 错误；实际 GUI 与远端响应尚未验证。
