@@ -338,7 +338,7 @@ public final class RoomScreen extends Screen {
    public boolean mouseClicked(double mouseX, double mouseY, int button) {
       if (button == 0) {
          if (BackButton.contains(this.originX, this.originY, mouseX, mouseY)) {
-            RoomLobbyScreen.send(RoomActionPayload.of("leave"));
+            RoomLobbyScreen.sendRoomAction(RoomActionPayload.of("leave"));
             return true;
          }
 
@@ -356,7 +356,7 @@ public final class RoomScreen extends Screen {
             && mouseY >= y
             && mouseY < y + 12) {
             this.interactionState.beginStart(this.state.youAre(), this.state.hasGuest(), this.state.fighting());
-            RoomLobbyScreen.send(RoomActionPayload.of("start"));
+            RoomLobbyScreen.sendRoomAction(RoomActionPayload.of("start"));
             return true;
          }
       }
@@ -365,7 +365,7 @@ public final class RoomScreen extends Screen {
    }
 
    public void onClose() {
-      RoomLobbyScreen.send(RoomActionPayload.of("leave"));
+      RoomLobbyScreen.sendRoomAction(RoomActionPayload.of("leave"));
       Minecraft.getInstance().setScreen(null);
    }
 }

@@ -132,3 +132,4 @@ B4-queue-response-decoding（2026-09-16）：排队和房间的六类响应字�
 B5-battle-choice-restrictions（2026-09-16）：BattleActor Mixin 的五种机制限制映射迁入 Kotlin，保持注入签名、响应扫描和取消副作用顺序；259 项离线测试通过，真实回调仍待游戏内验证。
 B6-symbol-coverage-baseline（2026-09-17）：以基线语义候选和当前零错误 javac 快照建立逐声明命名清单；3487 个候选中 2409 个原名仍存在，原声明键消失比例上限 30.91%，不得据此宣称达到 90%。
 B6-room-lobby-symbols-1（2026-09-17）：重写 RoomLobbyScreen 的79个纹理、布局、颜色、状态和输入字段名称；259项测试通过，文件剩余原名267降至188，整体原声明键消失比例上限升至33.18%。
+B6-room-lobby-symbols-2（2026-09-17）：完成 RoomLobbyScreen 的私有绘制、命中检测、表单流程、DialogMode及几何局部变量语义改名；259项测试通过，该文件基线安全原名清零，整体覆盖上限升至38.57%。
