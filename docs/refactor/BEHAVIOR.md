@@ -235,3 +235,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B6-symbol-coverage-baseline（2026-09-17）
 
 本批次未改变业务行为。基线成员候选沿用既有公开接口、协议、API、Mixin 和生成成员排除规则，并补入具名内部类型；当前 Java 以完整 Gradle 编译类路径执行 javac 语义分析，97 个文件、4277 个声明、0 个分析错误。3487 个安全候选中仍有 2409 个原名精确存在，1078 个原声明键已消失，30.91% 仅是待人工对应的覆盖上限。剩余项写入 `RENAME_REMAINING.csv`，删除或迁移不会在建立职责对应前计作最终改名。
+
+## B6-room-lobby-symbols-1（2026-09-17）
+
+本批次只改写 `RoomLobbyScreen` 的私有纹理、布局、颜色、刷新状态、房间模型缓存和输入框名称，构造参数与更新参数由 javac 符号绑定同步改名。房间刷新周期、卡片几何、颜色数值、表单切换、网络载荷和公开覆写签名均未改变。JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-room-lobby-symbols-1.log`；重新生成的 javac 快照为 0 个分析错误，确认该文件 79 个原声明键消失。真实界面点击与渲染仍待客户端验证。

@@ -30,86 +30,86 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomActionPayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomListPayload;
 
 public final class RoomLobbyScreen extends Screen {
-   private static final ResourceLocation BASE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/base.png");
-   private static final ResourceLocation SCREEN = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/screen_1.png");
-   private static final ResourceLocation FORM = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/auth_background.png");
-   private static final int WIDTH = 345;
-   private static final int HEIGHT = 207;
-   private static final int HOLE_X = 18;
-   private static final int HOLE_Y = 13;
-   private static final int HOLE_W = 309;
-   private static final int HOLE_H = 183;
-   private static final int CREATE_X = 24;
-   private static final int CREATE_Y = 14;
-   private static final int CREATE_W = 52;
-   private static final int CREATE_H = 10;
-   private static final int INVITE_X = 80;
-   private static final int INVITE_W = 52;
-   private static final int GRID_X = 25;
-   private static final int GRID_Y = 33;
-   private static final int COLS = 2;
-   private static final int ROWS = 3;
-   private static final int CARD_W = 143;
-   private static final int CARD_H = 46;
-   private static final int FIGURE_SIZE = 15;
-   private static final int UNKNOWN_H = 26;
-   private static final int GAP_X = 8;
-   private static final int GAP_Y = 5;
+   private static final ResourceLocation LOBBY_FRAME_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/base.png");
+   private static final ResourceLocation LOBBY_CONTENT_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/screen_1.png");
+   private static final ResourceLocation DIALOG_BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/auth_background.png");
+   private static final int LOBBY_WIDTH = 345;
+   private static final int LOBBY_HEIGHT = 207;
+   private static final int CONTENT_LEFT_OFFSET = 18;
+   private static final int CONTENT_TOP_OFFSET = 13;
+   private static final int CONTENT_WIDTH = 309;
+   private static final int CONTENT_HEIGHT = 183;
+   private static final int CREATE_LINK_LEFT_OFFSET = 24;
+   private static final int HEADER_LINK_TOP_OFFSET = 14;
+   private static final int HEADER_LINK_WIDTH = 52;
+   private static final int HEADER_LINK_HEIGHT = 10;
+   private static final int INVITE_LINK_LEFT_OFFSET = 80;
+   private static final int INVITE_LINK_WIDTH = 52;
+   private static final int ROOM_GRID_LEFT_OFFSET = 25;
+   private static final int ROOM_GRID_TOP_OFFSET = 33;
+   private static final int ROOM_GRID_COLUMNS = 2;
+   private static final int VISIBLE_ROOM_ROWS = 3;
+   private static final int ROOM_CARD_WIDTH = 143;
+   private static final int ROOM_CARD_HEIGHT = 46;
+   private static final int PORTRAIT_RENDER_SIZE = 15;
+   private static final int UNKNOWN_MARK_HEIGHT = 26;
+   private static final int ROOM_CARD_COLUMN_GAP = 8;
+   private static final int ROOM_CARD_ROW_GAP = 5;
    private static final int SCROLLOFFSETS_X = 320;
    private static final int SCROLLOFFSETS_W = 3;
-   private static final int CARD_FILL = 1728053247;
-   private static final int CARD_FILL_HOVER = -1996488705;
-   private static final int CARD_EDGE = -1426063361;
-   private static final int BAR_MINE = -2082246;
-   private static final int BAR_OPEN = -1;
-   private static final int BAR_LOCKED = -868018;
-   private static final int TEXT = -1;
-   private static final int TEXT_SOFT = -1770753;
-   private static final int TRACK = -12937546;
-   private static final int THUMB = -197380;
-   private static final int FORM_W = 191;
-   private static final int FORM_H = 207;
-   private static final int IN_LEFT = 20;
-   private static final int IN_RIGHT = 170;
-   private static final int TITLE_Y = 17;
-   private static final int LABEL_X = 26;
-   private static final int FIELD_X = 74;
-   private static final int FIELD_W = 90;
-   private static final int ROW_ONE = 36;
-   private static final int ROW_GAP = 17;
-   private static final int FIELD_H = 13;
-   private static final int ARROW_W = 11;
-   private static final int BUTTON_Y = 152;
-   private static final int BUTTON_W = 64;
-   private static final int BUTTON_H = 14;
-   private static final int FORM_FILL = 872415231;
-   private static final int FORM_FILL_HOVER = 1728053247;
-   private static final int FORM_EDGE = -1996488705;
-   private static final int DIM = -1728053248;
-   private static final int REFRESH_TICKS = 100;
-   private static final int ROW_NAME = 0;
-   private static final int ROW_TYPE = 1;
-   private static final int ROW_PICK = 2;
-   private static final int ROW_LEVEL = 3;
-   private static final int ROW_HEAL = 4;
-   private static final int ROW_ENGINE = 5;
-   private static final int ROW_LEGALITY = 6;
-   private RoomListPayload data;
-   private int firstRow;
-   private int ticks;
-   private int originX;
-   private int originY;
-   private final Map<String, FloatingState> states = new HashMap<>();
-   private final Map<String, RenderablePokemon> leads = new HashMap<>();
-   private final Map<String, PlayerPortrait> portraits = new HashMap<>();
-   private RoomLobbyScreen.Form form = RoomLobbyScreen.Form.NONE;
-   private RoomListPayload.Room locked;
-   private EditBox nameBox;
-   private EditBox passwordBox;
-   private EditBox codeBox;
+   private static final int ROOM_CARD_COLOR = 1728053247;
+   private static final int ROOM_CARD_HOVER_COLOR = -1996488705;
+   private static final int ROOM_CARD_BORDER_COLOR = -1426063361;
+   private static final int OWN_ROOM_ACCENT_COLOR = -2082246;
+   private static final int OPEN_ROOM_ACCENT_COLOR = -1;
+   private static final int LOCKED_ROOM_ACCENT_COLOR = -868018;
+   private static final int PRIMARY_TEXT_COLOR = -1;
+   private static final int SECONDARY_TEXT_COLOR = -1770753;
+   private static final int SCROLL_TRACK_COLOR = -12937546;
+   private static final int SCROLL_THUMB_COLOR = -197380;
+   private static final int DIALOG_WIDTH = 191;
+   private static final int DIALOG_HEIGHT = 207;
+   private static final int DIALOG_LEFT_INSET = 20;
+   private static final int DIALOG_RIGHT_INSET = 170;
+   private static final int DIALOG_TITLE_TOP_OFFSET = 17;
+   private static final int DIALOG_LABEL_LEFT_OFFSET = 26;
+   private static final int DIALOG_FIELD_LEFT_OFFSET = 74;
+   private static final int DIALOG_FIELD_WIDTH = 90;
+   private static final int FIRST_DIALOG_ROW_OFFSET = 36;
+   private static final int DIALOG_ROW_SPACING = 17;
+   private static final int DIALOG_FIELD_HEIGHT = 13;
+   private static final int PICKER_ARROW_WIDTH = 11;
+   private static final int DEFAULT_DIALOG_BUTTON_TOP = 152;
+   private static final int DIALOG_BUTTON_WIDTH = 64;
+   private static final int DIALOG_BUTTON_HEIGHT = 14;
+   private static final int DIALOG_CONTROL_COLOR = 872415231;
+   private static final int DIALOG_CONTROL_HOVER_COLOR = 1728053247;
+   private static final int DIALOG_CONTROL_BORDER_COLOR = -1996488705;
+   private static final int DIALOG_OVERLAY_COLOR = -1728053248;
+   private static final int ROOM_REFRESH_INTERVAL_TICKS = 100;
+   private static final int ROOM_NAME_ROW = 0;
+   private static final int BATTLE_TYPE_ROW = 1;
+   private static final int TEAM_PICK_ROW = 2;
+   private static final int LEVEL_CAP_ROW = 3;
+   private static final int FULL_HEAL_ROW = 4;
+   private static final int BATTLE_ENGINE_ROW = 5;
+   private static final int LEGALITY_ROW = 6;
+   private RoomListPayload directorySnapshot;
+   private int firstVisibleRoomRow;
+   private int refreshTickCounter;
+   private int lobbyLeft;
+   private int lobbyTop;
+   private final Map<String, FloatingState> leadAnimationStates = new HashMap<>();
+   private final Map<String, RenderablePokemon> leadModels = new HashMap<>();
+   private final Map<String, PlayerPortrait> hostPortraits = new HashMap<>();
+   private RoomLobbyScreen.Form activeDialog = RoomLobbyScreen.Form.NONE;
+   private RoomListPayload.Room passwordProtectedRoom;
+   private EditBox roomNameInput;
+   private EditBox roomPasswordInput;
+   private EditBox invitationCodeInput;
    private final RoomCreationOptions creationOptions = new RoomCreationOptions();
-   private int formX;
-   private int formY;
+   private int dialogLeft;
+   private int dialogTop;
 
    private static int row(int index) {
       return 36 + 17 * index;
@@ -120,74 +120,74 @@ public final class RoomLobbyScreen extends Screen {
    }
 
    private int buttonY() {
-      return this.form == RoomLobbyScreen.Form.CREATE ? row(this.passwordRow() + 1) : 152;
+      return this.activeDialog == RoomLobbyScreen.Form.CREATE ? row(this.passwordRow() + 1) : 152;
    }
 
-   public RoomLobbyScreen(RoomListPayload data) {
+   public RoomLobbyScreen(RoomListPayload directorySnapshot) {
       super(Component.translatable("cobblebattle.room.title"));
-      this.data = data;
+      this.directorySnapshot = directorySnapshot;
    }
 
-   public void update(RoomListPayload data) {
-      this.data = data;
+   public void update(RoomListPayload directorySnapshot) {
+      this.directorySnapshot = directorySnapshot;
       int max = Math.max(0, this.rowCount() - 3);
-      if (this.firstRow > max) {
-         this.firstRow = max;
+      if (this.firstVisibleRoomRow > max) {
+         this.firstVisibleRoomRow = max;
       }
 
       Set<String> live = new HashSet<>();
       Set<String> hosts = new HashSet<>();
 
-      for (RoomListPayload.Room room : data.rooms()) {
+      for (RoomListPayload.Room room : directorySnapshot.rooms()) {
          live.add(room.id());
          hosts.add(hostKey(room));
       }
 
-      this.leads.keySet().retainAll(live);
-      this.states.keySet().retainAll(live);
-      this.portraits.keySet().retainAll(hosts);
+      this.leadModels.keySet().retainAll(live);
+      this.leadAnimationStates.keySet().retainAll(live);
+      this.hostPortraits.keySet().retainAll(hosts);
    }
 
    protected void init() {
-      this.originX = (this.width - 345) / 2;
-      this.originY = (this.height - 207) / 2;
-      this.formX = (this.width - 191) / 2;
-      this.formY = (this.height - 207) / 2;
-      String was = this.nameBox == null ? this.defaultName() : this.nameBox.getValue();
-      String password = this.passwordBox == null ? "" : this.passwordBox.getValue();
-      this.nameBox = new EditBox(this.font, this.formX + 74, this.formY + 36, 90, 13, Component.empty());
-      this.nameBox.setMaxLength(24);
-      this.nameBox.setValue(was);
-      this.passwordBox = new EditBox(this.font, this.formX + 74, this.formY + row(this.passwordRow()), 90, 13, Component.empty());
-      this.passwordBox.setMaxLength(16);
-      this.passwordBox.setValue(password);
-      String code = this.codeBox == null ? "" : this.codeBox.getValue();
-      this.codeBox = new EditBox(this.font, this.formX + 74, this.formY + row(1), 90, 13, Component.empty());
-      this.codeBox.setMaxLength(12);
-      this.codeBox.setValue(code);
-      this.addWidget(this.nameBox);
-      this.addWidget(this.passwordBox);
-      this.addWidget(this.codeBox);
+      this.lobbyLeft = (this.width - 345) / 2;
+      this.lobbyTop = (this.height - 207) / 2;
+      this.dialogLeft = (this.width - 191) / 2;
+      this.dialogTop = (this.height - 207) / 2;
+      String was = this.roomNameInput == null ? this.defaultName() : this.roomNameInput.getValue();
+      String password = this.roomPasswordInput == null ? "" : this.roomPasswordInput.getValue();
+      this.roomNameInput = new EditBox(this.font, this.dialogLeft + 74, this.dialogTop + 36, 90, 13, Component.empty());
+      this.roomNameInput.setMaxLength(24);
+      this.roomNameInput.setValue(was);
+      this.roomPasswordInput = new EditBox(this.font, this.dialogLeft + 74, this.dialogTop + row(this.passwordRow()), 90, 13, Component.empty());
+      this.roomPasswordInput.setMaxLength(16);
+      this.roomPasswordInput.setValue(password);
+      String code = this.invitationCodeInput == null ? "" : this.invitationCodeInput.getValue();
+      this.invitationCodeInput = new EditBox(this.font, this.dialogLeft + 74, this.dialogTop + row(1), 90, 13, Component.empty());
+      this.invitationCodeInput.setMaxLength(12);
+      this.invitationCodeInput.setValue(code);
+      this.addWidget(this.roomNameInput);
+      this.addWidget(this.roomPasswordInput);
+      this.addWidget(this.invitationCodeInput);
       this.applyForm();
    }
 
    private void applyForm() {
-      boolean creating = this.form == RoomLobbyScreen.Form.CREATE;
-      boolean asking = this.form == RoomLobbyScreen.Form.PASSWORD;
-      boolean inviting = this.form == RoomLobbyScreen.Form.INVITE;
-      this.nameBox.setVisible(creating);
-      this.passwordBox.setVisible(creating || asking);
-      this.codeBox.setVisible(inviting);
+      boolean creating = this.activeDialog == RoomLobbyScreen.Form.CREATE;
+      boolean asking = this.activeDialog == RoomLobbyScreen.Form.PASSWORD;
+      boolean inviting = this.activeDialog == RoomLobbyScreen.Form.INVITE;
+      this.roomNameInput.setVisible(creating);
+      this.roomPasswordInput.setVisible(creating || asking);
+      this.invitationCodeInput.setVisible(inviting);
       if (asking) {
-         this.passwordBox.setX(this.formX + 74);
-         this.passwordBox.setY(this.formY + row(1));
-         this.passwordBox.setValue("");
+         this.roomPasswordInput.setX(this.dialogLeft + 74);
+         this.roomPasswordInput.setY(this.dialogTop + row(1));
+         this.roomPasswordInput.setValue("");
       } else {
-         this.passwordBox.setX(this.formX + 74);
-         this.passwordBox.setY(this.formY + row(this.passwordRow()));
+         this.roomPasswordInput.setX(this.dialogLeft + 74);
+         this.roomPasswordInput.setY(this.dialogTop + row(this.passwordRow()));
       }
 
-      this.setFocused(creating ? this.nameBox : (asking ? this.passwordBox : (inviting ? this.codeBox : null)));
+      this.setFocused(creating ? this.roomNameInput : (asking ? this.roomPasswordInput : (inviting ? this.invitationCodeInput : null)));
    }
 
    private String defaultName() {
@@ -201,60 +201,60 @@ public final class RoomLobbyScreen extends Screen {
    }
 
    public void tick() {
-      if (++this.ticks % 100 == 0) {
+      if (++this.refreshTickCounter % 100 == 0) {
          send(RoomActionPayload.of("list"));
       }
    }
 
    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
       super.render(graphics, mouseX, mouseY, partialTick);
-      graphics.blit(SCREEN, this.originX, this.originY, 0.0F, 0.0F, 345, 207, 345, 207);
-      Backdrop.draw(graphics, this.originX, this.originY);
-      if (this.form == RoomLobbyScreen.Form.NONE) {
-         int left = this.originX + 18;
-         int top = this.originY + 13;
+      graphics.blit(LOBBY_CONTENT_TEXTURE, this.lobbyLeft, this.lobbyTop, 0.0F, 0.0F, 345, 207, 345, 207);
+      Backdrop.draw(graphics, this.lobbyLeft, this.lobbyTop);
+      if (this.activeDialog == RoomLobbyScreen.Form.NONE) {
+         int left = this.lobbyLeft + 18;
+         int top = this.lobbyTop + 13;
          graphics.enableScissor(left, top, left + 309, top + 183);
 
          try {
             this.drawHeader(graphics, mouseX, mouseY);
             this.drawCards(graphics, mouseX, mouseY, partialTick);
             this.drawScrollbar(graphics);
-            BackButton.draw(graphics, this.font, this.originX, this.originY, mouseX, mouseY);
+            BackButton.draw(graphics, this.font, this.lobbyLeft, this.lobbyTop, mouseX, mouseY);
          } finally {
             graphics.disableScissor();
          }
       }
 
-      graphics.blit(BASE, this.originX, this.originY, 0.0F, 0.0F, 345, 207, 345, 207);
-      if (this.form != RoomLobbyScreen.Form.NONE) {
+      graphics.blit(LOBBY_FRAME_TEXTURE, this.lobbyLeft, this.lobbyTop, 0.0F, 0.0F, 345, 207, 345, 207);
+      if (this.activeDialog != RoomLobbyScreen.Form.NONE) {
          this.drawForm(graphics, mouseX, mouseY, partialTick);
       }
    }
 
    private void drawHeader(GuiGraphics graphics, int mouseX, int mouseY) {
-      boolean hover = this.form == RoomLobbyScreen.Form.NONE && this.inCreate(mouseX, mouseY);
-      int x = this.originX + 24;
-      int y = this.originY + 14;
+      boolean hover = this.activeDialog == RoomLobbyScreen.Form.NONE && this.inCreate(mouseX, mouseY);
+      int x = this.lobbyLeft + 24;
+      int y = this.lobbyTop + 14;
       graphics.fill(x, y, x + 52, y + 10, hover ? 1728053247 : 872415231);
       Ui.drawCentered(graphics, this.font, Component.translatable("cobblebattle.room.create"), x + 26, y + 1, -1);
-      boolean inviteHover = this.form == RoomLobbyScreen.Form.NONE && this.inInvite(mouseX, mouseY);
-      int ix = this.originX + 80;
+      boolean inviteHover = this.activeDialog == RoomLobbyScreen.Form.NONE && this.inInvite(mouseX, mouseY);
+      int ix = this.lobbyLeft + 80;
       graphics.fill(ix, y, ix + 52, y + 10, inviteHover ? 1728053247 : 872415231);
       Ui.drawCentered(graphics, this.font, Component.translatable("cobblebattle.room.invite"), ix + 26, y + 1, -1);
       Component page = Component.translatable("cobblebattle.room.title")
          .withStyle(style -> style.withFont(CobblemonResources.INSTANCE.getDEFAULT_LARGE()).withBold(true));
-      Ui.draw(graphics, this.font, page, this.originX + 322 - Ui.width(this.font, page), this.originY + 14, -1, true);
+      Ui.draw(graphics, this.font, page, this.lobbyLeft + 322 - Ui.width(this.font, page), this.lobbyTop + 14, -1, true);
    }
 
    private void drawCards(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-      List<RoomListPayload.Room> rooms = this.data.rooms();
+      List<RoomListPayload.Room> rooms = this.directorySnapshot.rooms();
       if (rooms.isEmpty()) {
-         Ui.drawCentered(graphics, this.font, Component.translatable("cobblebattle.room.empty"), this.originX + 172, this.originY + 33 + 60, -1770753);
+         Ui.drawCentered(graphics, this.font, Component.translatable("cobblebattle.room.empty"), this.lobbyLeft + 172, this.lobbyTop + 33 + 60, -1770753);
       } else {
-         int hovered = this.form == RoomLobbyScreen.Form.NONE ? this.cardAt(mouseX, mouseY) : -1;
+         int hovered = this.activeDialog == RoomLobbyScreen.Form.NONE ? this.cardAt(mouseX, mouseY) : -1;
 
          for (int slot = 0; slot < 6; slot++) {
-            int index = this.firstRow * 2 + slot;
+            int index = this.firstVisibleRoomRow * 2 + slot;
             if (index >= rooms.size()) {
                break;
             }
@@ -317,14 +317,14 @@ public final class RoomLobbyScreen extends Screen {
       graphics.enableScissor(x + 8, y + 1, x + 50, y + 46 - 1);
 
       try {
-         PlayerPortrait portrait = this.portraits.computeIfAbsent(hostKey(room), key -> PlayerPortrait.lookup(room.host(), room.hostUid()));
+         PlayerPortrait portrait = this.hostPortraits.computeIfAbsent(hostKey(room), key -> PlayerPortrait.lookup(room.host(), room.hostUid()));
          if (portrait.entity() != null) {
             LeaderboardScreen.drawEntity(graphics, x + 19, floorY, 15, -35.0F, -10.0F, portrait.entity());
          }
 
          RenderablePokemon lead = this.leadOf(room);
          if (lead != null) {
-            FloatingState state = this.states.computeIfAbsent(room.id(), id -> new FloatingState());
+            FloatingState state = this.leadAnimationStates.computeIfAbsent(room.id(), id -> new FloatingState());
             graphics.pose().pushPose();
             graphics.pose().translate(x + 38, floorY, 0.0);
             Quaternionf rotation = QuaternionUtilsKt.fromEulerXYZDegrees(new Quaternionf(), new Vector3f(5.0F, LeaderboardScreen.FACING, 0.0F));
@@ -347,7 +347,7 @@ public final class RoomLobbyScreen extends Screen {
    }
 
    private RenderablePokemon leadOf(RoomListPayload.Room room) {
-      return room.lead().isEmpty() ? null : this.leads.computeIfAbsent(room.id(), id -> {
+      return room.lead().isEmpty() ? null : this.leadModels.computeIfAbsent(room.id(), id -> {
          Species speciesTemplate = PokemonSpecies.getByName(room.lead());
          return speciesTemplate == null ? null : new RenderablePokemon(speciesTemplate, Set.of(), ItemStack.EMPTY);
       });
@@ -356,34 +356,34 @@ public final class RoomLobbyScreen extends Screen {
    private void drawScrollbar(GuiGraphics graphics) {
       int rows = this.rowCount();
       if (rows > 3) {
-         int top = this.originY + 33;
+         int top = this.lobbyTop + 33;
          int height = 148;
-         int x = this.originX + 320;
+         int x = this.lobbyLeft + 320;
          graphics.fill(x, top, x + 3, top + height, -12937546);
          int thumb = Math.max(12, height * 3 / rows);
          int travel = height - thumb;
-         int at = top + (rows - 3 == 0 ? 0 : travel * this.firstRow / (rows - 3));
+         int at = top + (rows - 3 == 0 ? 0 : travel * this.firstVisibleRoomRow / (rows - 3));
          graphics.fill(x, at, x + 3, at + thumb, -197380);
       }
    }
 
    private void drawForm(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
       graphics.fill(0, 0, this.width, this.height, -1728053248);
-      graphics.blit(FORM, this.formX, this.formY, 0.0F, 0.0F, 191, 207, 191, 207);
-      boolean creating = this.form == RoomLobbyScreen.Form.CREATE;
-      boolean inviting = this.form == RoomLobbyScreen.Form.INVITE;
+      graphics.blit(DIALOG_BACKGROUND_TEXTURE, this.dialogLeft, this.dialogTop, 0.0F, 0.0F, 191, 207, 191, 207);
+      boolean creating = this.activeDialog == RoomLobbyScreen.Form.CREATE;
+      boolean inviting = this.activeDialog == RoomLobbyScreen.Form.INVITE;
       Ui.drawCentered(
          graphics,
          this.font,
          Component.translatable(
             creating ? "cobblebattle.room.create_title" : (inviting ? "cobblebattle.room.invite_title" : "cobblebattle.room.password_title")
          ),
-         this.formX + 95,
-         this.formY + 17,
+         this.dialogLeft + 95,
+         this.dialogTop + 17,
          -1
       );
       if (inviting) {
-         Ui.drawCentered(graphics, this.font, Component.translatable("cobblebattle.room.invite_hint"), this.formX + 95, this.formY + row(0), -1770753);
+         Ui.drawCentered(graphics, this.font, Component.translatable("cobblebattle.room.invite_hint"), this.dialogLeft + 95, this.dialogTop + row(0), -1770753);
          this.label(graphics, "cobblebattle.room.invite", row(1));
       } else if (creating) {
          this.label(graphics, "cobblebattle.room.name", row(0));
@@ -422,7 +422,7 @@ public final class RoomLobbyScreen extends Screen {
             );
          }
       } else {
-         Ui.drawCentered(graphics, this.font, this.locked == null ? "" : this.locked.name(), this.formX + 95, this.formY + row(0), -1770753);
+         Ui.drawCentered(graphics, this.font, this.passwordProtectedRoom == null ? "" : this.passwordProtectedRoom.name(), this.dialogLeft + 95, this.dialogTop + row(0), -1770753);
          this.label(graphics, "cobblebattle.room.password", row(1));
       }
 
@@ -430,33 +430,33 @@ public final class RoomLobbyScreen extends Screen {
          graphics,
          mouseX,
          mouseY,
-         this.formX + 20 + 6,
-         this.formY + this.buttonY(),
+         this.dialogLeft + 20 + 6,
+         this.dialogTop + this.buttonY(),
          Component.translatable(creating ? "cobblebattle.room.confirm" : "cobblebattle.room.join")
       );
-      this.button(graphics, mouseX, mouseY, this.formX + 170 - 6 - 64, this.formY + this.buttonY(), Component.translatable("cobblebattle.back"));
+      this.button(graphics, mouseX, mouseY, this.dialogLeft + 170 - 6 - 64, this.dialogTop + this.buttonY(), Component.translatable("cobblebattle.back"));
       if (creating) {
-         this.nameBox.render(graphics, mouseX, mouseY, partialTick);
+         this.roomNameInput.render(graphics, mouseX, mouseY, partialTick);
       }
 
       if (inviting) {
-         this.codeBox.render(graphics, mouseX, mouseY, partialTick);
+         this.invitationCodeInput.render(graphics, mouseX, mouseY, partialTick);
       } else {
-         this.passwordBox.render(graphics, mouseX, mouseY, partialTick);
+         this.roomPasswordInput.render(graphics, mouseX, mouseY, partialTick);
       }
    }
 
    private void label(GuiGraphics graphics, String key, int y) {
-      Ui.draw(graphics, this.font, Component.translatable(key), this.formX + 26, this.formY + y + 3, -1, true);
+      Ui.draw(graphics, this.font, Component.translatable(key), this.dialogLeft + 26, this.dialogTop + y + 3, -1, true);
    }
 
    private void picker(GuiGraphics graphics, int mouseX, int mouseY, int y, Component value) {
-      int left = this.formX + 74;
+      int left = this.dialogLeft + 74;
       int right = left + 90 - 11;
-      this.box(graphics, mouseX, mouseY, left, this.formY + y, 11, 13, Component.literal("<"));
-      this.box(graphics, mouseX, mouseY, right, this.formY + y, 11, 13, Component.literal(">"));
-      graphics.enableScissor(left + 11 + 1, this.formY + y, right - 1, this.formY + y + 13);
-      Ui.drawCentered(graphics, this.font, value, left + 45, this.formY + y + 3, -1);
+      this.box(graphics, mouseX, mouseY, left, this.dialogTop + y, 11, 13, Component.literal("<"));
+      this.box(graphics, mouseX, mouseY, right, this.dialogTop + y, 11, 13, Component.literal(">"));
+      graphics.enableScissor(left + 11 + 1, this.dialogTop + y, right - 1, this.dialogTop + y + 13);
+      Ui.drawCentered(graphics, this.font, value, left + 45, this.dialogTop + y + 3, -1);
       graphics.disableScissor();
    }
 
@@ -475,32 +475,32 @@ public final class RoomLobbyScreen extends Screen {
    }
 
    private void openCreate() {
-      this.form = RoomLobbyScreen.Form.CREATE;
-      this.nameBox.setValue(this.defaultName());
+      this.activeDialog = RoomLobbyScreen.Form.CREATE;
+      this.roomNameInput.setValue(this.defaultName());
       this.applyForm();
    }
 
    private void openPassword(RoomListPayload.Room room) {
-      this.form = RoomLobbyScreen.Form.PASSWORD;
-      this.locked = room;
+      this.activeDialog = RoomLobbyScreen.Form.PASSWORD;
+      this.passwordProtectedRoom = room;
       this.applyForm();
    }
 
    private void openInvite() {
-      this.form = RoomLobbyScreen.Form.INVITE;
-      this.codeBox.setValue("");
+      this.activeDialog = RoomLobbyScreen.Form.INVITE;
+      this.invitationCodeInput.setValue("");
       this.applyForm();
    }
 
    private void closeForm() {
-      this.form = RoomLobbyScreen.Form.NONE;
-      this.locked = null;
+      this.activeDialog = RoomLobbyScreen.Form.NONE;
+      this.passwordProtectedRoom = null;
       this.applyForm();
    }
 
    private void submitForm() {
-      if (this.form == RoomLobbyScreen.Form.CREATE) {
-         RoomCreationRequest request = this.creationOptions.createRequest(this.nameBox.getValue(), this.passwordBox.getValue(), this.defaultName());
+      if (this.activeDialog == RoomLobbyScreen.Form.CREATE) {
+         RoomCreationRequest request = this.creationOptions.createRequest(this.roomNameInput.getValue(), this.roomPasswordInput.getValue(), this.defaultName());
          send(
             new RoomActionPayload(
                "create",
@@ -516,18 +516,18 @@ public final class RoomLobbyScreen extends Screen {
                ""
             )
          );
-      } else if (this.form == RoomLobbyScreen.Form.PASSWORD && this.locked != null) {
+      } else if (this.activeDialog == RoomLobbyScreen.Form.PASSWORD && this.passwordProtectedRoom != null) {
          send(
             RoomActionPayload.join(
-               this.locked.id(),
-               this.passwordBox.getValue(),
-               RoomLobbyRules.seatType(this.locked.fighting(), this.locked.battleType()),
-               this.locked.hostEngine(),
-               this.locked.legality()
+               this.passwordProtectedRoom.id(),
+               this.roomPasswordInput.getValue(),
+               RoomLobbyRules.seatType(this.passwordProtectedRoom.fighting(), this.passwordProtectedRoom.battleType()),
+               this.passwordProtectedRoom.hostEngine(),
+               this.passwordProtectedRoom.legality()
             )
          );
-      } else if (this.form == RoomLobbyScreen.Form.INVITE) {
-         String code = RoomLobbyRules.invitationCode(this.codeBox.getValue());
+      } else if (this.activeDialog == RoomLobbyScreen.Form.INVITE) {
+         String code = RoomLobbyRules.invitationCode(this.invitationCodeInput.getValue());
          if (code == null) {
             return;
          }
@@ -539,15 +539,15 @@ public final class RoomLobbyScreen extends Screen {
    }
 
    private int rowCount() {
-      return (this.data.rooms().size() + 2 - 1) / 2;
+      return (this.directorySnapshot.rooms().size() + 2 - 1) / 2;
    }
 
    private int cardX(int col) {
-      return this.originX + 25 + col * 151;
+      return this.lobbyLeft + 25 + col * 151;
    }
 
    private int cardY(int row) {
-      return this.originY + 33 + row * 51;
+      return this.lobbyTop + 33 + row * 51;
    }
 
    private int cardAt(double mouseX, double mouseY) {
@@ -555,8 +555,8 @@ public final class RoomLobbyScreen extends Screen {
          int x = this.cardX(slot % 2);
          int y = this.cardY(slot / 2);
          if (mouseX >= x && mouseX < x + 143 && mouseY >= y && mouseY < y + 46) {
-            int index = this.firstRow * 2 + slot;
-            return index < this.data.rooms().size() ? index : -1;
+            int index = this.firstVisibleRoomRow * 2 + slot;
+            return index < this.directorySnapshot.rooms().size() ? index : -1;
          }
       }
 
@@ -564,23 +564,23 @@ public final class RoomLobbyScreen extends Screen {
    }
 
    private boolean inCreate(double mouseX, double mouseY) {
-      int x = this.originX + 24;
-      int y = this.originY + 14;
+      int x = this.lobbyLeft + 24;
+      int y = this.lobbyTop + 14;
       return mouseX >= x && mouseX < x + 52 && mouseY >= y && mouseY < y + 10;
    }
 
    private boolean inInvite(double mouseX, double mouseY) {
-      int x = this.originX + 80;
-      int y = this.originY + 14;
+      int x = this.lobbyLeft + 80;
+      int y = this.lobbyTop + 14;
       return mouseX >= x && mouseX < x + 52 && mouseY >= y && mouseY < y + 10;
    }
 
    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-      if (this.form != RoomLobbyScreen.Form.NONE) {
+      if (this.activeDialog != RoomLobbyScreen.Form.NONE) {
          return this.formClicked(mouseX, mouseY, button);
       } else {
          if (button == 0) {
-            if (BackButton.contains(this.originX, this.originY, mouseX, mouseY)) {
+            if (BackButton.contains(this.lobbyLeft, this.lobbyTop, mouseX, mouseY)) {
                ServerDex.requestMain();
                return true;
             }
@@ -597,7 +597,7 @@ public final class RoomLobbyScreen extends Screen {
 
             int index = this.cardAt(mouseX, mouseY);
             if (index >= 0) {
-               RoomListPayload.Room room = this.data.rooms().get(index);
+               RoomListPayload.Room room = this.directorySnapshot.rooms().get(index);
                if (room.locked() && !room.mine()) {
                   this.openPassword(room);
                } else {
@@ -614,14 +614,14 @@ public final class RoomLobbyScreen extends Screen {
 
    private boolean formClicked(double mouseX, double mouseY, int button) {
       if (button == 0) {
-         if (this.form == RoomLobbyScreen.Form.CREATE) {
-            int left = this.formX + 74;
+         if (this.activeDialog == RoomLobbyScreen.Form.CREATE) {
+            int left = this.dialogLeft + 74;
             int right = left + 90 - 11;
-            int typeY = this.formY + row(1);
-            int pickY = this.formY + row(2);
-            int levelY = this.formY + row(3);
-            int healY = this.formY + row(4);
-            int engineY = this.formY + row(5);
+            int typeY = this.dialogTop + row(1);
+            int pickY = this.dialogTop + row(2);
+            int levelY = this.dialogTop + row(3);
+            int healY = this.dialogTop + row(4);
+            int engineY = this.dialogTop + row(5);
             if (hit(mouseX, mouseY, left, typeY, 11, 13)) {
                this.creationOptions.cycleBattleType(-1);
                return true;
@@ -664,7 +664,7 @@ public final class RoomLobbyScreen extends Screen {
             }
 
             if (this.creationOptions.hostEngine()) {
-               int legalityY = this.formY + row(6);
+               int legalityY = this.dialogTop + row(6);
                if (hit(mouseX, mouseY, left, legalityY, 11, 13) || hit(mouseX, mouseY, right, legalityY, 11, 13)) {
                   this.creationOptions.toggleLegality();
                   return true;
@@ -672,12 +672,12 @@ public final class RoomLobbyScreen extends Screen {
             }
          }
 
-         if (hit(mouseX, mouseY, this.formX + 20 + 6, this.formY + this.buttonY(), 64, 14)) {
+         if (hit(mouseX, mouseY, this.dialogLeft + 20 + 6, this.dialogTop + this.buttonY(), 64, 14)) {
             this.submitForm();
             return true;
          }
 
-         if (hit(mouseX, mouseY, this.formX + 170 - 6 - 64, this.formY + this.buttonY(), 64, 14)) {
+         if (hit(mouseX, mouseY, this.dialogLeft + 170 - 6 - 64, this.dialogTop + this.buttonY(), 64, 14)) {
             this.closeForm();
             return true;
          }
@@ -691,7 +691,7 @@ public final class RoomLobbyScreen extends Screen {
    }
 
    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-      if (this.form != RoomLobbyScreen.Form.NONE) {
+      if (this.activeDialog != RoomLobbyScreen.Form.NONE) {
          if (keyCode == 256) {
             this.closeForm();
             return true;
@@ -707,11 +707,11 @@ public final class RoomLobbyScreen extends Screen {
    }
 
    public boolean mouseScrolled(double mouseX, double mouseY, double amountX, double amountY) {
-      if (this.form != RoomLobbyScreen.Form.NONE) {
+      if (this.activeDialog != RoomLobbyScreen.Form.NONE) {
          return true;
       } else {
          int max = Math.max(0, this.rowCount() - 3);
-         this.firstRow = Math.max(0, Math.min(max, this.firstRow - (int)Math.signum(amountY)));
+         this.firstVisibleRoomRow = Math.max(0, Math.min(max, this.firstVisibleRoomRow - (int)Math.signum(amountY)));
          return true;
       }
    }
