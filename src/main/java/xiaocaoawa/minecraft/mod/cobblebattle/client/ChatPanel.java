@@ -46,9 +46,9 @@ public final class ChatPanel {
    public static final int BATTLE_SLOT_RIGHT_INSET = 181;
    public static final int BATTLE_SLOT_BOTTOM_INSET = 30;
    public static final int BATTLE_SLOT_GAP = 2;
-   private static final List<ChatPanel.NameBox> NAME_BOXES = new ArrayList<>();
-   private static int listLeft;
-   private static int listTop;
+   private static final List<ChatPanel.SenderHitArea> SENDER_HIT_AREAS = new ArrayList<>();
+   private static int messageClipLeft;
+   private static int messageClipTop;
 
    private ChatPanel() {
    }
@@ -61,84 +61,84 @@ public final class ChatPanel {
       return CobblemonClient.INSTANCE.getBattle() != null;
    }
 
-   public static int originX(int screenWidth) {
-      return screenWidth - 181;
+   public static int originX(int viewportWidth) {
+      return viewportWidth - 181;
    }
 
-   public static int originY(int screenHeight) {
-      return screenHeight - 30 - 79;
+   public static int originY(int viewportHeight) {
+      return viewportHeight - 30 - 79;
    }
 
    public static boolean visible() {
       return ChatState.signedIn() && ChatState.enabled() && ClientSettings.chatHud() ? !battleLogShowing() || ChatState.inBattle() : false;
    }
 
-   public static boolean contains(int screenWidth, int screenHeight, double x, double y) {
-      int left = originX(screenWidth);
-      int top = originY(screenHeight);
-      return x >= left && x < left + 169 && y >= top && y < top + 79;
+   public static boolean contains(int viewportWidth, int viewportHeight, double pointerX, double pointerY) {
+      int panelLeft = originX(viewportWidth);
+      int panelTop = originY(viewportHeight);
+      return pointerX >= panelLeft && pointerX < panelLeft + 169 && pointerY >= panelTop && pointerY < panelTop + 79;
    }
 
-   public static boolean inInputBox(int relX, int relY) {
-      return relX >= 5 && relX < 158 && relY >= 65 && relY < 75;
+   public static boolean inInputBox(int panelRelativeX, int panelRelativeY) {
+      return panelRelativeX >= 5 && panelRelativeX < 158 && panelRelativeY >= 65 && panelRelativeY < 75;
    }
 
-   public static void drawBackground(GuiGraphics graphics, int originX, int originY) {
-      graphics.blit(TEXTURE, originX, originY, 0.0F, 0.0F, 169, 79, 169, 79);
+   public static void drawBackground(GuiGraphics canvas, int panelLeft, int panelTop) {
+      canvas.blit(TEXTURE, panelLeft, panelTop, 0.0F, 0.0F, 169, 79, 169, 79);
    }
 
-   public static void drawTabs(GuiGraphics graphics, Font font, int originX, int originY, boolean battleSelected) {
-      Component global = Component.translatable("cobblebattle.chat.tab.global");
-      Component battle = Component.translatable("cobblebattle.chat.tab.battle");
-      float scale = tabScale(font, global, battle);
-      drawTab(graphics, font, originX + 0, originY + 0, global, !battleSelected, scale);
-      drawTab(graphics, font, originX + 21, originY + 0, battle, battleSelected, scale);
+   public static void drawTabs(GuiGraphics canvas, Font textRenderer, int panelLeft, int panelTop, boolean battleChannelSelected) {
+      Component globalLabel = Component.translatable("cobblebattle.chat.tab.global");
+      Component battleLabel = Component.translatable("cobblebattle.chat.tab.battle");
+      float textScale = computeTabTextScale(textRenderer, globalLabel, battleLabel);
+      renderTabLabel(canvas, textRenderer, panelLeft, panelTop, globalLabel, !battleChannelSelected, textScale);
+      renderTabLabel(canvas, textRenderer, panelLeft + 21, panelTop, battleLabel, battleChannelSelected, textScale);
    }
 
-   private static void drawTab(GuiGraphics graphics, Font font, int x, int y, Component label, boolean selected, float scale) {
-      float textHeight = 8.0F * scale;
-      graphics.pose().pushPose();
-      graphics.pose().translate(x + 10.5F, y + (7.0F - textHeight) / 2.0F, 0.0F);
-      graphics.pose().scale(scale, scale, 1.0F);
-      Ui.drawCentered(graphics, font, label, 0, 0, selected ? -1 : -4605511);
-      graphics.pose().popPose();
+   private static void renderTabLabel(GuiGraphics canvas, Font textRenderer, int tabLeft, int tabTop, Component caption, boolean active, float textScale) {
+      float scaledTextHeight = 8.0F * textScale;
+      canvas.pose().pushPose();
+      canvas.pose().translate(tabLeft + 10.5F, tabTop + (7.0F - scaledTextHeight) / 2.0F, 0.0F);
+      canvas.pose().scale(textScale, textScale, 1.0F);
+      Ui.drawCentered(canvas, textRenderer, caption, 0, 0, active ? -1 : -4605511);
+      canvas.pose().popPose();
    }
 
-   private static float tabScale(Font font, Component... labels) {
-      int widest = 1;
+   private static float computeTabTextScale(Font textRenderer, Component... captions) {
+      int widestCaptionWidth = 1;
 
-      for (Component label : labels) {
-         widest = Math.max(widest, Ui.width(font, label));
+      for (Component caption : captions) {
+         widestCaptionWidth = Math.max(widestCaptionWidth, Ui.width(textRenderer, caption));
       }
 
-      float byWidth = 17.0F / widest;
-      float byHeight = 0.625F;
-      return Math.min(1.0F, Math.min(byWidth, byHeight));
+      float widthScale = 17.0F / widestCaptionWidth;
+      float heightScale = 0.625F;
+      return Math.min(1.0F, Math.min(widthScale, heightScale));
    }
 
-   private static List<ChatPanel.Row> rows(Font font, List<ChatLog.Line> lines) {
-      List<ChatPanel.Row> outputStream = new ArrayList<>();
+   private static List<ChatPanel.VisualMessageRow> buildVisualRows(Font textRenderer, List<ChatLog.Line> chatLines) {
+      List<ChatPanel.VisualMessageRow> visualRows = new ArrayList<>();
 
-      for (ChatLog.Line line : lines) {
-         List<String> wrapped = wrap(font, prefixOf(line) + line.text(), 139);
+      for (ChatLog.Line chatLine : chatLines) {
+         List<String> wrappedLines = wrap(textRenderer, senderPrefix(chatLine) + chatLine.text(), 139);
 
-         for (int i = 0; i < wrapped.size(); i++) {
-            outputStream.add(new ChatPanel.Row(line, wrapped.get(i), i == 0));
+         for (int wrappedIndex = 0; wrappedIndex < wrappedLines.size(); wrappedIndex++) {
+            visualRows.add(new ChatPanel.VisualMessageRow(chatLine, wrappedLines.get(wrappedIndex), wrappedIndex == 0));
          }
       }
 
-      return outputStream;
+      return visualRows;
    }
 
-   private static String prefixOf(ChatLog.Line line) {
-      return line.name() + ": ";
+   private static String senderPrefix(ChatLog.Line chatLine) {
+      return chatLine.name() + ": ";
    }
 
-   public static ChatLog.Line lineAt(double mouseX, double mouseY) {
-      if (!(mouseX < listLeft) && !(mouseX >= listLeft + 153) && !(mouseY < listTop) && !(mouseY >= listTop + 44)) {
-         for (ChatPanel.NameBox box : NAME_BOXES) {
-            if (mouseX >= box.x() && mouseX < box.x() + box.w() && mouseY >= box.y() && mouseY < box.y() + box.h()) {
-               return box.line();
+   public static ChatLog.Line lineAt(double pointerX, double pointerY) {
+      if (!(pointerX < messageClipLeft) && !(pointerX >= messageClipLeft + 153) && !(pointerY < messageClipTop) && !(pointerY >= messageClipTop + 44)) {
+         for (ChatPanel.SenderHitArea hitArea : SENDER_HIT_AREAS) {
+            if (pointerX >= hitArea.left() && pointerX < hitArea.left() + hitArea.width() && pointerY >= hitArea.top() && pointerY < hitArea.top() + hitArea.height()) {
+               return hitArea.chatLine();
             }
          }
 
@@ -148,132 +148,132 @@ public final class ChatPanel {
       }
    }
 
-   public static int maxScroll(Font font, List<ChatLog.Line> lines) {
-      return Math.max(0, rows(font, lines).size() - 4);
+   public static int maxScroll(Font textRenderer, List<ChatLog.Line> chatLines) {
+      return Math.max(0, buildVisualRows(textRenderer, chatLines).size() - 4);
    }
 
-   public static void drawMessages(GuiGraphics graphics, Font font, int originX, int originY, List<ChatLog.Line> lines, Component empty, int scrollOffsets) {
-      int left = originX + 5;
-      int top = originY + 14;
-      NAME_BOXES.clear();
-      listLeft = left;
-      listTop = top;
-      graphics.enableScissor(left, top, left + 153, top + 44);
+   public static void drawMessages(GuiGraphics canvas, Font textRenderer, int panelLeft, int panelTop, List<ChatLog.Line> chatLines, Component emptyStateText, int rowScrollOffset) {
+      int messageLeft = panelLeft + 5;
+      int messageTop = panelTop + 14;
+      SENDER_HIT_AREAS.clear();
+      messageClipLeft = messageLeft;
+      messageClipTop = messageTop;
+      canvas.enableScissor(messageLeft, messageTop, messageLeft + 153, messageTop + 44);
 
       try {
-         if (!lines.isEmpty()) {
-            List<ChatPanel.Row> all = rows(font, lines);
-            int clamped = Math.max(0, Math.min(scrollOffsets, Math.max(0, all.size() - 4)));
-            int end = all.size() - clamped;
-            int start = Math.max(0, end - 4);
-            int y = top + 44 - 2 - (end - start) * 10;
+         if (!chatLines.isEmpty()) {
+            List<ChatPanel.VisualMessageRow> visualRows = buildVisualRows(textRenderer, chatLines);
+            int boundedScrollOffset = Math.max(0, Math.min(rowScrollOffset, Math.max(0, visualRows.size() - 4)));
+            int visibleEndIndex = visualRows.size() - boundedScrollOffset;
+            int visibleStartIndex = Math.max(0, visibleEndIndex - 4);
+            int rowTop = messageTop + 44 - 2 - (visibleEndIndex - visibleStartIndex) * 10;
 
-            for (int i = start; i < end; i++) {
-               drawRow(graphics, font, left, y, all.get(i));
-               y += 10;
+            for (int rowIndex = visibleStartIndex; rowIndex < visibleEndIndex; rowIndex++) {
+               renderMessageRow(canvas, textRenderer, messageLeft, rowTop, visualRows.get(rowIndex));
+               rowTop += 10;
             }
 
-            if (clamped > 0) {
-               drawScrollOffsetsHint(graphics, left, top);
+            if (boundedScrollOffset > 0) {
+               renderScrollMarker(canvas, messageLeft, messageTop);
             }
 
             return;
          }
 
-         Ui.drawCentered(graphics, font, empty, left + 76, top + (44 - 9) / 2, -7697782);
+         Ui.drawCentered(canvas, textRenderer, emptyStateText, messageLeft + 76, messageTop + (44 - 9) / 2, -7697782);
       } finally {
-         graphics.disableScissor();
+         canvas.disableScissor();
       }
    }
 
-   private static void drawScrollOffsetsHint(GuiGraphics graphics, int left, int top) {
-      int x = left + 153 - 2 - 2;
-      int y = top + 44 - 2 - 3;
-      graphics.fill(x, y, x + 2, y + 2, -8399617);
+   private static void renderScrollMarker(GuiGraphics canvas, int messageLeft, int messageTop) {
+      int markerLeft = messageLeft + 153 - 2 - 2;
+      int markerTop = messageTop + 44 - 2 - 3;
+      canvas.fill(markerLeft, markerTop, markerLeft + 2, markerTop + 2, -8399617);
    }
 
-   private static void drawRow(GuiGraphics graphics, Font font, int left, int y, ChatPanel.Row row) {
-      int textX = left + 2 + 8 + 2;
-      int textY = y + 1;
-      if (!row.first()) {
-         Ui.draw(graphics, font, row.text(), textX, textY, -1644826, false);
+   private static void renderMessageRow(GuiGraphics canvas, Font textRenderer, int messageLeft, int rowTop, ChatPanel.VisualMessageRow visualRow) {
+      int textLeft = messageLeft + 2 + 8 + 2;
+      int textTop = rowTop + 1;
+      if (!visualRow.firstForMessage()) {
+         Ui.draw(canvas, textRenderer, visualRow.renderedText(), textLeft, textTop, -1644826, false);
       } else {
-         drawFace(graphics, row.line().sender(), left + 2, y);
-         String prefix = prefixOf(row.line());
-         if (!row.text().startsWith(prefix)) {
-            Ui.draw(graphics, font, row.text(), textX, textY, -1644826, false);
+         drawFace(canvas, visualRow.chatLine().sender(), messageLeft + 2, rowTop);
+         String expectedPrefix = senderPrefix(visualRow.chatLine());
+         if (!visualRow.renderedText().startsWith(expectedPrefix)) {
+            Ui.draw(canvas, textRenderer, visualRow.renderedText(), textLeft, textTop, -1644826, false);
          } else {
-            String who = row.line().name();
-            int nameWidth = Ui.width(font, who);
-            NAME_BOXES.add(new ChatPanel.NameBox(textX, textY, nameWidth, 9, row.line()));
-            Ui.draw(graphics, font, who, textX, textY, -8399617, false);
-            Ui.draw(graphics, font, ": ", textX + nameWidth, textY, -6645094, false);
-            Ui.draw(graphics, font, row.text().substring(prefix.length()), textX + nameWidth + Ui.width(font, ": "), textY, -1644826, false);
+            String senderName = visualRow.chatLine().name();
+            int senderNameWidth = Ui.width(textRenderer, senderName);
+            SENDER_HIT_AREAS.add(new ChatPanel.SenderHitArea(textLeft, textTop, senderNameWidth, 9, visualRow.chatLine()));
+            Ui.draw(canvas, textRenderer, senderName, textLeft, textTop, -8399617, false);
+            Ui.draw(canvas, textRenderer, ": ", textLeft + senderNameWidth, textTop, -6645094, false);
+            Ui.draw(canvas, textRenderer, visualRow.renderedText().substring(expectedPrefix.length()), textLeft + senderNameWidth + Ui.width(textRenderer, ": "), textTop, -1644826, false);
          }
       }
    }
 
-   public static void drawFace(GuiGraphics graphics, UUID sender, int x, int y) {
-      Minecraft minecraft = Minecraft.getInstance();
-      ResourceLocation skin = null;
-      LocalPlayer var7 = minecraft.player;
-      if (var7 instanceof AbstractClientPlayer && var7.getUUID().equals(sender)) {
-         skin = var7.getSkin().texture();
+   public static void drawFace(GuiGraphics canvas, UUID senderId, int faceLeft, int faceTop) {
+      Minecraft client = Minecraft.getInstance();
+      ResourceLocation skinTexture = null;
+      LocalPlayer localPlayer = client.player;
+      if (localPlayer instanceof AbstractClientPlayer && localPlayer.getUUID().equals(senderId)) {
+         skinTexture = localPlayer.getSkin().texture();
       }
 
-      if (skin == null) {
-         skin = DefaultPlayerSkin.get(sender).texture();
+      if (skinTexture == null) {
+         skinTexture = DefaultPlayerSkin.get(senderId).texture();
       }
 
-      graphics.blit(skin, x, y, 8, 8, 8.0F, 8.0F, 8, 8, 64, 64);
-      graphics.blit(skin, x, y, 8, 8, 40.0F, 8.0F, 8, 8, 64, 64);
+      canvas.blit(skinTexture, faceLeft, faceTop, 8, 8, 8.0F, 8.0F, 8, 8, 64, 64);
+      canvas.blit(skinTexture, faceLeft, faceTop, 8, 8, 40.0F, 8.0F, 8, 8, 64, 64);
    }
 
-   public static List<String> wrap(Font font, String text, int width) {
-      List<String> outputStream = new ArrayList<>();
-      StringBuilder row = new StringBuilder();
-      int rowWidth = 0;
-      int i = 0;
+   public static List<String> wrap(Font textRenderer, String content, int maximumWidth) {
+      List<String> wrappedLines = new ArrayList<>();
+      StringBuilder currentLine = new StringBuilder();
+      int currentLineWidth = 0;
+      int textOffset = 0;
 
-      while (i < text.length()) {
-         int cp = text.codePointAt(i);
-         String ch = new String(Character.toChars(cp));
-         i += Character.charCount(cp);
-         int chWidth = Ui.width(font, ch);
-         if (rowWidth + chWidth > width && row.length() > 0) {
-            outputStream.add(row.toString());
-            row.setLength(0);
-            rowWidth = 0;
+      while (textOffset < content.length()) {
+         int codePoint = content.codePointAt(textOffset);
+         String codePointText = new String(Character.toChars(codePoint));
+         textOffset += Character.charCount(codePoint);
+         int glyphWidth = Ui.width(textRenderer, codePointText);
+         if (currentLineWidth + glyphWidth > maximumWidth && currentLine.length() > 0) {
+            wrappedLines.add(currentLine.toString());
+            currentLine.setLength(0);
+            currentLineWidth = 0;
          }
 
-         row.append(ch);
-         rowWidth += chWidth;
+         currentLine.append(codePointText);
+         currentLineWidth += glyphWidth;
       }
 
-      if (row.length() > 0) {
-         outputStream.add(row.toString());
+      if (currentLine.length() > 0) {
+         wrappedLines.add(currentLine.toString());
       }
 
-      if (outputStream.isEmpty()) {
-         outputStream.add("");
+      if (wrappedLines.isEmpty()) {
+         wrappedLines.add("");
       }
 
-      return outputStream;
+      return wrappedLines;
    }
 
-   public static ChatLog.Channel tabAt(int relX, int relY) {
-      if (relY < 0 || relY >= 7) {
+   public static ChatLog.Channel tabAt(int panelRelativeX, int panelRelativeY) {
+      if (panelRelativeY < 0 || panelRelativeY >= 7) {
          return null;
-      } else if (relX >= 0 && relX < 21) {
+      } else if (panelRelativeX >= 0 && panelRelativeX < 21) {
          return ChatLog.Channel.GLOBAL;
       } else {
-         return relX >= 21 && relX < 42 ? ChatLog.Channel.BATTLE : null;
+         return panelRelativeX >= 21 && panelRelativeX < 42 ? ChatLog.Channel.BATTLE : null;
       }
    }
 
-   private record NameBox(int x, int y, int w, int h, ChatLog.Line line) {
+   private record SenderHitArea(int left, int top, int width, int height, ChatLog.Line chatLine) {
    }
 
-   private record Row(ChatLog.Line line, String text, boolean first) {
+   private record VisualMessageRow(ChatLog.Line chatLine, String renderedText, boolean firstForMessage) {
    }
 }

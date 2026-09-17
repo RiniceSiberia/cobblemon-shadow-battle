@@ -263,3 +263,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B6-chat-room-symbols（2026-09-17）
 
 `ChatRoomScreen` 的布局与颜色常量、消息输入、频道标签、消息列表、气泡布局、头像与文本绘制、滚动和提交入口完成语义改名，内部 `Bubble` 类型改为 `MessageBubble`。Screen 公开覆写保持；频道选择、200字符限制、文本裁剪、换行宽度、滚动步长、发送后清空和返回主界面的行为未改变。JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-chat-room-symbols.log`；当前 javac 快照为 97 个文件、4277 个声明、0 个分析错误，精确匹配不到该文件的基线安全原名。真实聊天输入、滚动、频道切换和远端发送仍待客户端联调。
+
+## B6-chat-panel-symbols（2026-09-17）
+
+`ChatPanel` 的面板边界、频道标签缩放、可见消息行、发送者名称命中区域、滚动提示、头像纹理和 Unicode 换行声明完成语义改名，内部 `NameBox` 与 `Row` 分别改为 `SenderHitArea` 与 `VisualMessageRow`。公开静态入口和常量保持；面板坐标、频道命中区、四行窗口、颜色与纹理数值、代码点换行和本地玩家皮肤优先级未改变。JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-chat-panel-symbols.log`；当前 javac 快照为 97 个文件、4277 个声明、0 个分析错误，精确匹配不到该文件的 98 个基线安全原名。真实 HUD 点击、滚动、头像和战斗日志避让仍待客户端验证。
