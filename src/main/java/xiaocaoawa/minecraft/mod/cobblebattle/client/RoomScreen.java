@@ -28,78 +28,78 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomActionPayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.RoomStatePayload;
 
 public final class RoomScreen extends Screen {
-   private static final ResourceLocation BASE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/base.png");
-   private static final ResourceLocation SCREEN = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/screen_1.png");
-   private static final ResourceLocation PLATFORM = ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/gui/pokedex/platform_base.png");
-   private static final ResourceLocation PLATFORM_SHADOW = ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/gui/pokedex/platform_shadow.png");
-   private static final int WIDTH = 345;
-   private static final int HEIGHT = 207;
-   private static final int HOLE_X = 18;
-   private static final int HOLE_Y = 13;
-   private static final int HOLE_W = 309;
-   private static final int HOLE_H = 183;
-   private static final int TITLE_X = 24;
-   private static final int TITLE_Y = 15;
-   private static final int SEAT_W = 138;
-   private static final int SEAT_Y = 28;
-   private static final int SEAT_H = 128;
-   private static final int LEFT_X = 22;
-   private static final int RIGHT_X = 186;
-   private static final int NAME_H = 12;
-   private static final int FLOOR_Y = 138;
-   private static final int PLATFORM_H = 36;
-   private static final int PLATFORM_Y = 126;
-   private static final int PARTICIPANT_SIZE = 34;
-   private static final int SHADOW_W = 44;
-   private static final int SHADOW_H = 10;
-   private static final int UNKNOWN_H = 28;
-   private static final int CREATURE_OFFSET = 44;
-   private static final int BENCH_X = 22;
-   private static final int BENCH_Y = 160;
-   private static final int BENCH_W = 302;
-   private static final int BENCH_H = 20;
-   private static final int START_X = 130;
-   private static final int START_Y = 183;
-   private static final int START_W = 84;
-   private static final int START_H = 12;
-   private static final int INVITE_X = 22;
-   private static final int INVITE_Y = 185;
-   private static final int INVITE_W = 102;
-   private static final int PANEL_HOST = 1429903030;
-   private static final int PANEL_GUEST = 1438796619;
-   private static final int PANEL_EMPTY = 872415231;
-   private static final int EDGE = -1426063361;
-   private static final int NAME_HOST = -869302372;
-   private static final int NAME_GUEST = -862176710;
-   private static final int TEXT = -1;
-   private static final int TEXT_SOFT = -1770753;
-   private static final int START_FILL = 1728053247;
-   private static final int START_FILL_HOVER = -1711276033;
-   private static final int START_FILL_OFF = 872415231;
-   private RoomStatePayload state;
-   private final Map<String, PlayerPortrait> portraits = new HashMap<>();
-   private final Map<String, RenderablePokemon> leads = new HashMap<>();
-   private final Map<String, FloatingState> poses = new HashMap<>();
-   private int originX;
-   private int originY;
-   private final RoomInteractionState interactionState = new RoomInteractionState();
+   private static final ResourceLocation FRAME_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/base.png");
+   private static final ResourceLocation ROOM_SCREEN_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/screen_1.png");
+   private static final ResourceLocation SEAT_PLATFORM_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/gui/pokedex/platform_base.png");
+   private static final ResourceLocation ENTITY_SHADOW_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/gui/pokedex/platform_shadow.png");
+   private static final int PANEL_WIDTH = 345;
+   private static final int PANEL_HEIGHT = 207;
+   private static final int CONTENT_LEFT_OFFSET = 18;
+   private static final int CONTENT_TOP_OFFSET = 13;
+   private static final int CONTENT_WIDTH = 309;
+   private static final int CONTENT_HEIGHT = 183;
+   private static final int TITLE_LEFT_OFFSET = 24;
+   private static final int TITLE_TOP_OFFSET = 15;
+   private static final int SEAT_WIDTH = 138;
+   private static final int SEAT_TOP_OFFSET = 28;
+   private static final int SEAT_HEIGHT = 128;
+   private static final int HOST_SEAT_LEFT_OFFSET = 22;
+   private static final int GUEST_SEAT_LEFT_OFFSET = 186;
+   private static final int MEMBER_NAME_HEIGHT = 12;
+   private static final int ENTITY_FLOOR_OFFSET = 138;
+   private static final int SEAT_PLATFORM_HEIGHT = 36;
+   private static final int SEAT_PLATFORM_TOP_OFFSET = 126;
+   private static final int PLAYER_RENDER_SIZE = 34;
+   private static final int ENTITY_SHADOW_WIDTH = 44;
+   private static final int ENTITY_SHADOW_HEIGHT = 10;
+   private static final int UNKNOWN_CREATURE_HEIGHT = 28;
+   private static final int CREATURE_HORIZONTAL_OFFSET = 44;
+   private static final int OBSERVER_BAR_LEFT_OFFSET = 22;
+   private static final int OBSERVER_BAR_TOP_OFFSET = 160;
+   private static final int OBSERVER_BAR_WIDTH = 302;
+   private static final int OBSERVER_BAR_HEIGHT = 20;
+   private static final int START_BUTTON_LEFT_OFFSET = 130;
+   private static final int START_BUTTON_TOP_OFFSET = 183;
+   private static final int START_BUTTON_WIDTH = 84;
+   private static final int START_BUTTON_HEIGHT = 12;
+   private static final int INVITATION_LEFT_OFFSET = 22;
+   private static final int INVITATION_TOP_OFFSET = 185;
+   private static final int INVITATION_WIDTH = 102;
+   private static final int HOST_PANEL_COLOR = 1429903030;
+   private static final int GUEST_PANEL_COLOR = 1438796619;
+   private static final int EMPTY_PANEL_COLOR = 872415231;
+   private static final int PANEL_BORDER_COLOR = -1426063361;
+   private static final int HOST_NAME_COLOR = -869302372;
+   private static final int GUEST_NAME_COLOR = -862176710;
+   private static final int PRIMARY_TEXT_COLOR = -1;
+   private static final int SECONDARY_TEXT_COLOR = -1770753;
+   private static final int START_BUTTON_COLOR = 1728053247;
+   private static final int START_BUTTON_HOVER_COLOR = -1711276033;
+   private static final int START_BUTTON_DISABLED_COLOR = 872415231;
+   private RoomStatePayload roomState;
+   private final Map<String, PlayerPortrait> portraitCache = new HashMap<>();
+   private final Map<String, RenderablePokemon> leadModelCache = new HashMap<>();
+   private final Map<String, FloatingState> poseCache = new HashMap<>();
+   private int panelLeft;
+   private int panelTop;
+   private final RoomInteractionState roomControls = new RoomInteractionState();
 
-   public RoomScreen(RoomStatePayload state) {
+   public RoomScreen(RoomStatePayload roomState) {
       super(Component.translatable("cobblebattle.room.screen_title"));
-      this.state = state;
+      this.roomState = roomState;
    }
 
-   public void update(RoomStatePayload state) {
-      this.state = state;
+   public void update(RoomStatePayload roomState) {
+      this.roomState = roomState;
    }
 
    public String roomId() {
-      return this.state.roomId();
+      return this.roomState.roomId();
    }
 
    protected void init() {
-      this.originX = (this.width - 345) / 2;
-      this.originY = (this.height - 207) / 2;
+      this.panelLeft = (this.width - 345) / 2;
+      this.panelTop = (this.height - 207) / 2;
    }
 
    public boolean isPauseScreen() {
@@ -107,261 +107,261 @@ public final class RoomScreen extends Screen {
    }
 
    public void tick() {
-      this.interactionState.tick();
+      this.roomControls.tick();
 
       if (CobblemonClient.INSTANCE.getBattle() != null) {
          Minecraft.getInstance().setScreen(null);
       }
    }
 
-   public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-      super.render(graphics, mouseX, mouseY, partialTick);
-      graphics.blit(SCREEN, this.originX, this.originY, 0.0F, 0.0F, 345, 207, 345, 207);
-      Backdrop.draw(graphics, this.originX, this.originY);
-      int left = this.originX + 18;
-      int top = this.originY + 13;
-      graphics.enableScissor(left, top, left + 309, top + 183);
+   public void render(GuiGraphics canvas, int pointerX, int pointerY, float frameDelta) {
+      super.render(canvas, pointerX, pointerY, frameDelta);
+      canvas.blit(ROOM_SCREEN_TEXTURE, this.panelLeft, this.panelTop, 0.0F, 0.0F, 345, 207, 345, 207);
+      Backdrop.draw(canvas, this.panelLeft, this.panelTop);
+      int clipLeft = this.panelLeft + 18;
+      int clipTop = this.panelTop + 13;
+      canvas.enableScissor(clipLeft, clipTop, clipLeft + 309, clipTop + 183);
 
       try {
-         this.drawHeader(graphics);
-         this.drawSeat(graphics, 22, this.state.host(), true, true, partialTick);
-         this.drawSeat(graphics, 186, this.state.guest(), this.state.hasGuest(), false, partialTick);
-         this.drawVersus(graphics);
-         this.drawBench(graphics);
-         this.drawInvite(graphics, mouseX, mouseY);
-         this.drawStart(graphics, mouseX, mouseY);
-         BackButton.draw(graphics, this.font, this.originX, this.originY, mouseX, mouseY);
+         this.renderRoomHeader(canvas);
+         this.renderMemberSeat(canvas, 22, this.roomState.host(), true, true, frameDelta);
+         this.renderMemberSeat(canvas, 186, this.roomState.guest(), this.roomState.hasGuest(), false, frameDelta);
+         this.renderVersusLabel(canvas);
+         this.renderObserverBar(canvas);
+         this.renderInvitationCode(canvas, pointerX, pointerY);
+         this.renderStartControl(canvas, pointerX, pointerY);
+         BackButton.draw(canvas, this.font, this.panelLeft, this.panelTop, pointerX, pointerY);
       } finally {
-         graphics.disableScissor();
+         canvas.disableScissor();
       }
 
-      graphics.blit(BASE, this.originX, this.originY, 0.0F, 0.0F, 345, 207, 345, 207);
+      canvas.blit(FRAME_TEXTURE, this.panelLeft, this.panelTop, 0.0F, 0.0F, 345, 207, 345, 207);
    }
 
-   private void drawHeader(GuiGraphics graphics) {
-      Ui.draw(graphics, this.font, this.state.name(), this.originX + 24, this.originY + 15, -1, true);
-      Component type = Component.translatable("cobblebattle.room.type." + this.state.battleType());
-      Component level = this.state.level() > 0
-         ? Component.translatable("cobblebattle.room.level_at", new Object[]{this.state.level()})
+   private void renderRoomHeader(GuiGraphics canvas) {
+      Ui.draw(canvas, this.font, this.roomState.name(), this.panelLeft + 24, this.panelTop + 15, -1, true);
+      Component battleTypeLabel = Component.translatable("cobblebattle.room.type." + this.roomState.battleType());
+      Component levelRuleLabel = this.roomState.level() > 0
+         ? Component.translatable("cobblebattle.room.level_at", new Object[]{this.roomState.level()})
          : Component.translatable("cobblebattle.room.level_free");
-      List<Component> parts = new ArrayList<>(List.of(type, level));
-      if (this.state.pick() > 0 && this.state.pick() < 6) {
-         parts.add(Component.translatable("cobblebattle.room.pick_tag", new Object[]{this.state.pick()}));
+      List<Component> ruleLabels = new ArrayList<>(List.of(battleTypeLabel, levelRuleLabel));
+      if (this.roomState.pick() > 0 && this.roomState.pick() < 6) {
+         ruleLabels.add(Component.translatable("cobblebattle.room.pick_tag", new Object[]{this.roomState.pick()}));
       }
 
-      if (this.state.hostEngine()) {
-         parts.add(Component.translatable("cobblebattle.room.engine_host_tag"));
+      if (this.roomState.hostEngine()) {
+         ruleLabels.add(Component.translatable("cobblebattle.room.engine_host_tag"));
       }
 
-      if (!this.state.legality()) {
-         parts.add(Component.translatable("cobblebattle.room.legality_tag"));
+      if (!this.roomState.legality()) {
+         ruleLabels.add(Component.translatable("cobblebattle.room.legality_tag"));
       }
 
-      Component rules = Ui.join(parts.toArray(new Component[0]));
-      Ui.draw(graphics, this.font, rules, this.originX + 322 - Ui.width(this.font, rules), this.originY + 14, -1770753, true);
+      Component rulesSummary = Ui.join(ruleLabels.toArray(new Component[0]));
+      Ui.draw(canvas, this.font, rulesSummary, this.panelLeft + 322 - Ui.width(this.font, rulesSummary), this.panelTop + 14, -1770753, true);
    }
 
-   private void drawSeat(GuiGraphics graphics, int x, RoomStatePayload.Member member, boolean taken, boolean host, float partialTick) {
-      int px = this.originX + x;
-      int py = this.originY + 28;
-      graphics.fill(px, py, px + 138, py + 128, taken ? (host ? 1429903030 : 1438796619) : 872415231);
-      graphics.fill(px, py, px + 138, py + 1, -1426063361);
-      graphics.fill(px, py + 128 - 1, px + 138, py + 128, -1426063361);
-      graphics.fill(px, py, px + 1, py + 128, -1426063361);
-      graphics.fill(px + 138 - 1, py, px + 138, py + 128, -1426063361);
-      graphics.fill(px + 1, py + 1, px + 138 - 1, py + 12, host ? -869302372 : -862176710);
-      Component role = Component.translatable(host ? "cobblebattle.room.host_seat" : "cobblebattle.room.guest_seat");
-      if (host) {
-         Ui.draw(graphics, this.font, role, px + 5, py + 3, -1770753, false);
-         Ui.draw(graphics, this.font, member.name(), px + 5 + Ui.width(this.font, role) + 6, py + 3, -1, true);
+   private void renderMemberSeat(GuiGraphics canvas, int horizontalPosition, RoomStatePayload.Member roomMember, boolean seatOccupied, boolean hostSeat, float frameDelta) {
+      int seatLeft = this.panelLeft + horizontalPosition;
+      int seatTop = this.panelTop + 28;
+      canvas.fill(seatLeft, seatTop, seatLeft + 138, seatTop + 128, seatOccupied ? (hostSeat ? 1429903030 : 1438796619) : 872415231);
+      canvas.fill(seatLeft, seatTop, seatLeft + 138, seatTop + 1, -1426063361);
+      canvas.fill(seatLeft, seatTop + 128 - 1, seatLeft + 138, seatTop + 128, -1426063361);
+      canvas.fill(seatLeft, seatTop, seatLeft + 1, seatTop + 128, -1426063361);
+      canvas.fill(seatLeft + 138 - 1, seatTop, seatLeft + 138, seatTop + 128, -1426063361);
+      canvas.fill(seatLeft + 1, seatTop + 1, seatLeft + 138 - 1, seatTop + 12, hostSeat ? -869302372 : -862176710);
+      Component seatRoleLabel = Component.translatable(hostSeat ? "cobblebattle.room.host_seat" : "cobblebattle.room.guest_seat");
+      if (hostSeat) {
+         Ui.draw(canvas, this.font, seatRoleLabel, seatLeft + 5, seatTop + 3, -1770753, false);
+         Ui.draw(canvas, this.font, roomMember.name(), seatLeft + 5 + Ui.width(this.font, seatRoleLabel) + 6, seatTop + 3, -1, true);
       } else {
-         Ui.draw(graphics, this.font, role, px + 138 - 5 - Ui.width(this.font, role), py + 3, -1770753, false);
-         if (taken) {
-            Component name = Component.literal(member.name());
-            Ui.draw(graphics, this.font, name, px + 138 - 11 - Ui.width(this.font, role) - Ui.width(this.font, name), py + 3, -1, true);
+         Ui.draw(canvas, this.font, seatRoleLabel, seatLeft + 138 - 5 - Ui.width(this.font, seatRoleLabel), seatTop + 3, -1770753, false);
+         if (seatOccupied) {
+            Component memberNameLabel = Component.literal(roomMember.name());
+            Ui.draw(canvas, this.font, memberNameLabel, seatLeft + 138 - 11 - Ui.width(this.font, seatRoleLabel) - Ui.width(this.font, memberNameLabel), seatTop + 3, -1, true);
          }
       }
 
-      if (!taken) {
-         Ui.drawCentered(graphics, this.font, Component.translatable("cobblebattle.room.waiting_seat"), px + 69, py + 64 - 4, -1770753);
+      if (!seatOccupied) {
+         Ui.drawCentered(canvas, this.font, Component.translatable("cobblebattle.room.waiting_seat"), seatLeft + 69, seatTop + 64 - 4, -1770753);
       } else {
-         graphics.enableScissor(px + 1, py + 12, px + 138 - 1, this.originY + 126 + 36);
+         canvas.enableScissor(seatLeft + 1, seatTop + 12, seatLeft + 138 - 1, this.panelTop + 126 + 36);
 
          try {
-            graphics.blit(PLATFORM, px, this.originY + 126, 138, 36, 0.0F, 0.0F, 113, 30, 113, 30);
-            int participantX = px + 69 - 22 - 4;
-            int creatureX = px + 69 + 22 + 4;
-            this.drawShadow(graphics, participantX);
-            this.drawShadow(graphics, creatureX);
-            PlayerPortrait portrait = this.portraitOf(member, host);
-            if (portrait != null && portrait.entity() != null) {
-               LeaderboardScreen.drawEntity(graphics, participantX, this.originY + 138, 34, -35.0F, -10.0F, portrait.entity());
+            canvas.blit(SEAT_PLATFORM_TEXTURE, seatLeft, this.panelTop + 126, 138, 36, 0.0F, 0.0F, 113, 30, 113, 30);
+            int playerCenterX = seatLeft + 69 - 22 - 4;
+            int creatureCenterX = seatLeft + 69 + 22 + 4;
+            this.renderEntityShadow(canvas, playerCenterX);
+            this.renderEntityShadow(canvas, creatureCenterX);
+            PlayerPortrait playerPortrait = this.portraitFor(roomMember, hostSeat);
+            if (playerPortrait != null && playerPortrait.entity() != null) {
+               LeaderboardScreen.drawEntity(canvas, playerCenterX, this.panelTop + 138, 34, -35.0F, -10.0F, playerPortrait.entity());
             }
 
-            RenderablePokemon lead = this.leadOf(member);
-            if (lead != null) {
-               FloatingState pose = this.poses.computeIfAbsent(key(member), k -> new FloatingState());
-               float blocks = Math.max(0.1F, lead.getForm().getHitbox().height());
-               float scale = Math.min(34.0F, 94.0F / blocks);
-               graphics.pose().pushPose();
-               graphics.pose().translate(creatureX, this.originY + 138, 0.0);
-               Quaternionf rotation = QuaternionUtilsKt.fromEulerXYZDegrees(new Quaternionf(), new Vector3f(5.0F, LeaderboardScreen.FACING, 0.0F));
+            RenderablePokemon leadModel = this.leadModelFor(roomMember);
+            if (leadModel != null) {
+               FloatingState modelPose = this.poseCache.computeIfAbsent(memberCacheKey(roomMember), unusedCacheKey -> new FloatingState());
+               float modelHeightBlocks = Math.max(0.1F, leadModel.getForm().getHitbox().height());
+               float modelScale = Math.min(34.0F, 94.0F / modelHeightBlocks);
+               canvas.pose().pushPose();
+               canvas.pose().translate(creatureCenterX, this.panelTop + 138, 0.0);
+               Quaternionf modelRotation = QuaternionUtilsKt.fromEulerXYZDegrees(new Quaternionf(), new Vector3f(5.0F, LeaderboardScreen.FACING, 0.0F));
                CobblemonCompat.drawProfile(
-                  lead, graphics.pose(), rotation, PoseType.PROFILE, pose, partialTick, scale, true, 1.0F, 1.0F, 1.0F, 1.0F, 0.0F, 0.0F, 13
+                  leadModel, canvas.pose(), modelRotation, PoseType.PROFILE, modelPose, frameDelta, modelScale, true, 1.0F, 1.0F, 1.0F, 1.0F, 0.0F, 0.0F, 13
                );
-               graphics.pose().popPose();
+               canvas.pose().popPose();
             } else {
-               UnknownMark.draw(graphics, creatureX, this.originY + 138, 28);
+               UnknownMark.draw(canvas, creatureCenterX, this.panelTop + 138, 28);
             }
          } finally {
-            graphics.disableScissor();
+            canvas.disableScissor();
          }
 
          Ui.drawCentered(
-            graphics, this.font, Component.translatable("cobblebattle.room.team", new Object[]{member.teamSize()}), px + 69, py + 128 - 12, -1770753
+            canvas, this.font, Component.translatable("cobblebattle.room.team", new Object[]{roomMember.teamSize()}), seatLeft + 69, seatTop + 128 - 12, -1770753
          );
       }
    }
 
-   private void drawShadow(GuiGraphics graphics, int centreX) {
-      graphics.blit(PLATFORM_SHADOW, centreX - 22, this.originY + 138 - 5, 44, 10, 0.0F, 0.0F, 90, 20, 90, 20);
+   private void renderEntityShadow(GuiGraphics canvas, int centerX) {
+      canvas.blit(ENTITY_SHADOW_TEXTURE, centerX - 22, this.panelTop + 138 - 5, 44, 10, 0.0F, 0.0F, 90, 20, 90, 20);
    }
 
-   private void drawVersus(GuiGraphics graphics) {
-      Component vs = Component.literal("VS").withStyle(style -> style.withFont(CobblemonResources.INSTANCE.getDEFAULT_LARGE()).withBold(true));
-      Ui.drawCentered(graphics, this.font, vs, this.originX + 172, this.originY + 28 + 64 - 8, -1);
+   private void renderVersusLabel(GuiGraphics canvas) {
+      Component versusLabel = Component.literal("VS").withStyle(textStyle -> textStyle.withFont(CobblemonResources.INSTANCE.getDEFAULT_LARGE()).withBold(true));
+      Ui.drawCentered(canvas, this.font, versusLabel, this.panelLeft + 172, this.panelTop + 28 + 64 - 8, -1);
    }
 
-   private void drawBench(GuiGraphics graphics) {
-      int x = this.originX + 22;
-      int y = this.originY + 160;
-      graphics.fill(x, y, x + 302, y + 20, 872415231);
-      graphics.fill(x, y, x + 302, y + 1, -1426063361);
-      graphics.fill(x, y + 20 - 1, x + 302, y + 20, -1426063361);
-      List<RoomStatePayload.Member> observers = this.state.watchers();
-      Component label = Component.translatable("cobblebattle.room.watchers", new Object[]{observers.size()});
-      Ui.draw(graphics, this.font, label, x + 5, y + 6, -1770753, false);
-      int at = x + 8 + Ui.width(this.font, label);
-      graphics.enableScissor(at, y, x + 302 - 4, y + 20);
+   private void renderObserverBar(GuiGraphics canvas) {
+      int horizontalPosition = this.panelLeft + 22;
+      int verticalPosition = this.panelTop + 160;
+      canvas.fill(horizontalPosition, verticalPosition, horizontalPosition + 302, verticalPosition + 20, 872415231);
+      canvas.fill(horizontalPosition, verticalPosition, horizontalPosition + 302, verticalPosition + 1, -1426063361);
+      canvas.fill(horizontalPosition, verticalPosition + 20 - 1, horizontalPosition + 302, verticalPosition + 20, -1426063361);
+      List<RoomStatePayload.Member> observerList = this.roomState.watchers();
+      Component displayLabel = Component.translatable("cobblebattle.room.watchers", new Object[]{observerList.size()});
+      Ui.draw(canvas, this.font, displayLabel, horizontalPosition + 5, verticalPosition + 6, -1770753, false);
+      int nextNameLeft = horizontalPosition + 8 + Ui.width(this.font, displayLabel);
+      canvas.enableScissor(nextNameLeft, verticalPosition, horizontalPosition + 302 - 4, verticalPosition + 20);
 
-      for (RoomStatePayload.Member watcher : observers) {
-         String name = watcher.name();
-         if (at > x + 302) {
+      for (RoomStatePayload.Member observer : observerList) {
+         String memberNameLabel = observer.name();
+         if (nextNameLeft > horizontalPosition + 302) {
             break;
          }
 
-         Ui.draw(graphics, this.font, name, at, y + 6, -1, false);
-         at += Ui.width(this.font, name) + 8;
+         Ui.draw(canvas, this.font, memberNameLabel, nextNameLeft, verticalPosition + 6, -1, false);
+         nextNameLeft += Ui.width(this.font, memberNameLabel) + 8;
       }
 
-      if (observers.isEmpty()) {
-         Ui.draw(graphics, this.font, Component.translatable("cobblebattle.room.no_watchers"), at, y + 6, -1770753, false);
+      if (observerList.isEmpty()) {
+         Ui.draw(canvas, this.font, Component.translatable("cobblebattle.room.no_watchers"), nextNameLeft, verticalPosition + 6, -1770753, false);
       }
 
-      graphics.disableScissor();
+      canvas.disableScissor();
    }
 
-   private void drawInvite(GuiGraphics graphics, int mouseX, int mouseY) {
-      String code = this.state.inviteCode();
-      if (!code.isEmpty()) {
-         int x = this.originX + 22;
-         int y = this.originY + 185;
-         boolean hover = this.inInvite(mouseX, mouseY);
-         Component label = Component.translatable("cobblebattle.room.invite_show", new Object[]{code});
-         Ui.draw(graphics, this.font, label, x, y, hover ? -1 : -1770753, true);
-         Component hint = this.interactionState.copied()
+   private void renderInvitationCode(GuiGraphics canvas, int pointerX, int pointerY) {
+      String invitationCode = this.roomState.inviteCode();
+      if (!invitationCode.isEmpty()) {
+         int horizontalPosition = this.panelLeft + 22;
+         int verticalPosition = this.panelTop + 185;
+         boolean pointerOver = this.invitationContains(pointerX, pointerY);
+         Component displayLabel = Component.translatable("cobblebattle.room.invite_show", new Object[]{invitationCode});
+         Ui.draw(canvas, this.font, displayLabel, horizontalPosition, verticalPosition, pointerOver ? -1 : -1770753, true);
+         Component interactionHint = this.roomControls.copied()
             ? Component.translatable("cobblebattle.room.invite_copied")
-            : (hover ? Component.translatable("cobblebattle.room.invite_copy") : null);
-         if (hint != null) {
-            graphics.enableScissor(x, y - 2, x + 102, y + 10);
-            Ui.draw(graphics, this.font, hint, x + Ui.width(this.font, label) + 6, y, -1770753, false);
-            graphics.disableScissor();
+            : (pointerOver ? Component.translatable("cobblebattle.room.invite_copy") : null);
+         if (interactionHint != null) {
+            canvas.enableScissor(horizontalPosition, verticalPosition - 2, horizontalPosition + 102, verticalPosition + 10);
+            Ui.draw(canvas, this.font, interactionHint, horizontalPosition + Ui.width(this.font, displayLabel) + 6, verticalPosition, -1770753, false);
+            canvas.disableScissor();
          }
       }
    }
 
-   private boolean inInvite(double mouseX, double mouseY) {
-      int x = this.originX + 22;
-      int y = this.originY + 185;
-      return mouseX >= x && mouseX < x + 102 && mouseY >= y - 2 && mouseY < y + 10;
+   private boolean invitationContains(double pointerX, double pointerY) {
+      int horizontalPosition = this.panelLeft + 22;
+      int verticalPosition = this.panelTop + 185;
+      return pointerX >= horizontalPosition && pointerX < horizontalPosition + 102 && pointerY >= verticalPosition - 2 && pointerY < verticalPosition + 10;
    }
 
-   private void drawStart(GuiGraphics graphics, int mouseX, int mouseY) {
-      int x = this.originX + 130;
-      int y = this.originY + 183;
-      if (this.state.fighting()) {
-         Ui.drawCentered(graphics, this.font, Component.translatable("cobblebattle.room.in_battle"), x + 42, y + 2, -1770753);
+   private void renderStartControl(GuiGraphics canvas, int pointerX, int pointerY) {
+      int horizontalPosition = this.panelLeft + 130;
+      int verticalPosition = this.panelTop + 183;
+      if (this.roomState.fighting()) {
+         Ui.drawCentered(canvas, this.font, Component.translatable("cobblebattle.room.in_battle"), horizontalPosition + 42, verticalPosition + 2, -1770753);
       } else {
-         boolean host = "host".equals(this.state.youAre());
-         boolean ready = this.interactionState.canStart(this.state.youAre(), this.state.hasGuest(), this.state.fighting());
-         boolean hover = ready && mouseX >= x && mouseX < x + 84 && mouseY >= y && mouseY < y + 12;
-         if (!host) {
-            Ui.drawCentered(graphics, this.font, Component.translatable("cobblebattle.room.wait_host"), x + 42, y + 2, -1770753);
+         boolean hostSeat = "host".equals(this.roomState.youAre());
+         boolean startAllowed = this.roomControls.canStart(this.roomState.youAre(), this.roomState.hasGuest(), this.roomState.fighting());
+         boolean pointerOver = startAllowed && pointerX >= horizontalPosition && pointerX < horizontalPosition + 84 && pointerY >= verticalPosition && pointerY < verticalPosition + 12;
+         if (!hostSeat) {
+            Ui.drawCentered(canvas, this.font, Component.translatable("cobblebattle.room.wait_host"), horizontalPosition + 42, verticalPosition + 2, -1770753);
          } else {
-            graphics.fill(x, y, x + 84, y + 12, ready ? (hover ? -1711276033 : 1728053247) : 872415231);
-            graphics.fill(x, y, x + 84, y + 1, -1426063361);
-            graphics.fill(x, y + 12 - 1, x + 84, y + 12, -1426063361);
-            graphics.fill(x, y, x + 1, y + 12, -1426063361);
-            graphics.fill(x + 84 - 1, y, x + 84, y + 12, -1426063361);
-            String label = this.interactionState.starting()
+            canvas.fill(horizontalPosition, verticalPosition, horizontalPosition + 84, verticalPosition + 12, startAllowed ? (pointerOver ? -1711276033 : 1728053247) : 872415231);
+            canvas.fill(horizontalPosition, verticalPosition, horizontalPosition + 84, verticalPosition + 1, -1426063361);
+            canvas.fill(horizontalPosition, verticalPosition + 12 - 1, horizontalPosition + 84, verticalPosition + 12, -1426063361);
+            canvas.fill(horizontalPosition, verticalPosition, horizontalPosition + 1, verticalPosition + 12, -1426063361);
+            canvas.fill(horizontalPosition + 84 - 1, verticalPosition, horizontalPosition + 84, verticalPosition + 12, -1426063361);
+            String displayLabel = this.roomControls.starting()
                ? "cobblebattle.room.starting"
-               : (this.state.hasGuest() ? "cobblebattle.room.start" : "cobblebattle.room.need_opponent");
-            Ui.drawCentered(graphics, this.font, Component.translatable(label), x + 42, y + 2, ready ? -1 : -1770753);
+               : (this.roomState.hasGuest() ? "cobblebattle.room.start" : "cobblebattle.room.need_opponent");
+            Ui.drawCentered(canvas, this.font, Component.translatable(displayLabel), horizontalPosition + 42, verticalPosition + 2, startAllowed ? -1 : -1770753);
          }
       }
    }
 
-   private static String key(RoomStatePayload.Member member) {
-      return member.uid() + ":" + member.name();
+   private static String memberCacheKey(RoomStatePayload.Member roomMember) {
+      return roomMember.uid() + ":" + roomMember.name();
    }
 
-   private PlayerPortrait portraitOf(RoomStatePayload.Member member, boolean host) {
-      boolean mine = host ? "host".equals(this.state.youAre()) : "guest".equals(this.state.youAre());
-      Minecraft minecraft = Minecraft.getInstance();
-      if (mine) {
-         LocalPlayer var6 = minecraft.player;
-         if (var6 instanceof AbstractClientPlayer) {
-            return PlayerPortrait.of(var6);
+   private PlayerPortrait portraitFor(RoomStatePayload.Member roomMember, boolean hostSeat) {
+      boolean localSeat = hostSeat ? "host".equals(this.roomState.youAre()) : "guest".equals(this.roomState.youAre());
+      Minecraft client = Minecraft.getInstance();
+      if (localSeat) {
+         LocalPlayer localPlayer = client.player;
+         if (localPlayer instanceof AbstractClientPlayer) {
+            return PlayerPortrait.of(localPlayer);
          }
       }
 
-      return this.portraits.computeIfAbsent(key(member), k -> PlayerPortrait.lookup(member.name(), member.uid()));
+      return this.portraitCache.computeIfAbsent(memberCacheKey(roomMember), unusedCacheKey -> PlayerPortrait.lookup(roomMember.name(), roomMember.uid()));
    }
 
-   private RenderablePokemon leadOf(RoomStatePayload.Member member) {
-      return member.lead().isEmpty() ? null : this.leads.computeIfAbsent(key(member), k -> {
-         Species speciesTemplate = PokemonSpecies.getByName(member.lead());
-         return speciesTemplate == null ? null : new RenderablePokemon(speciesTemplate, Set.of(), ItemStack.EMPTY);
+   private RenderablePokemon leadModelFor(RoomStatePayload.Member roomMember) {
+      return roomMember.lead().isEmpty() ? null : this.leadModelCache.computeIfAbsent(memberCacheKey(roomMember), unusedCacheKey -> {
+         Species speciesDefinition = PokemonSpecies.getByName(roomMember.lead());
+         return speciesDefinition == null ? null : new RenderablePokemon(speciesDefinition, Set.of(), ItemStack.EMPTY);
       });
    }
 
-   public boolean mouseClicked(double mouseX, double mouseY, int button) {
-      if (button == 0) {
-         if (BackButton.contains(this.originX, this.originY, mouseX, mouseY)) {
+   public boolean mouseClicked(double pointerX, double pointerY, int mouseButton) {
+      if (mouseButton == 0) {
+         if (BackButton.contains(this.panelLeft, this.panelTop, pointerX, pointerY)) {
             RoomLobbyScreen.sendRoomAction(RoomActionPayload.of("leave"));
             return true;
          }
 
-         if (!this.state.inviteCode().isEmpty() && this.inInvite(mouseX, mouseY)) {
-            Minecraft.getInstance().keyboardHandler.setClipboard(this.state.inviteCode());
-            this.interactionState.markInvitationCopied();
+         if (!this.roomState.inviteCode().isEmpty() && this.invitationContains(pointerX, pointerY)) {
+            Minecraft.getInstance().keyboardHandler.setClipboard(this.roomState.inviteCode());
+            this.roomControls.markInvitationCopied();
             return true;
          }
 
-         int x = this.originX + 130;
-         int y = this.originY + 183;
-         if (this.interactionState.canStart(this.state.youAre(), this.state.hasGuest(), this.state.fighting())
-            && mouseX >= x
-            && mouseX < x + 84
-            && mouseY >= y
-            && mouseY < y + 12) {
-            this.interactionState.beginStart(this.state.youAre(), this.state.hasGuest(), this.state.fighting());
+         int horizontalPosition = this.panelLeft + 130;
+         int verticalPosition = this.panelTop + 183;
+         if (this.roomControls.canStart(this.roomState.youAre(), this.roomState.hasGuest(), this.roomState.fighting())
+            && pointerX >= horizontalPosition
+            && pointerX < horizontalPosition + 84
+            && pointerY >= verticalPosition
+            && pointerY < verticalPosition + 12) {
+            this.roomControls.beginStart(this.roomState.youAre(), this.roomState.hasGuest(), this.roomState.fighting());
             RoomLobbyScreen.sendRoomAction(RoomActionPayload.of("start"));
             return true;
          }
       }
 
-      return super.mouseClicked(mouseX, mouseY, button);
+      return super.mouseClicked(pointerX, pointerY, mouseButton);
    }
 
    public void onClose() {

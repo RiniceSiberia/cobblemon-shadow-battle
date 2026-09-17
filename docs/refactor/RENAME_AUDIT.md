@@ -2,12 +2,11 @@
 
 本审计以基线 javac 语义绑定结果为准。成员候选沿用早期批次规则：排除 public/protected 成员、构造器、枚举常量、record 自动成员、API 包、Mixin 和无方法体声明；另计非 Mixin 的具名内部类型。声明按路径、种类、owner 和原名与当前 Java 零错误快照精确匹配。
 
-2026-09-17 当前快照共有 3487 个候选，其中 1619 个原名仍存在，1868 个原声明键已消失，原声明键消失比例为 53.57%。该比例是待人工对应的上限，删除、迁入 Kotlin 和真正改名尚未逐项区分，不能作为最终 90% 验收结果。当前 Java 快照含 97 个文件、4277 个声明，javac 分析错误为 0。
+2026-09-17 当前快照共有 3487 个候选，其中 1478 个原名仍存在，2009 个原声明键已消失，原声明键消失比例为 57.61%。该比例是待人工对应的上限，删除、迁入 Kotlin 和真正改名尚未逐项区分，不能作为最终 90% 验收结果。当前 Java 快照含 97 个文件、4277 个声明，javac 分析错误为 0。
 
 剩余原名逐项记录在 `RENAME_REMAINING.csv`。优先按原名数量从高到低推进：
 
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/battle/CrossServerBattleService.java`：225 项
-- `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/RoomScreen.java`：141 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/ChatRoomScreen.java`：123 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/ChatPanel.java`：98 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/RankedScreen.java`：97 项
@@ -19,6 +18,6 @@
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/Ui.java`：59 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/ChatHud.java`：45 项
 
-已完成命名批次：`RoomLobbyScreen` 的纹理、布局、颜色、状态、输入、绘制、命中检测和表单流程声明完成语义改名；`LeaderboardScreen` 的纹理、布局、状态、榜单选择、画像缓存、实体姿态保存恢复、输入及绘制声明完成语义改名；`AuthScreen` 的认证模式、输入控件、验证码、提交状态、内部按钮和绘制声明完成语义改名；`TeamPreviewScreen` 的选择状态、阵容槽位、模型缓存、训练家面板、确认及提示声明完成语义改名。当前精确匹配不到这四个文件的基线安全原名。
+已完成命名批次：`RoomLobbyScreen`、`LeaderboardScreen`、`AuthScreen`、`TeamPreviewScreen` 和 `RoomScreen` 的安全内部声明已按各自业务职责完成语义改名。当前精确匹配不到这五个文件的基线安全原名。
 
 每个命名批次完成后重新生成零错误快照和剩余清单；只在旧声明与新职责建立对应且适用验证通过后计入最终覆盖率。

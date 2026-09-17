@@ -255,3 +255,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B6-team-preview-symbols（2026-09-17）
 
 `TeamPreviewScreen` 的纹理与布局常量、预览状态、选择与锁定判断、阵容槽位、模型和姿态缓存、训练家面板、确认按钮、提示框及提交入口完成语义改名。公开构造、`battleId`、`update` 和 Screen 覆写保持；选择顺序、确认条件、倒计时、坐标与颜色数值、模型姿态、物品名称回退及 `TeamPickPayload` 字段顺序未改变。JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-team-preview-symbols.log`；当前 javac 快照为 97 个文件、4277 个声明、0 个分析错误，精确匹配不到该文件的基线安全原名。真实客户端模型渲染、点击选择、倒计时和服务端确认仍待游戏内联调。
+
+## B6-room-screen-symbols（2026-09-17）
+
+`RoomScreen` 的布局常量、房间状态、玩家画像与首发模型缓存、席位和观察者绘制、邀请码复制及开战控制声明完成语义改名。公开构造、`update`、`roomId` 和 Screen 覆写保持；离开与开战动作值、按钮条件、邀请码剪贴板、实体姿态、坐标和颜色数值未改变。JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-room-screen-symbols.log`；当前 javac 快照为 97 个文件、4277 个声明、0 个分析错误，精确匹配不到该文件的基线安全原名。真实房间按钮、实体渲染和服务端响应仍待游戏内联调。
