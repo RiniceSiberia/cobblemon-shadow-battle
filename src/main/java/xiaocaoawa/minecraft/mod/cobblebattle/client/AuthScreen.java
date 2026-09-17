@@ -16,393 +16,393 @@ import net.minecraft.resources.ResourceLocation;
 import xiaocaoawa.minecraft.mod.cobblebattle.account.AuthMode;
 
 public final class AuthScreen extends Screen {
-   private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/auth_background.png");
-   private static final int PANEL_W = 191;
-   private static final int PANEL_H = 207;
-   private static final int TITLE_X = 39;
-   private static final int TITLE_Y = 16;
-   private static final int TITLE_W = 44;
-   private static final int TITLE_H = 12;
-   private static final int AVATAR_SIZE = 48;
-   private static final int AVATAR_Y = 37;
-   private static final int PARTICIPANT_Y = 88;
-   private static final int FIELD_H = 14;
-   private static final int FIELD_X = 39;
-   private static final int FIELD_W = 112;
-   private static final int ROW_1 = 100;
-   private static final int ROW_2 = 118;
-   private static final int ROW_3 = 136;
-   private static final int ROW_4 = 154;
-   private static final int ROW_SPACING = 18;
-   private static final int BUTTON_H = 16;
-   private static final int LINK_GAP = 7;
-   private static final int LINK_H = 10;
-   private static final int CODE_W = 60;
-   private static final int SEND_GAP = 4;
-   private static final int SEND_W = 48;
-   private static final int TEXT_INSET = 4;
-   private static final int FIELD_FILL = -12937546;
-   private static final int FIELD_BORDER = -13684945;
-   private static final int FIELD_FOCUSED = -14649667;
-   private static final int FIELD_TEXT = -1376769;
-   private static final int HINT_TEXT = -7350556;
-   private static final int TITLE_TEXT = -1376769;
-   private static final int ERROR_TEXT = -44445;
-   private static final int BUTTON_IDLE = -14649667;
-   private static final int BUTTON_HOVER = -12674087;
-   private static final int BUTTON_OFF = -12947828;
-   private static final int BUTTON_TEXT_OFF = -7362380;
-   private static final int PARTICIPANT_TEXT = -4330766;
-   private static final int LINK_IDLE = -7350556;
-   private static final int LINK_HOVER = -1376769;
-   private static final int BACKDROP = -1609559016;
-   private static final int CODE_COOLDOWN_TICKS = 1200;
-   private AuthMode mode;
-   private final String suggestedId;
-   private final boolean emailEnabled;
-   private EditBox idBox;
-   private EditBox emailBox;
-   private EditBox codeBox;
-   private EditBox passwordBox;
-   private EditBox confirmBox;
-   private Button submit;
-   private Button sendCode;
-   private Button switchMode;
-   private int idY;
-   private int emailY;
-   private int codeY;
-   private int passwordY;
-   private int confirmY;
-   private Component error = Component.empty();
-   private boolean waiting;
-   private boolean requestingCode;
-   private int codeCooldown;
-   private int originX;
-   private int originY;
+   private static final ResourceLocation AUTH_PANEL_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/auth_background.png");
+   private static final int PANEL_WIDTH = 191;
+   private static final int PANEL_HEIGHT = 207;
+   private static final int TITLE_LEFT_OFFSET = 39;
+   private static final int TITLE_TOP_OFFSET = 16;
+   private static final int TITLE_WIDTH = 44;
+   private static final int TITLE_HEIGHT = 12;
+   private static final int AVATAR_EDGE_LENGTH = 48;
+   private static final int AVATAR_TOP_OFFSET = 37;
+   private static final int PLAYER_NAME_TOP_OFFSET = 88;
+   private static final int INPUT_HEIGHT = 14;
+   private static final int INPUT_LEFT_OFFSET = 39;
+   private static final int INPUT_WIDTH = 112;
+   private static final int FIRST_INPUT_ROW = 100;
+   private static final int SECOND_INPUT_ROW = 118;
+   private static final int THIRD_INPUT_ROW = 136;
+   private static final int FOURTH_INPUT_ROW = 154;
+   private static final int INPUT_ROW_SPACING = 18;
+   private static final int ACTION_BUTTON_HEIGHT = 16;
+   private static final int MODE_LINK_GAP = 7;
+   private static final int MODE_LINK_HEIGHT = 10;
+   private static final int CODE_INPUT_WIDTH = 60;
+   private static final int CODE_BUTTON_GAP = 4;
+   private static final int CODE_BUTTON_WIDTH = 48;
+   private static final int INPUT_TEXT_INSET = 4;
+   private static final int INPUT_FILL_COLOR = -12937546;
+   private static final int INPUT_BORDER_COLOR = -13684945;
+   private static final int FOCUSED_INPUT_BORDER_COLOR = -14649667;
+   private static final int INPUT_TEXT_COLOR = -1376769;
+   private static final int INPUT_HINT_COLOR = -7350556;
+   private static final int TITLE_TEXT_COLOR = -1376769;
+   private static final int ERROR_TEXT_COLOR = -44445;
+   private static final int BUTTON_IDLE_COLOR = -14649667;
+   private static final int BUTTON_HOVER_COLOR = -12674087;
+   private static final int BUTTON_DISABLED_COLOR = -12947828;
+   private static final int BUTTON_DISABLED_TEXT_COLOR = -7362380;
+   private static final int PLAYER_NAME_COLOR = -4330766;
+   private static final int LINK_IDLE_COLOR = -7350556;
+   private static final int LINK_HOVER_COLOR = -1376769;
+   private static final int SCREEN_BACKDROP_COLOR = -1609559016;
+   private static final int CODE_REQUEST_COOLDOWN_TICKS = 1200;
+   private AuthMode authenticationMode;
+   private final String suggestedAccountId;
+   private final boolean emailAuthenticationAvailable;
+   private EditBox accountIdInput;
+   private EditBox emailInput;
+   private EditBox verificationCodeInput;
+   private EditBox passwordInput;
+   private EditBox passwordConfirmationInput;
+   private Button submitButton;
+   private Button verificationCodeButton;
+   private Button modeSwitchButton;
+   private int accountIdRow;
+   private int emailRow;
+   private int verificationCodeRow;
+   private int passwordRow;
+   private int passwordConfirmationRow;
+   private Component statusMessage = Component.empty();
+   private boolean requestInProgress;
+   private boolean verificationCodeRequestInProgress;
+   private int codeRequestCooldownTicks;
+   private int panelLeft;
+   private int panelTop;
 
-   public AuthScreen(AuthMode mode, String suggestedId, boolean emailEnabled) {
-      super(titleOf(mode));
-      this.emailEnabled = emailEnabled;
-      this.mode = AuthenticationFormRules.initialMode(mode, emailEnabled);
-      this.suggestedId = suggestedId == null ? "" : suggestedId;
+   public AuthScreen(AuthMode authenticationMode, String suggestedAccountId, boolean emailAuthenticationAvailable) {
+      super(authenticationTitle(authenticationMode));
+      this.emailAuthenticationAvailable = emailAuthenticationAvailable;
+      this.authenticationMode = AuthenticationFormRules.initialMode(authenticationMode, emailAuthenticationAvailable);
+      this.suggestedAccountId = suggestedAccountId == null ? "" : suggestedAccountId;
    }
 
-   private static Component titleOf(AuthMode mode) {
-      return Component.translatable(AuthenticationFormRules.titleKey(mode));
+   private static Component authenticationTitle(AuthMode authenticationMode) {
+      return Component.translatable(AuthenticationFormRules.titleKey(authenticationMode));
    }
 
    public Component getTitle() {
-      return titleOf(this.mode);
+      return authenticationTitle(this.authenticationMode);
    }
 
-   private boolean needsEmail() {
-      return AuthenticationFormRules.requiresEmail(this.mode, this.emailEnabled);
+   private boolean requiresEmail() {
+      return AuthenticationFormRules.requiresEmail(this.authenticationMode, this.emailAuthenticationAvailable);
    }
 
    protected void init() {
-      this.originX = (this.width - 191) / 2;
-      this.originY = (this.height - 207) / 2;
-      String keptId = this.idBox != null ? this.idBox.getValue() : this.suggestedId;
-      String keptEmail = this.emailBox != null ? this.emailBox.getValue() : "";
-      this.idBox = null;
-      this.emailBox = null;
-      this.codeBox = null;
-      this.confirmBox = null;
-      this.sendCode = null;
-      this.idY = -1;
-      this.emailY = -1;
-      this.codeY = -1;
-      this.confirmY = -1;
-      int row = 100;
-      if (this.mode.isBindEmail()) {
-         this.idY = row;
-         this.idBox = this.addField(row, 64, false, Component.translatable("cobblebattle.auth.field.legacy_id"));
-         this.idBox.setValue(keptId);
-         row += 18;
+      this.panelLeft = (this.width - 191) / 2;
+      this.panelTop = (this.height - 207) / 2;
+      String preservedAccountId = this.accountIdInput != null ? this.accountIdInput.getValue() : this.suggestedAccountId;
+      String preservedEmail = this.emailInput != null ? this.emailInput.getValue() : "";
+      this.accountIdInput = null;
+      this.emailInput = null;
+      this.verificationCodeInput = null;
+      this.passwordConfirmationInput = null;
+      this.verificationCodeButton = null;
+      this.accountIdRow = -1;
+      this.emailRow = -1;
+      this.verificationCodeRow = -1;
+      this.passwordConfirmationRow = -1;
+      int nextInputRow = 100;
+      if (this.authenticationMode.isBindEmail()) {
+         this.accountIdRow = nextInputRow;
+         this.accountIdInput = this.createStandardInputField(nextInputRow, 64, false, Component.translatable("cobblebattle.auth.field.legacy_id"));
+         this.accountIdInput.setValue(preservedAccountId);
+         nextInputRow += 18;
       }
 
-      if (this.needsEmail()) {
-         this.emailY = row;
-         this.emailBox = this.addField(row, 254, false, Component.translatable("cobblebattle.auth.field.email"));
-         this.emailBox.setValue(keptEmail.isEmpty() && !this.mode.isBindEmail() ? keptId : keptEmail);
-         row += 18;
-         this.codeY = row;
-         this.codeBox = this.addField(row, 6, false, 60, Component.translatable("cobblebattle.auth.field.code"));
-         this.sendCode = new AuthScreen.PanelButton(
-            this.originX + 39 + 60 + 4, this.originY + row, 48, 14, Component.translatable("cobblebattle.auth.send_code"), button -> this.requestCode()
+      if (this.requiresEmail()) {
+         this.emailRow = nextInputRow;
+         this.emailInput = this.createStandardInputField(nextInputRow, 254, false, Component.translatable("cobblebattle.auth.field.email"));
+         this.emailInput.setValue(preservedEmail.isEmpty() && !this.authenticationMode.isBindEmail() ? preservedAccountId : preservedEmail);
+         nextInputRow += 18;
+         this.verificationCodeRow = nextInputRow;
+         this.verificationCodeInput = this.createSizedInputField(nextInputRow, 6, false, 60, Component.translatable("cobblebattle.auth.field.code"));
+         this.verificationCodeButton = new AuthScreen.ActionPanelButton(
+            this.panelLeft + 39 + 60 + 4, this.panelTop + nextInputRow, 48, 14, Component.translatable("cobblebattle.auth.send_code"), pressedButton -> this.requestVerificationCode()
          );
-         this.addRenderableWidget(this.sendCode);
-         row += 18;
+         this.addRenderableWidget(this.verificationCodeButton);
+         nextInputRow += 18;
       } else {
-         this.idY = row;
-         this.idBox = this.addField(row, 16, false, Component.translatable("cobblebattle.auth.field.id"));
-         this.idBox.setValue(keptId);
-         row += 18;
+         this.accountIdRow = nextInputRow;
+         this.accountIdInput = this.createStandardInputField(nextInputRow, 16, false, Component.translatable("cobblebattle.auth.field.id"));
+         this.accountIdInput.setValue(preservedAccountId);
+         nextInputRow += 18;
       }
 
-      this.passwordY = row;
-      this.passwordBox = this.addField(row, 64, true, Component.translatable("cobblebattle.auth.field.password"));
-      row += 18;
-      if (this.mode.isRegister()) {
-         this.confirmY = row;
-         this.confirmBox = this.addField(row, 64, true, Component.translatable("cobblebattle.auth.field.confirm"));
-         row += 18;
+      this.passwordRow = nextInputRow;
+      this.passwordInput = this.createStandardInputField(nextInputRow, 64, true, Component.translatable("cobblebattle.auth.field.password"));
+      nextInputRow += 18;
+      if (this.authenticationMode.isRegister()) {
+         this.passwordConfirmationRow = nextInputRow;
+         this.passwordConfirmationInput = this.createStandardInputField(nextInputRow, 64, true, Component.translatable("cobblebattle.auth.field.confirm"));
+         nextInputRow += 18;
       }
 
-      this.submit = new AuthScreen.PanelButton(this.originX + 39, this.originY + row, 112, 16, this.submitLabel(), button -> this.send());
-      this.addRenderableWidget(this.submit);
-      Component switchLabel = this.switchLabel();
-      int switchWidth = Ui.width(this.font, switchLabel) + 8;
-      this.switchMode = new AuthScreen.LinkButton(
-         this.originX + (191 - switchWidth) / 2, this.originY + row + 16 + 7, switchWidth, 10, switchLabel, button -> this.toggleMode()
+      this.submitButton = new AuthScreen.ActionPanelButton(this.panelLeft + 39, this.panelTop + nextInputRow, 112, 16, this.submitButtonLabel(), pressedButton -> this.submitCredentials());
+      this.addRenderableWidget(this.submitButton);
+      Component modeSwitchLabel = this.modeSwitchLabel();
+      int modeSwitchWidth = Ui.width(this.font, modeSwitchLabel) + 8;
+      this.modeSwitchButton = new AuthScreen.ModeLinkButton(
+         this.panelLeft + (191 - modeSwitchWidth) / 2, this.panelTop + nextInputRow + 16 + 7, modeSwitchWidth, 10, modeSwitchLabel, pressedButton -> this.advanceAuthenticationMode()
       );
-      this.addRenderableWidget(this.switchMode);
-      EditBox first = this.idBox != null ? this.idBox : this.emailBox;
-      this.setInitialFocus(first.getValue().isEmpty() ? first : this.passwordBox);
-      this.refreshSubmit();
-      this.updateCodeButton();
+      this.addRenderableWidget(this.modeSwitchButton);
+      EditBox initialFocusField = this.accountIdInput != null ? this.accountIdInput : this.emailInput;
+      this.setInitialFocus(initialFocusField.getValue().isEmpty() ? initialFocusField : this.passwordInput);
+      this.refreshSubmitAvailability();
+      this.refreshCodeRequestButton();
    }
 
-   private Component submitLabel() {
-      return Component.translatable(AuthenticationFormRules.submitKey(this.mode));
+   private Component submitButtonLabel() {
+      return Component.translatable(AuthenticationFormRules.submitKey(this.authenticationMode));
    }
 
-   private Component switchLabel() {
-      return Component.translatable(AuthenticationFormRules.switchKey(this.mode, this.emailEnabled));
+   private Component modeSwitchLabel() {
+      return Component.translatable(AuthenticationFormRules.switchKey(this.authenticationMode, this.emailAuthenticationAvailable));
    }
 
-   private void toggleMode() {
-      if (!this.waiting) {
-         this.mode = AuthenticationFormRules.nextMode(this.mode, this.emailEnabled);
-         this.error = Component.empty();
+   private void advanceAuthenticationMode() {
+      if (!this.requestInProgress) {
+         this.authenticationMode = AuthenticationFormRules.nextMode(this.authenticationMode, this.emailAuthenticationAvailable);
+         this.statusMessage = Component.empty();
          this.rebuildWidgets();
       }
    }
 
-   private EditBox addField(int y, int maxLength, boolean password, Component label) {
-      return this.addField(y, maxLength, password, 112, label);
+   private EditBox createStandardInputField(int verticalPosition, int characterLimit, boolean maskContent, Component accessibleLabel) {
+      return this.createSizedInputField(verticalPosition, characterLimit, maskContent, 112, accessibleLabel);
    }
 
-   private EditBox addField(int y, int maxLength, boolean password, int width, Component label) {
-      EditBox box = new EditBox(this.font, this.originX + 39 + 4, this.originY + y + 1, width - 8, 12, label);
-      box.setMaxLength(maxLength);
-      box.setBordered(false);
-      box.setTextColor(-1376769);
-      box.setResponder(value -> {
-         this.refreshSubmit();
-         this.updateCodeButton();
+   private EditBox createSizedInputField(int verticalPosition, int characterLimit, boolean maskContent, int elementWidth, Component accessibleLabel) {
+      EditBox inputField = new EditBox(this.font, this.panelLeft + 39 + 4, this.panelTop + verticalPosition + 1, elementWidth - 8, 12, accessibleLabel);
+      inputField.setMaxLength(characterLimit);
+      inputField.setBordered(false);
+      inputField.setTextColor(-1376769);
+      inputField.setResponder(currentValue -> {
+         this.refreshSubmitAvailability();
+         this.refreshCodeRequestButton();
       });
-      if (password) {
-         box.setFormatter((text, offset) -> Component.literal("*".repeat(text.length())).getVisualOrderText());
+      if (maskContent) {
+         inputField.setFormatter((displayText, textOffset) -> Component.literal("*".repeat(displayText.length())).getVisualOrderText());
       }
 
-      this.addRenderableWidget(box);
-      return box;
+      this.addRenderableWidget(inputField);
+      return inputField;
    }
 
-   private int textY(int fieldY) {
-      return this.originY + fieldY + 1 + 2;
+   private int inputTextTop(int inputRow) {
+      return this.panelTop + inputRow + 1 + 2;
    }
 
-   private void refreshSubmit() {
-      if (this.submit != null) {
-         this.submit.active = AuthenticationFormRules.canSubmit(
-            this.mode,
-            this.emailEnabled,
-            this.waiting,
-            this.idBox == null ? "" : this.idBox.getValue(),
-            this.emailBox == null ? "" : this.emailBox.getValue(),
-            this.codeBox == null ? "" : this.codeBox.getValue(),
-            this.passwordBox.getValue()
+   private void refreshSubmitAvailability() {
+      if (this.submitButton != null) {
+         this.submitButton.active = AuthenticationFormRules.canSubmit(
+            this.authenticationMode,
+            this.emailAuthenticationAvailable,
+            this.requestInProgress,
+            this.accountIdInput == null ? "" : this.accountIdInput.getValue(),
+            this.emailInput == null ? "" : this.emailInput.getValue(),
+            this.verificationCodeInput == null ? "" : this.verificationCodeInput.getValue(),
+            this.passwordInput.getValue()
          );
       }
    }
 
-   private void updateCodeButton() {
-      if (this.sendCode != null) {
-         this.sendCode.active = AuthenticationFormRules.canRequestCode(this.waiting, this.codeCooldown, this.emailBox.getValue());
-         this.sendCode
+   private void refreshCodeRequestButton() {
+      if (this.verificationCodeButton != null) {
+         this.verificationCodeButton.active = AuthenticationFormRules.canRequestCode(this.requestInProgress, this.codeRequestCooldownTicks, this.emailInput.getValue());
+         this.verificationCodeButton
             .setMessage(
-               this.codeCooldown > 0
-                  ? Component.literal(AuthenticationFormRules.cooldownSeconds(this.codeCooldown) + "s")
+               this.codeRequestCooldownTicks > 0
+                  ? Component.literal(AuthenticationFormRules.cooldownSeconds(this.codeRequestCooldownTicks) + "s")
                   : Component.translatable("cobblebattle.auth.send_code")
             );
       }
    }
 
-   private void requestCode() {
-      if (!this.waiting && this.emailBox != null && !this.emailBox.getValue().isBlank()) {
-         this.error = Component.empty();
-         this.waiting = true;
-         this.requestingCode = true;
-         this.codeCooldown = 1200;
-         this.refreshSubmit();
-         this.updateCodeButton();
-         AuthenticationSubmission request = AuthenticationFormRules.codeRequest(this.mode, this.emailBox.getValue());
-         AuthScreenHandler.submit(request.getMode(), request.getAccountId(), request.getEmail(), request.getPassword(), request.getCode());
+   private void requestVerificationCode() {
+      if (!this.requestInProgress && this.emailInput != null && !this.emailInput.getValue().isBlank()) {
+         this.statusMessage = Component.empty();
+         this.requestInProgress = true;
+         this.verificationCodeRequestInProgress = true;
+         this.codeRequestCooldownTicks = 1200;
+         this.refreshSubmitAvailability();
+         this.refreshCodeRequestButton();
+         AuthenticationSubmission authenticationSubmission = AuthenticationFormRules.codeRequest(this.authenticationMode, this.emailInput.getValue());
+         AuthScreenHandler.submit(authenticationSubmission.getMode(), authenticationSubmission.getAccountId(), authenticationSubmission.getEmail(), authenticationSubmission.getPassword(), authenticationSubmission.getCode());
       }
    }
 
    public void tick() {
       super.tick();
-      if (this.codeCooldown > 0) {
-         this.codeCooldown--;
-         this.updateCodeButton();
+      if (this.codeRequestCooldownTicks > 0) {
+         this.codeRequestCooldownTicks--;
+         this.refreshCodeRequestButton();
       }
    }
 
-   private void send() {
-      if (!this.waiting) {
-         String password = this.passwordBox.getValue();
-         AuthenticationSubmission request = AuthenticationFormRules.submission(
-            this.mode,
-            this.idBox == null ? "" : this.idBox.getValue(),
-            this.emailBox == null ? "" : this.emailBox.getValue(),
-            password,
-            this.confirmBox == null ? "" : this.confirmBox.getValue(),
-            this.codeBox == null ? "" : this.codeBox.getValue()
+   private void submitCredentials() {
+      if (!this.requestInProgress) {
+         String maskContent = this.passwordInput.getValue();
+         AuthenticationSubmission authenticationSubmission = AuthenticationFormRules.submission(
+            this.authenticationMode,
+            this.accountIdInput == null ? "" : this.accountIdInput.getValue(),
+            this.emailInput == null ? "" : this.emailInput.getValue(),
+            maskContent,
+            this.passwordConfirmationInput == null ? "" : this.passwordConfirmationInput.getValue(),
+            this.verificationCodeInput == null ? "" : this.verificationCodeInput.getValue()
          );
-         if (request == null) {
-            this.error = Component.translatable("cobblebattle.auth.error.mismatch");
+         if (authenticationSubmission == null) {
+            this.statusMessage = Component.translatable("cobblebattle.auth.error.mismatch");
          } else {
-            this.error = Component.empty();
-            this.waiting = true;
-            this.requestingCode = false;
-            this.refreshSubmit();
-            this.updateCodeButton();
-            AuthScreenHandler.submit(request.getMode(), request.getAccountId(), request.getEmail(), request.getPassword(), request.getCode());
+            this.statusMessage = Component.empty();
+            this.requestInProgress = true;
+            this.verificationCodeRequestInProgress = false;
+            this.refreshSubmitAvailability();
+            this.refreshCodeRequestButton();
+            AuthScreenHandler.submit(authenticationSubmission.getMode(), authenticationSubmission.getAccountId(), authenticationSubmission.getEmail(), authenticationSubmission.getPassword(), authenticationSubmission.getCode());
          }
       }
    }
 
-   void onResult(boolean ok, String document) {
-      this.waiting = false;
-      if (this.requestingCode) {
-         this.requestingCode = false;
-         if (!ok) {
-            this.codeCooldown = 0;
+   void handleAuthenticationResult(boolean successful, String resultMessage) {
+      this.requestInProgress = false;
+      if (this.verificationCodeRequestInProgress) {
+         this.verificationCodeRequestInProgress = false;
+         if (!successful) {
+            this.codeRequestCooldownTicks = 0;
          }
 
-         this.error = Component.literal(document);
-         if (ok && this.codeBox != null) {
-            this.setFocused(this.codeBox);
+         this.statusMessage = Component.literal(resultMessage);
+         if (successful && this.verificationCodeInput != null) {
+            this.setFocused(this.verificationCodeInput);
          }
 
-         this.refreshSubmit();
-         this.updateCodeButton();
-      } else if (ok) {
+         this.refreshSubmitAvailability();
+         this.refreshCodeRequestButton();
+      } else if (successful) {
          this.onClose();
       } else {
-         this.error = Component.literal(document);
-         this.passwordBox.setValue("");
-         if (this.confirmBox != null) {
-            this.confirmBox.setValue("");
+         this.statusMessage = Component.literal(resultMessage);
+         this.passwordInput.setValue("");
+         if (this.passwordConfirmationInput != null) {
+            this.passwordConfirmationInput.setValue("");
          }
 
-         this.setFocused(this.passwordBox);
-         this.refreshSubmit();
-         this.updateCodeButton();
+         this.setFocused(this.passwordInput);
+         this.refreshSubmitAvailability();
+         this.refreshCodeRequestButton();
       }
    }
 
-   public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+   public void renderBackground(GuiGraphics canvas, int pointerX, int pointerY, float frameDelta) {
    }
 
-   public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-      graphics.fill(0, 0, this.width, this.height, -1609559016);
-      graphics.blit(BACKGROUND, this.originX, this.originY, 0.0F, 0.0F, 191, 207, 191, 207);
-      this.drawTitle(graphics);
-      this.drawAvatar(graphics);
-      this.drawParticipantName(graphics);
-      this.drawField(graphics, this.idY, this.idBox, 112);
-      this.drawField(graphics, this.emailY, this.emailBox, 112);
-      this.drawField(graphics, this.codeY, this.codeBox, 60);
-      this.drawField(graphics, this.passwordY, this.passwordBox, 112);
-      this.drawField(graphics, this.confirmY, this.confirmBox, 112);
-      super.render(graphics, mouseX, mouseY, partialTick);
-      this.drawPlaceholders(graphics);
-      this.drawStatus(graphics);
+   public void render(GuiGraphics canvas, int pointerX, int pointerY, float frameDelta) {
+      canvas.fill(0, 0, this.width, this.height, -1609559016);
+      canvas.blit(AUTH_PANEL_TEXTURE, this.panelLeft, this.panelTop, 0.0F, 0.0F, 191, 207, 191, 207);
+      this.renderTitle(canvas);
+      this.renderPlayerAvatar(canvas);
+      this.renderPlayerName(canvas);
+      this.renderInputBackground(canvas, this.accountIdRow, this.accountIdInput, 112);
+      this.renderInputBackground(canvas, this.emailRow, this.emailInput, 112);
+      this.renderInputBackground(canvas, this.verificationCodeRow, this.verificationCodeInput, 60);
+      this.renderInputBackground(canvas, this.passwordRow, this.passwordInput, 112);
+      this.renderInputBackground(canvas, this.passwordConfirmationRow, this.passwordConfirmationInput, 112);
+      super.render(canvas, pointerX, pointerY, frameDelta);
+      this.renderInputHints(canvas);
+      this.renderStatusMessage(canvas);
    }
 
-   private void drawTitle(GuiGraphics graphics) {
-      int centreX = this.originX + 39 + 22;
-      int y = this.originY + 16 + (12 - 9) / 2;
-      Ui.drawCentered(graphics, this.font, this.getTitle(), centreX, y, -1376769);
+   private void renderTitle(GuiGraphics canvas) {
+      int titleCenterX = this.panelLeft + 39 + 22;
+      int verticalPosition = this.panelTop + 16 + (12 - 9) / 2;
+      Ui.drawCentered(canvas, this.font, this.getTitle(), titleCenterX, verticalPosition, -1376769);
    }
 
-   private void drawAvatar(GuiGraphics graphics) {
-      LocalPlayer skin = this.minecraft.player;
-      if (skin instanceof AbstractClientPlayer) {
-         ResourceLocation var6 = skin.getSkin().texture();
-         int x = this.originX + 71;
-         int y = this.originY + 37;
-         graphics.blit(var6, x, y, 48, 48, 8.0F, 8.0F, 8, 8, 64, 64);
-         graphics.blit(var6, x, y, 48, 48, 40.0F, 8.0F, 8, 8, 64, 64);
+   private void renderPlayerAvatar(GuiGraphics canvas) {
+      LocalPlayer localPlayer = this.minecraft.player;
+      if (localPlayer instanceof AbstractClientPlayer) {
+         ResourceLocation skinTexture = localPlayer.getSkin().texture();
+         int horizontalPosition = this.panelLeft + 71;
+         int verticalPosition = this.panelTop + 37;
+         canvas.blit(skinTexture, horizontalPosition, verticalPosition, 48, 48, 8.0F, 8.0F, 8, 8, 64, 64);
+         canvas.blit(skinTexture, horizontalPosition, verticalPosition, 48, 48, 40.0F, 8.0F, 8, 8, 64, 64);
       }
    }
 
-   private void drawParticipantName(GuiGraphics graphics) {
+   private void renderPlayerName(GuiGraphics canvas) {
       if (this.minecraft != null && this.minecraft.player != null) {
-         Ui.drawCentered(graphics, this.font, this.minecraft.player.getGameProfile().getName(), this.originX + 95, this.originY + 88, -4330766);
+         Ui.drawCentered(canvas, this.font, this.minecraft.player.getGameProfile().getName(), this.panelLeft + 95, this.panelTop + 88, -4330766);
       }
    }
 
-   private void drawField(GuiGraphics graphics, int y, EditBox box, int width) {
-      if (box != null) {
-         int left = this.originX + 39;
-         int top = this.originY + y;
-         graphics.fill(left, top, left + width, top + 14, box.isFocused() ? -14649667 : -13684945);
-         graphics.fill(left + 1, top + 1, left + width - 1, top + 14 - 1, -12937546);
+   private void renderInputBackground(GuiGraphics canvas, int verticalPosition, EditBox inputField, int elementWidth) {
+      if (inputField != null) {
+         int leftEdge = this.panelLeft + 39;
+         int topEdge = this.panelTop + verticalPosition;
+         canvas.fill(leftEdge, topEdge, leftEdge + elementWidth, topEdge + 14, inputField.isFocused() ? -14649667 : -13684945);
+         canvas.fill(leftEdge + 1, topEdge + 1, leftEdge + elementWidth - 1, topEdge + 14 - 1, -12937546);
       }
    }
 
-   private void drawPlaceholders(GuiGraphics graphics) {
-      this.hint(graphics, this.idBox, this.idY, this.mode.isBindEmail() ? "cobblebattle.auth.hint.legacy_id" : "cobblebattle.auth.hint.id");
-      this.hint(graphics, this.emailBox, this.emailY, "cobblebattle.auth.hint.email");
-      this.hint(graphics, this.codeBox, this.codeY, "cobblebattle.auth.hint.code");
-      this.hint(graphics, this.passwordBox, this.passwordY, "cobblebattle.auth.hint.password");
-      this.hint(graphics, this.confirmBox, this.confirmY, "cobblebattle.auth.hint.confirm");
+   private void renderInputHints(GuiGraphics canvas) {
+      this.renderInputHint(canvas, this.accountIdInput, this.accountIdRow, this.authenticationMode.isBindEmail() ? "cobblebattle.auth.hint.legacy_id" : "cobblebattle.auth.hint.id");
+      this.renderInputHint(canvas, this.emailInput, this.emailRow, "cobblebattle.auth.hint.email");
+      this.renderInputHint(canvas, this.verificationCodeInput, this.verificationCodeRow, "cobblebattle.auth.hint.code");
+      this.renderInputHint(canvas, this.passwordInput, this.passwordRow, "cobblebattle.auth.hint.password");
+      this.renderInputHint(canvas, this.passwordConfirmationInput, this.passwordConfirmationRow, "cobblebattle.auth.hint.confirm");
    }
 
-   private void hint(GuiGraphics graphics, EditBox box, int y, String key) {
-      if (box != null && box.getValue().isEmpty() && !box.isFocused()) {
-         Ui.draw(graphics, this.font, Component.translatable(key), this.originX + 39 + 4, this.textY(y), -7350556, false);
+   private void renderInputHint(GuiGraphics canvas, EditBox inputField, int verticalPosition, String translationKey) {
+      if (inputField != null && inputField.getValue().isEmpty() && !inputField.isFocused()) {
+         Ui.draw(canvas, this.font, Component.translatable(translationKey), this.panelLeft + 39 + 4, this.inputTextTop(verticalPosition), -7350556, false);
       }
    }
 
-   private void drawStatus(GuiGraphics graphics) {
-      Component text = (Component)(this.waiting ? Component.translatable("cobblebattle.auth.waiting") : this.error);
-      if (!text.getString().isEmpty()) {
-         Ui.drawCentered(graphics, this.font, text, this.width / 2, this.originY + 207 + 6, this.waiting ? -7350556 : -44445);
+   private void renderStatusMessage(GuiGraphics canvas) {
+      Component displayText = (Component)(this.requestInProgress ? Component.translatable("cobblebattle.auth.waiting") : this.statusMessage);
+      if (!displayText.getString().isEmpty()) {
+         Ui.drawCentered(canvas, this.font, displayText, this.width / 2, this.panelTop + 207 + 6, this.requestInProgress ? -7350556 : -44445);
       }
    }
 
-   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-      if (keyCode != 257 && keyCode != 335) {
-         return super.keyPressed(keyCode, scanCode, modifiers);
+   public boolean keyPressed(int pressedKeyCode, int physicalScanCode, int modifierMask) {
+      if (pressedKeyCode != 257 && pressedKeyCode != 335) {
+         return super.keyPressed(pressedKeyCode, physicalScanCode, modifierMask);
       } else {
-         EditBox next = this.nextAfterFocused();
-         if (next != null) {
-            this.setFocused(next);
-         } else if (this.submit.active) {
-            this.send();
+         EditBox nextInput = this.nextInputAfterFocus();
+         if (nextInput != null) {
+            this.setFocused(nextInput);
+         } else if (this.submitButton.active) {
+            this.submitCredentials();
          }
 
          return true;
       }
    }
 
-   private EditBox nextAfterFocused() {
-      EditBox[] order = new EditBox[]{this.idBox, this.emailBox, this.codeBox, this.passwordBox, this.confirmBox};
-      boolean seen = false;
+   private EditBox nextInputAfterFocus() {
+      EditBox[] focusOrder = new EditBox[]{this.accountIdInput, this.emailInput, this.verificationCodeInput, this.passwordInput, this.passwordConfirmationInput};
+      boolean passedFocusedInput = false;
 
-      for (EditBox box : order) {
-         if (box != null) {
-            if (seen) {
-               return box;
+      for (EditBox inputField : focusOrder) {
+         if (inputField != null) {
+            if (passedFocusedInput) {
+               return inputField;
             }
 
-            seen = box.isFocused();
+            passedFocusedInput = inputField.isFocused();
          }
       }
 
@@ -410,21 +410,21 @@ public final class AuthScreen extends Screen {
    }
 
    public boolean shouldCloseOnEsc() {
-      return !this.waiting;
+      return !this.requestInProgress;
    }
 
    public boolean isPauseScreen() {
       return false;
    }
 
-   private static final class LinkButton extends Button {
-      private LinkButton(int x, int y, int width, int height, Component label, OnPress onPress) {
-         super(x, y, width, height, label, onPress, DEFAULT_NARRATION);
+   private static final class ModeLinkButton extends Button {
+      private ModeLinkButton(int horizontalPosition, int verticalPosition, int elementWidth, int elementHeight, Component accessibleLabel, OnPress pressAction) {
+         super(horizontalPosition, verticalPosition, elementWidth, elementHeight, accessibleLabel, pressAction, DEFAULT_NARRATION);
       }
 
-      protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+      protected void renderWidget(GuiGraphics canvas, int pointerX, int pointerY, float frameDelta) {
          Ui.drawCentered(
-            graphics,
+            canvas,
             Minecraft.getInstance().font,
             this.getMessage(),
             this.getX() + this.width / 2,
@@ -433,31 +433,31 @@ public final class AuthScreen extends Screen {
          );
       }
 
-      public void updateWidgetNarration(NarrationElementOutput output) {
-         this.defaultButtonNarrationText(output);
+      public void updateWidgetNarration(NarrationElementOutput narrationOutput) {
+         this.defaultButtonNarrationText(narrationOutput);
       }
    }
 
-   private static final class PanelButton extends Button {
-      private PanelButton(int x, int y, int width, int height, Component label, OnPress onPress) {
-         super(x, y, width, height, label, onPress, DEFAULT_NARRATION);
+   private static final class ActionPanelButton extends Button {
+      private ActionPanelButton(int horizontalPosition, int verticalPosition, int elementWidth, int elementHeight, Component accessibleLabel, OnPress pressAction) {
+         super(horizontalPosition, verticalPosition, elementWidth, elementHeight, accessibleLabel, pressAction, DEFAULT_NARRATION);
       }
 
-      protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-         int left = this.getX();
-         int top = this.getY();
-         int right = left + this.width;
-         int bottom = top + this.height;
-         int fill = !this.active ? -12947828 : (this.isHovered() ? -12674087 : -14649667);
-         graphics.fill(left, top, right, bottom, -13684945);
-         graphics.fill(left + 1, top + 1, right - 1, bottom - 1, fill);
+      protected void renderWidget(GuiGraphics canvas, int pointerX, int pointerY, float frameDelta) {
+         int leftEdge = this.getX();
+         int topEdge = this.getY();
+         int rightEdge = leftEdge + this.width;
+         int bottomEdge = topEdge + this.height;
+         int interiorColor = !this.active ? -12947828 : (this.isHovered() ? -12674087 : -14649667);
+         canvas.fill(leftEdge, topEdge, rightEdge, bottomEdge, -13684945);
+         canvas.fill(leftEdge + 1, topEdge + 1, rightEdge - 1, bottomEdge - 1, interiorColor);
          Ui.drawCentered(
-            graphics, Minecraft.getInstance().font, this.getMessage(), left + this.width / 2, top + (this.height - 8) / 2, this.active ? -1376769 : -7362380
+            canvas, Minecraft.getInstance().font, this.getMessage(), leftEdge + this.width / 2, topEdge + (this.height - 8) / 2, this.active ? -1376769 : -7362380
          );
       }
 
-      public void updateWidgetNarration(NarrationElementOutput output) {
-         this.defaultButtonNarrationText(output);
+      public void updateWidgetNarration(NarrationElementOutput narrationOutput) {
+         this.defaultButtonNarrationText(narrationOutput);
       }
    }
 }

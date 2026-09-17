@@ -46,7 +46,7 @@ internal object ClientHandlerRuntime {
             AuthResultPayload.CODEC,
         ) { payload, context ->
             context.queue {
-                (Minecraft.getInstance().screen as? AuthScreen)?.onResult(payload.ok(), payload.message())
+                (Minecraft.getInstance().screen as? AuthScreen)?.handleAuthenticationResult(payload.ok(), payload.message())
             }
         }
     }
