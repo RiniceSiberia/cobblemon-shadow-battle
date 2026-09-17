@@ -243,3 +243,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B6-room-lobby-symbols-2（2026-09-17）
 
 `RoomLobbyScreen` 的私有绘制、滚动条、卡片几何、命中检测、表单切换、发送入口和 `DialogMode` 类型完成语义改名。Screen 的公开构造、更新及输入覆写签名保持；纹理路径、坐标和颜色数值、点击分支、请求字段及发送时机未改变。JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-room-lobby-symbols-2-final.log`；当前 javac 快照为 0 个分析错误，精确匹配不到该文件的基线安全原名。真实客户端渲染、点击和网络发送仍待集成验证。
+
+## B6-leaderboard-symbols（2026-09-17）
+
+`LeaderboardScreen` 的私有纹理与布局常量、排行榜快照、当前玩家与选中条目、画像缓存、滚动位置、条目选择、命中处理和绘制流程完成语义改名。公开构造、更新入口、Screen 覆写及 `drawEntity` 方法名保持；榜单排序和选择规则、画像获取、颜色与坐标数值、滚轮边界、实体渲染参数及姿态恢复顺序未改变。JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-leaderboard-symbols-final.log`；当前 javac 快照为 97 个文件、4277 个声明、0 个分析错误，精确匹配不到该文件的基线安全原名。真实客户端渲染、鼠标交互和实体姿态副作用仍待游戏内验证。
