@@ -25,118 +25,118 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.MenuActionPayload;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.OpenMainMenuPayload;
 
 public final class MainMenuScreen extends Screen {
-   private static final ResourceLocation BASE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/base.png");
-   private static final ResourceLocation SCREEN = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/screen_1.png");
-   private static final ResourceLocation PLATFORM = ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/gui/pokedex/platform_base.png");
-   private static final ResourceLocation PLATFORM_SHADOW = ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/gui/pokedex/platform_shadow.png");
-   private static final ResourceLocation UNKNOWN = ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/gui/pokedex/platform_unknown.png");
-   private static final int WIDTH = 345;
-   private static final int HEIGHT = 207;
-   private static final int HOLE_X = 18;
-   private static final int HOLE_Y = 13;
-   private static final int HOLE_W = 309;
-   private static final int HOLE_H = 183;
-   private static final int TAB_X = 24;
-   private static final int TAB_Y = 15;
-   private static final int TAB_W = 100;
-   private static final int VIEWER_X = 22;
-   private static final int VIEWER_W = 126;
-   private static final int VIEWER_TOP = 30;
-   private static final int FLOOR_Y = 162;
-   private static final int PARTICIPANT_X = 62;
-   private static final int PARTICIPANT_SIZE = 40;
-   private static final int CREATURE_X = 92;
-   private static final int CREATURE_W = 56;
-   private static final int PLATFORM_H = 33;
-   private static final int PLATFORM_Y = 150;
-   private static final int SHADOW_W = 50;
-   private static final int SHADOW_H = 11;
-   private static final int UNKNOWN_W = 28;
-   private static final int UNKNOWN_H = 32;
-   private static final int COLS = 2;
-   private static final int ROWS = 3;
-   private static final int GRID_X = 150;
-   private static final int GRID_Y = 30;
-   private static final int TILE_W = 84;
-   private static final int TILE_H = 50;
-   private static final int GAP_X = 8;
-   private static final int GAP_Y = 7;
-   private static final int TILE_FILL = 1728053247;
-   private static final int TILE_FILL_HOVER = -1711276033;
-   private static final int TILE_EDGE = -1426063361;
-   private static final int TILE_BAR = -1;
-   private static final int TILE_BAR_HOVER = -2082246;
-   private static final int TEXT = -1;
-   private static final int TEXT_SOFT = -1770753;
-   private final OpenMainMenuPayload data;
-   private final List<MainMenuScreen.Tile> menu = new ArrayList<>();
-   private PlayerPortrait portrait;
-   private RenderablePokemon favourite;
-   private final FloatingState creatureState = new FloatingState();
-   private float creatureScale = 40.0F;
-   private int originX;
-   private int originY;
+   private static final ResourceLocation MENU_FRAME_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/base.png");
+   private static final ResourceLocation MENU_CONTENT_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblebattle", "textures/gui/leaderboard/screen_1.png");
+   private static final ResourceLocation CREATURE_PLATFORM_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/gui/pokedex/platform_base.png");
+   private static final ResourceLocation CREATURE_PLATFORM_SHADOW_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/gui/pokedex/platform_shadow.png");
+   private static final ResourceLocation UNKNOWN_CREATURE_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/gui/pokedex/platform_unknown.png");
+   private static final int SCREEN_WIDTH = 345;
+   private static final int SCREEN_HEIGHT = 207;
+   private static final int CONTENT_LEFT_OFFSET = 18;
+   private static final int CONTENT_TOP_OFFSET = 13;
+   private static final int CONTENT_WIDTH = 309;
+   private static final int CONTENT_HEIGHT = 183;
+   private static final int ACCOUNT_LABEL_LEFT_OFFSET = 24;
+   private static final int ACCOUNT_LABEL_TOP_OFFSET = 15;
+   private static final int ACCOUNT_LABEL_WIDTH = 100;
+   private static final int PROFILE_VIEWER_LEFT_OFFSET = 22;
+   private static final int PROFILE_VIEWER_WIDTH = 126;
+   private static final int PROFILE_VIEWER_TOP_OFFSET = 30;
+   private static final int PLATFORM_TOP_OFFSET = 162;
+   private static final int PLAYER_PORTRAIT_LEFT_OFFSET = 62;
+   private static final int PLAYER_PORTRAIT_SIZE = 40;
+   private static final int FEATURED_CREATURE_LEFT_OFFSET = 92;
+   private static final int FEATURED_CREATURE_WIDTH = 56;
+   private static final int PLATFORM_HEIGHT = 33;
+   private static final int PLATFORM_DRAW_TOP_OFFSET = 150;
+   private static final int PLATFORM_SHADOW_WIDTH = 50;
+   private static final int PLATFORM_SHADOW_HEIGHT = 11;
+   private static final int UNKNOWN_MARK_WIDTH = 28;
+   private static final int UNKNOWN_MARK_HEIGHT = 32;
+   private static final int MENU_COLUMN_COUNT = 2;
+   private static final int MENU_ROW_COUNT = 3;
+   private static final int MENU_GRID_LEFT_OFFSET = 150;
+   private static final int MENU_GRID_TOP_OFFSET = 30;
+   private static final int MENU_TILE_WIDTH = 84;
+   private static final int MENU_TILE_HEIGHT = 50;
+   private static final int MENU_TILE_HORIZONTAL_GAP = 8;
+   private static final int MENU_TILE_VERTICAL_GAP = 7;
+   private static final int MENU_TILE_FILL_COLOR = 1728053247;
+   private static final int MENU_TILE_HOVER_COLOR = -1711276033;
+   private static final int MENU_TILE_BORDER_COLOR = -1426063361;
+   private static final int MENU_TILE_ACCENT_COLOR = -1;
+   private static final int MENU_TILE_HOVER_ACCENT_COLOR = -2082246;
+   private static final int PRIMARY_TEXT_COLOR = -1;
+   private static final int SECONDARY_TEXT_COLOR = -1770753;
+   private final OpenMainMenuPayload menuPayload;
+   private final List<MainMenuScreen.MenuActionTile> actionTiles = new ArrayList<>();
+   private PlayerPortrait playerPortrait;
+   private RenderablePokemon featuredPokemon;
+   private final FloatingState featuredPokemonPose = new FloatingState();
+   private float featuredPokemonScale = 40.0F;
+   private int screenLeft;
+   private int screenTop;
 
-   public MainMenuScreen(OpenMainMenuPayload data) {
+   public MainMenuScreen(OpenMainMenuPayload menuPayload) {
       super(Component.translatable("cobblebattle.menu.title"));
-      this.data = data;
+      this.menuPayload = menuPayload;
    }
 
    protected void init() {
-      this.originX = (this.width - 345) / 2;
-      this.originY = (this.height - 207) / 2;
-      this.menu.clear();
-      this.menu
+      this.screenLeft = (this.width - 345) / 2;
+      this.screenTop = (this.height - 207) / 2;
+      this.actionTiles.clear();
+      this.actionTiles
          .add(
-            new MainMenuScreen.Tile(
+            new MainMenuScreen.MenuActionTile(
                Component.translatable("cobblebattle.menu.ranked"),
                Component.translatable("cobblebattle.menu.ranked_sub"),
-               () -> Minecraft.getInstance().setScreen(new RankedScreen(this, this.data.competitions()))
+               () -> Minecraft.getInstance().setScreen(new RankedScreen(this, this.menuPayload.competitions()))
             )
          );
-      this.menu
+      this.actionTiles
          .add(
-            new MainMenuScreen.Tile(
+            new MainMenuScreen.MenuActionTile(
                Component.translatable("cobblebattle.menu.rooms"), Component.translatable("cobblebattle.menu.rooms_sub"), ServerDex::requestRooms
             )
          );
-      this.menu
+      this.actionTiles
          .add(
-            new MainMenuScreen.Tile(Component.translatable("cobblebattle.menu.dex"), Component.translatable("cobblebattle.menu.dex_sub"), ServerDex::requestDex)
+            new MainMenuScreen.MenuActionTile(Component.translatable("cobblebattle.menu.dex"), Component.translatable("cobblebattle.menu.dex_sub"), ServerDex::requestDex)
          );
-      this.menu
+      this.actionTiles
          .add(
-            new MainMenuScreen.Tile(
+            new MainMenuScreen.MenuActionTile(
                Component.translatable("cobblebattle.menu.settings"),
                Component.translatable("cobblebattle.menu.settings_sub"),
                () -> Minecraft.getInstance().setScreen(new SettingsScreen(this))
             )
          );
-      this.menu
+      this.actionTiles
          .add(
-            new MainMenuScreen.Tile(
+            new MainMenuScreen.MenuActionTile(
                Component.translatable("cobblebattle.menu.chat"),
                Component.translatable("cobblebattle.menu.chat_sub"),
                () -> Minecraft.getInstance().setScreen(new ChatRoomScreen())
             )
          );
-      this.menu.add(new MainMenuScreen.Tile(Component.translatable("cobblebattle.menu.logout"), Component.translatable("cobblebattle.menu.logout_sub"), () -> {
+      this.actionTiles.add(new MainMenuScreen.MenuActionTile(Component.translatable("cobblebattle.menu.logout"), Component.translatable("cobblebattle.menu.logout_sub"), () -> {
          NetworkManager.sendToServer(new MenuActionPayload("logout", ""));
          this.onClose();
       }));
-      LocalPlayer blocks = Minecraft.getInstance().player;
-      if (blocks instanceof AbstractClientPlayer) {
-         this.portrait = PlayerPortrait.of(blocks);
+      LocalPlayer localPlayer = Minecraft.getInstance().player;
+      if (localPlayer instanceof AbstractClientPlayer) {
+         this.playerPortrait = PlayerPortrait.of(localPlayer);
       }
 
-      this.favourite = null;
-      this.creatureScale = 40.0F;
-      if (!this.data.favourite().isEmpty()) {
-         Species speciesTemplate = PokemonSpecies.getByName(this.data.favourite());
+      this.featuredPokemon = null;
+      this.featuredPokemonScale = 40.0F;
+      if (!this.menuPayload.favourite().isEmpty()) {
+         Species speciesTemplate = PokemonSpecies.getByName(this.menuPayload.favourite());
          if (speciesTemplate != null) {
-            this.favourite = new RenderablePokemon(speciesTemplate, Set.of(), ItemStack.EMPTY);
-            float blocksx = Math.max(0.1F, this.favourite.getForm().getHitbox().height());
-            this.creatureScale = Math.min(40.0F, 126.0F / blocksx);
+            this.featuredPokemon = new RenderablePokemon(speciesTemplate, Set.of(), ItemStack.EMPTY);
+            float featuredHitboxHeight = Math.max(0.1F, this.featuredPokemon.getForm().getHitbox().height());
+            this.featuredPokemonScale = Math.min(40.0F, 126.0F / featuredHitboxHeight);
          }
       }
    }
@@ -145,65 +145,65 @@ public final class MainMenuScreen extends Screen {
       return false;
    }
 
-   public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-      super.render(graphics, mouseX, mouseY, partialTick);
-      graphics.blit(SCREEN, this.originX, this.originY, 0.0F, 0.0F, 345, 207, 345, 207);
-      Backdrop.draw(graphics, this.originX, this.originY);
-      int left = this.originX + 18;
-      int top = this.originY + 13;
-      graphics.enableScissor(left, top, left + 309, top + 183);
+   public void render(GuiGraphics canvas, int pointerX, int pointerY, float frameDelta) {
+      super.render(canvas, pointerX, pointerY, frameDelta);
+      canvas.blit(MENU_CONTENT_TEXTURE, this.screenLeft, this.screenTop, 0.0F, 0.0F, 345, 207, 345, 207);
+      Backdrop.draw(canvas, this.screenLeft, this.screenTop);
+      int contentLeft = this.screenLeft + 18;
+      int contentTop = this.screenTop + 13;
+      canvas.enableScissor(contentLeft, contentTop, contentLeft + 309, contentTop + 183);
 
       try {
-         this.drawHeader(graphics);
-         this.drawViewer(graphics, partialTick);
+         this.renderHeader(canvas);
+         this.renderProfileViewer(canvas, frameDelta);
 
-         for (int i = 0; i < this.menu.size() && i < 6; i++) {
-            int x = this.tileX(i % 2);
-            int y = this.tileY(i / 2);
-            boolean hover = mouseX >= x && mouseX < x + 84 && mouseY >= y && mouseY < y + 50;
-            this.drawTile(graphics, this.menu.get(i), x, y, hover);
+         for (int actionIndex = 0; actionIndex < this.actionTiles.size() && actionIndex < 6; actionIndex++) {
+            int tileLeft = this.tileLeftFor(actionIndex % 2);
+            int tileTop = this.tileTopFor(actionIndex / 2);
+            boolean isHovered = pointerX >= tileLeft && pointerX < tileLeft + 84 && pointerY >= tileTop && pointerY < tileTop + 50;
+            this.renderMenuTile(canvas, this.actionTiles.get(actionIndex), tileLeft, tileTop, isHovered);
          }
       } finally {
-         graphics.disableScissor();
+         canvas.disableScissor();
       }
 
-      graphics.blit(BASE, this.originX, this.originY, 0.0F, 0.0F, 345, 207, 345, 207);
+      canvas.blit(MENU_FRAME_TEXTURE, this.screenLeft, this.screenTop, 0.0F, 0.0F, 345, 207, 345, 207);
    }
 
-   private void drawHeader(GuiGraphics graphics) {
-      graphics.enableScissor(this.originX + 24, this.originY + 15 - 2, this.originX + 24 + 100, this.originY + 15 + 10);
-      Ui.draw(graphics, this.font, Component.literal(this.data.nickname()), this.originX + 24, this.originY + 15, -1, true);
-      graphics.disableScissor();
-      Component page = Component.translatable("cobblebattle.menu.title")
-         .withStyle(style -> style.withFont(CobblemonResources.INSTANCE.getDEFAULT_LARGE()).withBold(true));
-      Ui.draw(graphics, this.font, page, this.originX + 322 - Ui.width(this.font, page), this.originY + 14, -1, true);
+   private void renderHeader(GuiGraphics canvas) {
+      canvas.enableScissor(this.screenLeft + 24, this.screenTop + 15 - 2, this.screenLeft + 24 + 100, this.screenTop + 15 + 10);
+      Ui.draw(canvas, this.font, Component.literal(this.menuPayload.nickname()), this.screenLeft + 24, this.screenTop + 15, -1, true);
+      canvas.disableScissor();
+      Component titleLabel = Component.translatable("cobblebattle.menu.title")
+         .withStyle(textStyle -> textStyle.withFont(CobblemonResources.INSTANCE.getDEFAULT_LARGE()).withBold(true));
+      Ui.draw(canvas, this.font, titleLabel, this.screenLeft + 322 - Ui.width(this.font, titleLabel), this.screenTop + 14, -1, true);
    }
 
-   private void drawViewer(GuiGraphics graphics, float partialTick) {
-      int paneLeft = this.originX + 22;
-      int paneTop = this.originY + 30;
-      graphics.enableScissor(paneLeft, paneTop, paneLeft + 126, this.originY + 150 + 33);
+   private void renderProfileViewer(GuiGraphics canvas, float frameDelta) {
+      int viewerLeft = this.screenLeft + 22;
+      int viewerTop = this.screenTop + 30;
+      canvas.enableScissor(viewerLeft, viewerTop, viewerLeft + 126, this.screenTop + 150 + 33);
 
       try {
-         graphics.blit(PLATFORM, paneLeft, this.originY + 150, 126, 33, 0.0F, 0.0F, 113, 30, 113, 30);
-         this.drawShadow(graphics, this.originX + 62);
-         this.drawShadow(graphics, this.originX + 92 + 28);
-         if (this.portrait != null && this.portrait.entity() != null) {
-            LeaderboardScreen.drawEntity(graphics, this.originX + 62, this.originY + 162, 40, -35.0F, -10.0F, this.portrait.entity());
+         canvas.blit(CREATURE_PLATFORM_TEXTURE, viewerLeft, this.screenTop + 150, 126, 33, 0.0F, 0.0F, 113, 30, 113, 30);
+         this.renderPlatformShadow(canvas, this.screenLeft + 62);
+         this.renderPlatformShadow(canvas, this.screenLeft + 92 + 28);
+         if (this.playerPortrait != null && this.playerPortrait.entity() != null) {
+            LeaderboardScreen.drawEntity(canvas, this.screenLeft + 62, this.screenTop + 162, 40, -35.0F, -10.0F, this.playerPortrait.entity());
          }
 
-         if (this.favourite != null) {
-            graphics.pose().pushPose();
-            graphics.pose().translate(this.originX + 92 + 28.0, this.originY + 162, 0.0);
-            Quaternionf rotation = QuaternionUtilsKt.fromEulerXYZDegrees(new Quaternionf(), new Vector3f(5.0F, LeaderboardScreen.FACING, 0.0F));
+         if (this.featuredPokemon != null) {
+            canvas.pose().pushPose();
+            canvas.pose().translate(this.screenLeft + 92 + 28.0, this.screenTop + 162, 0.0);
+            Quaternionf profileRotation = QuaternionUtilsKt.fromEulerXYZDegrees(new Quaternionf(), new Vector3f(5.0F, LeaderboardScreen.FACING, 0.0F));
             CobblemonCompat.drawProfile(
-               this.favourite,
-               graphics.pose(),
-               rotation,
+               this.featuredPokemon,
+               canvas.pose(),
+               profileRotation,
                PoseType.PROFILE,
-               this.creatureState,
-               partialTick,
-               this.creatureScale,
+               this.featuredPokemonPose,
+               frameDelta,
+               this.featuredPokemonScale,
                true,
                1.0F,
                1.0F,
@@ -213,57 +213,57 @@ public final class MainMenuScreen extends Screen {
                0.0F,
                13
             );
-            graphics.pose().popPose();
+            canvas.pose().popPose();
          } else {
-            UnknownMark.draw(graphics, this.originX + 92 + 28, this.originY + 162, 32);
+            UnknownMark.draw(canvas, this.screenLeft + 92 + 28, this.screenTop + 162, 32);
          }
       } finally {
-         graphics.disableScissor();
+         canvas.disableScissor();
       }
    }
 
-   private void drawShadow(GuiGraphics graphics, int centreX) {
-      graphics.blit(PLATFORM_SHADOW, centreX - 25, this.originY + 162 - 5, 50, 11, 0.0F, 0.0F, 90, 20, 90, 20);
+   private void renderPlatformShadow(GuiGraphics canvas, int centerX) {
+      canvas.blit(CREATURE_PLATFORM_SHADOW_TEXTURE, centerX - 25, this.screenTop + 162 - 5, 50, 11, 0.0F, 0.0F, 90, 20, 90, 20);
    }
 
-   private void drawTile(GuiGraphics graphics, MainMenuScreen.Tile tile, int x, int y, boolean hover) {
-      graphics.fill(x, y, x + 84, y + 50, hover ? -1711276033 : 1728053247);
-      graphics.fill(x, y, x + 84, y + 1, -1426063361);
-      graphics.fill(x, y + 50 - 1, x + 84, y + 50, -1426063361);
-      graphics.fill(x, y, x + 1, y + 50, -1426063361);
-      graphics.fill(x + 84 - 1, y, x + 84, y + 50, -1426063361);
-      graphics.fill(x + 5, y + 5, x + 8, y + 50 - 5, hover ? -2082246 : -1);
-      int centre = x + 8 + 38;
-      Component title = tile.title().copy().withStyle(style -> style.withFont(CobblemonResources.INSTANCE.getDEFAULT_LARGE()).withBold(true));
-      graphics.enableScissor(x + 9, y, x + 84 - 2, y + 50);
-      Ui.drawCentered(graphics, this.font, title, centre, y + 14, -1);
-      Ui.drawCentered(graphics, this.font, tile.subtitle(), centre, y + 30, -1770753);
-      graphics.disableScissor();
+   private void renderMenuTile(GuiGraphics canvas, MainMenuScreen.MenuActionTile menuTile, int tileLeft, int tileTop, boolean isHovered) {
+      canvas.fill(tileLeft, tileTop, tileLeft + 84, tileTop + 50, isHovered ? -1711276033 : 1728053247);
+      canvas.fill(tileLeft, tileTop, tileLeft + 84, tileTop + 1, -1426063361);
+      canvas.fill(tileLeft, tileTop + 50 - 1, tileLeft + 84, tileTop + 50, -1426063361);
+      canvas.fill(tileLeft, tileTop, tileLeft + 1, tileTop + 50, -1426063361);
+      canvas.fill(tileLeft + 84 - 1, tileTop, tileLeft + 84, tileTop + 50, -1426063361);
+      canvas.fill(tileLeft + 5, tileTop + 5, tileLeft + 8, tileTop + 50 - 5, isHovered ? -2082246 : -1);
+      int textCenter = tileLeft + 8 + 38;
+      Component tileTitle = menuTile.title().copy().withStyle(textStyle -> textStyle.withFont(CobblemonResources.INSTANCE.getDEFAULT_LARGE()).withBold(true));
+      canvas.enableScissor(tileLeft + 9, tileTop, tileLeft + 84 - 2, tileTop + 50);
+      Ui.drawCentered(canvas, this.font, tileTitle, textCenter, tileTop + 14, -1);
+      Ui.drawCentered(canvas, this.font, menuTile.subtitle(), textCenter, tileTop + 30, -1770753);
+      canvas.disableScissor();
    }
 
-   private int tileX(int col) {
-      return this.originX + 150 + col * 92;
+   private int tileLeftFor(int columnIndex) {
+      return this.screenLeft + 150 + columnIndex * 92;
    }
 
-   private int tileY(int row) {
-      return this.originY + 30 + row * 57;
+   private int tileTopFor(int rowIndex) {
+      return this.screenTop + 30 + rowIndex * 57;
    }
 
-   public boolean mouseClicked(double mouseX, double mouseY, int button) {
-      if (button == 0) {
-         for (int i = 0; i < this.menu.size() && i < 6; i++) {
-            int x = this.tileX(i % 2);
-            int y = this.tileY(i / 2);
-            if (mouseX >= x && mouseX < x + 84 && mouseY >= y && mouseY < y + 50) {
-               this.menu.get(i).action().run();
+   public boolean mouseClicked(double pointerX, double pointerY, int clickButton) {
+      if (clickButton == 0) {
+         for (int actionIndex = 0; actionIndex < this.actionTiles.size() && actionIndex < 6; actionIndex++) {
+            int tileLeft = this.tileLeftFor(actionIndex % 2);
+            int tileTop = this.tileTopFor(actionIndex / 2);
+            if (pointerX >= tileLeft && pointerX < tileLeft + 84 && pointerY >= tileTop && pointerY < tileTop + 50) {
+               this.actionTiles.get(actionIndex).action().run();
                return true;
             }
          }
       }
 
-      return super.mouseClicked(mouseX, mouseY, button);
+      return super.mouseClicked(pointerX, pointerY, clickButton);
    }
 
-   private record Tile(Component title, Component subtitle, Runnable action) {
+   private record MenuActionTile(Component title, Component subtitle, Runnable action) {
    }
 }
