@@ -251,3 +251,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B6-auth-screen-symbols（2026-09-17）
 
 `AuthScreen` 的认证模式、账号与邮箱输入、验证码请求、密码确认、提交状态、焦点顺序、内部按钮和绘制流程完成语义改名。公开构造、Screen 覆写、认证规则调用、字段长度、冷却时间、翻译键、颜色和坐标数值保持；包内结果回调改名后同步更新 Kotlin 客户端处理器。首次构建检出 Kotlin 仍调用旧回调，修正后 JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-auth-screen-symbols-final.log`；当前 javac 快照为 97 个文件、4277 个声明、0 个分析错误，精确匹配不到该文件的基线安全原名。真实注册、登录、邮箱绑定、验证码和焦点交互仍待客户端与远端联调。
+
+## B6-team-preview-symbols（2026-09-17）
+
+`TeamPreviewScreen` 的纹理与布局常量、预览状态、选择与锁定判断、阵容槽位、模型和姿态缓存、训练家面板、确认按钮、提示框及提交入口完成语义改名。公开构造、`battleId`、`update` 和 Screen 覆写保持；选择顺序、确认条件、倒计时、坐标与颜色数值、模型姿态、物品名称回退及 `TeamPickPayload` 字段顺序未改变。JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-team-preview-symbols.log`；当前 javac 快照为 97 个文件、4277 个声明、0 个分析错误，精确匹配不到该文件的基线安全原名。真实客户端模型渲染、点击选择、倒计时和服务端确认仍待游戏内联调。
