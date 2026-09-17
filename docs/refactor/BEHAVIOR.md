@@ -231,3 +231,7 @@ QueueRules.requiredSlots 对 null、空值和未知类型返回1，对 doubles/d
 ## B5-battle-choice-restrictions（2026-09-16）
 
 `BattleActorMixin` 中 Mega、Z-Move、Dynamax、Terastal 和 Ultra Burst 的条款匹配与提示键投影迁入 Kotlin `BattleChoiceRestrictions`。机制标识继续按根区域忽略大小写，规则条款仍精确匹配；空规则、未知机制和非玩家 actor 不取消选择。命中后仍依次清空已有响应、要求重新选择、发送队列请求与选择包、发送红色提示并取消回调，异常继续由原入口捕获和记录。三项规则契约、既有 Mixin 元数据契约及 JDK21 离线 `clean build` 通过，259 项测试、0 失败、0 错误，日志 `D:/workspace/gradle-battle-choice-restrictions.log`。真实游戏内回调和发包顺序仍待验证，因此 Mixin 文件保持待验证。
+
+## B6-symbol-coverage-baseline（2026-09-17）
+
+本批次未改变业务行为。基线成员候选沿用既有公开接口、协议、API、Mixin 和生成成员排除规则，并补入具名内部类型；当前 Java 以完整 Gradle 编译类路径执行 javac 语义分析，97 个文件、4277 个声明、0 个分析错误。3487 个安全候选中仍有 2409 个原名精确存在，1078 个原声明键已消失，30.91% 仅是待人工对应的覆盖上限。剩余项写入 `RENAME_REMAINING.csv`，删除或迁移不会在建立职责对应前计作最终改名。
