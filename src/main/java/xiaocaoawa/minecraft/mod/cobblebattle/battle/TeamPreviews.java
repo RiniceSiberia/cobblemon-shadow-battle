@@ -110,7 +110,7 @@ final class TeamPreviews {
                }
 
                this.service.tellParticipant(session.getPlayer(), Msg.of(ChatFormatting.YELLOW, "preview.closed"));
-               this.service.battleQueue().drop(session.getPlayer());
+               this.service.queueCoordinator().drop(session.getPlayer());
          }
       }
    }
@@ -135,7 +135,7 @@ final class TeamPreviews {
    }
 
    private void send(String battleId, UUID participantUuid, List<Integer> picks) {
-      this.service.client().send(TeamPreviewMessages.pick(battleId, participantUuid, picks));
+      this.service.serverClient().send(TeamPreviewMessages.pick(battleId, participantUuid, picks));
    }
 
 }

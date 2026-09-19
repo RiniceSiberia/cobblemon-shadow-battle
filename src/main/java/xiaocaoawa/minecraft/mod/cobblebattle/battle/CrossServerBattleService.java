@@ -67,125 +67,125 @@ import io.github.rinicesiberia.shadowbattle.transport.ServiceRequests;
 import io.github.rinicesiberia.shadowbattle.transport.ServiceProtocolMessages;
 
 public final class CrossServerBattleService {
-   private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle");
-   private final CobbleBattleConfig config;
-   private final RemoteDex dex = new RemoteDex();
-   private final BattleQueue battleQueue = new BattleQueue(this);
-   private final MirrorFactory mirrorFactory = new MirrorFactory(this);
+   private static final Logger SERVICE_LOGGER = LoggerFactory.getLogger("CobbleBattle");
+   private final CobbleBattleConfig serviceConfig;
+   private final RemoteDex remoteDex = new RemoteDex();
+   private final BattleQueue matchmakingQueue = new BattleQueue(this);
+   private final MirrorFactory battleMirrorFactory = new MirrorFactory(this);
    private final MirrorLifecycleCleanup lifecycleCleanup = new MirrorLifecycleCleanup(this);
-   private final SpectatorFactory spectators = new SpectatorFactory(this);
-   private final TeamPreviews previews = new TeamPreviews(this);
-   private final AuthService auth = new AuthService();
-   private final Map<String, CrossServerBattleService.Ranked> ranked = new LinkedHashMap<>();
+   private final SpectatorFactory spectatorSessions = new SpectatorFactory(this);
+   private final TeamPreviews teamPreviewSessions = new TeamPreviews(this);
+   private final AuthService authenticationService = new AuthService();
+   private final Map<String, CrossServerBattleService.Ranked> rankedCompetitions = new LinkedHashMap<>();
    private final ServiceRequestLedger requestLedger = new ServiceRequestLedger();
-   private BattleServerClient client;
-   private MinecraftServer minecraftServer;
+   private BattleServerClient battleServerClient;
+   private MinecraftServer gameServer;
    private final Set<UUID> waitingChunksAuthOpens = ConcurrentHashMap.newKeySet();
-   private ScheduledExecutorService idleTimer;
-   private ScheduledFuture<?> idleDisconnect;
+   private ScheduledExecutorService idleDisconnectScheduler;
+   private ScheduledFuture<?> pendingIdleDisconnect;
    private final RoomDirectoryState<List<RoomListPayload.Room>> roomDirectory = new RoomDirectoryState<>();
    private volatile int chatObserversReported = -1;
-   private volatile boolean chatEnabled = true;
-   private volatile boolean emailEnabled = false;
+   private volatile boolean remoteChatEnabled = true;
+   private volatile boolean emailAuthenticationEnabled = false;
 
    public Collection<CrossServerBattleService.Ranked> ranked() {
-      return this.ranked.values();
+      return this.rankedCompetitions.values();
    }
 
-   public boolean hasRanked(String id) {
-      return id != null && this.ranked.containsKey(id);
+   public boolean hasRanked(String rankedId) {
+      return rankedId != null && this.rankedCompetitions.containsKey(rankedId);
    }
 
-   public CrossServerBattleService.Ranked ranked(String id) {
-      return id == null ? null : this.ranked.get(id);
+   public CrossServerBattleService.Ranked ranked(String rankedId) {
+      return rankedId == null ? null : this.rankedCompetitions.get(rankedId);
    }
 
-   public CrossServerBattleService(CobbleBattleConfig config) {
-      this.config = config;
+   public CrossServerBattleService(CobbleBattleConfig serviceConfig) {
+      this.serviceConfig = serviceConfig;
    }
 
    public RemoteDex dex() {
-      return this.dex;
+      return this.remoteDex;
    }
 
    public CobbleBattleConfig config() {
-      return this.config;
+      return this.serviceConfig;
    }
 
    public boolean isConnected() {
-      return this.client != null && this.client.isHandshaken();
+      return this.battleServerClient != null && this.battleServerClient.isHandshaken();
    }
 
    public String connectionRefusal() {
-      return this.client == null ? null : this.client.refusedReason();
+      return this.battleServerClient == null ? null : this.battleServerClient.refusedReason();
    }
 
-   public Component notConnected(String key) {
-      String refused = this.connectionRefusal();
-      if (refused != null) {
-         return Msg.of(ChatFormatting.RED, "conn.refused", refused);
+   public Component notConnected(String translationKey) {
+      String disconnectedMessage = this.connectionRefusal();
+      if (disconnectedMessage != null) {
+         return Msg.of(ChatFormatting.RED, "conn.refused", disconnectedMessage);
       } else {
-         this.ensureConnected();
-         return Msg.of(ChatFormatting.RED, key);
+         this.requestConnection();
+         return Msg.of(ChatFormatting.RED, translationKey);
       }
    }
 
-   private void ensureConnected() {
+   private void requestConnection() {
       if (ConnectionLifecycleRules.shouldRequestConnection(
-         this.client != null, this.client != null && this.client.isWanted(), this.client == null ? null : this.client.refusedReason()
+         this.battleServerClient != null, this.battleServerClient != null && this.battleServerClient.isWanted(), this.battleServerClient == null ? null : this.battleServerClient.refusedReason()
       )) {
-         this.client.connect();
+         this.battleServerClient.connect();
       }
    }
 
    public boolean isQueued(UUID participantUuid) {
-      return this.battleQueue.contains(participantUuid);
+      return this.matchmakingQueue.contains(participantUuid);
    }
 
-   BattleServerClient client() {
-      return this.client;
+   BattleServerClient serverClient() {
+      return this.battleServerClient;
    }
 
-   MinecraftServer server() {
-      return this.minecraftServer;
+   MinecraftServer runningServer() {
+      return this.gameServer;
    }
 
-   BattleQueue battleQueue() {
-      return this.battleQueue;
+   BattleQueue queueCoordinator() {
+      return this.matchmakingQueue;
    }
 
    ServerPlayer participantOf(UUID participantUuid) {
-      MinecraftServer server = this.minecraftServer;
+      MinecraftServer server = this.gameServer;
       return server == null ? null : server.getPlayerList().getPlayer(participantUuid);
    }
 
-   public void onServerStarted(MinecraftServer server) {
-      this.minecraftServer = server;
-      this.dex.loadFromDisk();
-      CrossServerBattles.setChoiceRelay(this::relayChoice);
-      CrossServerBattles.setOutputRelay(this::relayOutput);
-      this.client = new BattleServerClient(this.config, this::onDocument, this::onConnected, this::onDisconnected);
-      this.client.setOnConnectFailed(this::onConnectFailed);
-      this.client.start();
-      if (ConnectionLifecycleRules.connectOnServerStart(this.config.keepConnectedWhenEmpty, server.getPlayerCount())) {
-         this.client.connect();
+   public void onServerStarted(MinecraftServer startedServer) {
+      this.gameServer = startedServer;
+      this.remoteDex.loadFromDisk();
+      CrossServerBattles.setChoiceRelay(this::sendBattleChoice);
+      CrossServerBattles.setOutputRelay(this::sendBattleOutput);
+      this.battleServerClient = new BattleServerClient(this.serviceConfig, this::onDocument, this::sendHandshakeAfterConnect, this::handleRemoteDisconnect);
+      this.battleServerClient.setOnConnectFailed(this::handleConnectionFailure);
+      this.battleServerClient.start();
+      if (ConnectionLifecycleRules.connectOnServerStart(this.serviceConfig.keepConnectedWhenEmpty, startedServer.getPlayerCount())) {
+         this.battleServerClient.connect();
       }
    }
 
    public void onPlayerJoin(ServerPlayer participant) {
-      this.cancelIdleDisconnect();
-      this.ensureConnected();
+      this.cancelScheduledDisconnect();
+      this.requestConnection();
       this.pushChatState(participant);
    }
 
-   private Component connectThenOpenAuth(ServerPlayer participant) {
-      String refused = this.connectionRefusal();
+   private Component connectAndOpenAuthentication(ServerPlayer participant) {
+      String connectionMessage = this.connectionRefusal();
       this.waitingChunksAuthOpens.add(participant.getUUID());
-      if (this.client != null) {
-         this.client.connect();
+      if (this.battleServerClient != null) {
+         this.battleServerClient.connect();
       }
 
-      return refused != null ? Msg.of(ChatFormatting.YELLOW, "auth.connecting_retry", refused) : Msg.of(ChatFormatting.YELLOW, "auth.connecting");
+      return connectionMessage != null ? Msg.of(ChatFormatting.YELLOW, "auth.connecting_retry", connectionMessage) : Msg.of(ChatFormatting.YELLOW, "auth.connecting");
    }
 
    private void openWaitingChunksAuth() {
@@ -200,94 +200,94 @@ public final class CrossServerBattleService {
       }
    }
 
-   private void onConnectFailed(String why) {
-      for (UUID waiting : List.copyOf(this.waitingChunksAuthOpens)) {
-         this.waitingChunksAuthOpens.remove(waiting);
-         this.tellParticipant(waiting, Msg.of(ChatFormatting.RED, "auth.connect_failed", why));
+   private void handleConnectionFailure(String failureReason) {
+      for (UUID authenticationWaiter : List.copyOf(this.waitingChunksAuthOpens)) {
+         this.waitingChunksAuthOpens.remove(authenticationWaiter);
+         this.tellParticipant(authenticationWaiter, Msg.of(ChatFormatting.RED, "auth.connect_failed", failureReason));
       }
    }
 
-   private synchronized void cancelIdleDisconnect() {
-      if (this.idleDisconnect != null) {
-         this.idleDisconnect.cancel(false);
-         this.idleDisconnect = null;
+   private synchronized void cancelScheduledDisconnect() {
+      if (this.pendingIdleDisconnect != null) {
+         this.pendingIdleDisconnect.cancel(false);
+         this.pendingIdleDisconnect = null;
       }
    }
 
-   private synchronized void scheduleIdleDisconnect() {
-      if (!this.config.keepConnectedWhenEmpty && this.client != null) {
-         this.cancelIdleDisconnect();
-         if (this.idleTimer == null) {
-            this.idleTimer = Executors.newSingleThreadScheduledExecutor(r -> {
-               Thread t = new Thread(r, "CobbleBattle-Idle");
-               t.setDaemon(true);
-               return t;
+   private synchronized void scheduleDisconnectWhenUnused() {
+      if (!this.serviceConfig.keepConnectedWhenEmpty && this.battleServerClient != null) {
+         this.cancelScheduledDisconnect();
+         if (this.idleDisconnectScheduler == null) {
+            this.idleDisconnectScheduler = Executors.newSingleThreadScheduledExecutor(scheduledTask -> {
+               Thread idleThread = new Thread(scheduledTask, "CobbleBattle-Idle");
+               idleThread.setDaemon(true);
+               return idleThread;
             });
          }
 
-         long seconds = ConnectionLifecycleRules.idleDelaySeconds(this.config.idleDisconnectSeconds);
-         this.idleDisconnect = this.idleTimer.schedule(() -> this.onServerThread(() -> {
-            MinecraftServer server = this.minecraftServer;
-            if (server != null && this.client != null && ConnectionLifecycleRules.shouldReleaseIdleConnection(server.getPlayerCount(), this.client.isWanted())) {
-               LOGGER.info("No players online for {}s, letting the battle server connection go", seconds);
-               this.client.disconnect("no players online");
+         long delaySeconds = ConnectionLifecycleRules.idleDelaySeconds(this.serviceConfig.idleDisconnectSeconds);
+         this.pendingIdleDisconnect = this.idleDisconnectScheduler.schedule(() -> this.executeOnServerThread(() -> {
+            MinecraftServer activeServer = this.gameServer;
+            if (activeServer != null && this.battleServerClient != null && ConnectionLifecycleRules.shouldReleaseIdleConnection(activeServer.getPlayerCount(), this.battleServerClient.isWanted())) {
+               SERVICE_LOGGER.info("No players online for {}s, letting the battle server connection go", delaySeconds);
+               this.battleServerClient.disconnect("no players online");
             }
-         }), seconds, TimeUnit.SECONDS);
+         }), delaySeconds, TimeUnit.SECONDS);
       }
    }
 
-   public void reconnect(String why) {
-      if (this.client != null) {
-         this.client.reconnect(why);
+   public void reconnect(String reconnectReason) {
+      if (this.battleServerClient != null) {
+         this.battleServerClient.reconnect(reconnectReason);
       }
    }
 
    public void onServerStopping() {
-      this.cancelIdleDisconnect();
-      if (this.idleTimer != null) {
-         this.idleTimer.shutdownNow();
-         this.idleTimer = null;
+      this.cancelScheduledDisconnect();
+      if (this.idleDisconnectScheduler != null) {
+         this.idleDisconnectScheduler.shutdownNow();
+         this.idleDisconnectScheduler = null;
       }
 
-      if (this.client != null) {
-         this.client.stop();
+      if (this.battleServerClient != null) {
+         this.battleServerClient.stop();
       }
 
-      for (MirrorBattle mirror : CrossServerBattles.all()) {
-         this.lifecycleCleanup.sweepEntities(mirror, 0L);
+      for (MirrorBattle activeMirror : CrossServerBattles.all()) {
+         this.lifecycleCleanup.sweepEntities(activeMirror, 0L);
       }
 
       CrossServerBattles.clear();
-      this.battleQueue.clear();
-      this.previews.clear();
+      this.matchmakingQueue.clear();
+      this.teamPreviewSessions.clear();
    }
 
-   private void onConnected() {
-      JsonObject hello = ServiceProtocolMessages.hello(
-         this.client.nextRef(),
-         this.config.authToken,
+   private void sendHandshakeAfterConnect() {
+      JsonObject handshake = ServiceProtocolMessages.hello(
+         this.battleServerClient.nextRef(),
+         this.serviceConfig.authToken,
          ServerIdentity.get(),
          Platform.isModLoaded("cobblemon") ? Platform.getMod("cobblemon").getVersion() : "unknown"
       );
-      this.client.sendHandshake(hello);
+      this.battleServerClient.sendHandshake(handshake);
    }
 
-   private void onDisconnected(String reason) {
-      if (this.client != null && !this.client.isWanted()) {
-         LOGGER.info("Battle server connection closed ({}).", reason);
+   private void handleRemoteDisconnect(String disconnectReason) {
+      if (this.battleServerClient != null && !this.battleServerClient.isWanted()) {
+         SERVICE_LOGGER.info("Battle server connection closed ({}).", disconnectReason);
       } else {
-         LOGGER.warn("Lost the battle server ({}). Aborting {} mirror battle(s).", reason, CrossServerBattles.size());
+         SERVICE_LOGGER.warn("Lost the battle server ({}). Aborting {} mirror battle(s).", disconnectReason, CrossServerBattles.size());
       }
 
-      this.dex.suspend(reason);
+      this.remoteDex.suspend(disconnectReason);
       this.chatObserversReported = -1;
-      this.onServerThread(this.roomDirectory::clearSession);
-      this.battleQueue.clear();
-      this.previews.clear();
-      this.auth.clear();
+      this.executeOnServerThread(this.roomDirectory::clearSession);
+      this.matchmakingQueue.clear();
+      this.teamPreviewSessions.clear();
+      this.authenticationService.clear();
 
-      for (MirrorBattle mirror : CrossServerBattles.all()) {
-         this.lifecycleCleanup.abort(mirror, Msg.of("battle.connection_lost").withStyle(ChatFormatting.RED));
+      for (MirrorBattle activeMirror : CrossServerBattles.all()) {
+         this.lifecycleCleanup.abort(activeMirror, Msg.of("battle.connection_lost").withStyle(ChatFormatting.RED));
       }
    }
 
@@ -295,114 +295,114 @@ public final class CrossServerBattleService {
       String type = BattleServerClient.str(document, "t", "");
       switch (type) {
          case "ping":
-            this.client.send(BattleServerClient.msg("pong"));
+            this.battleServerClient.send(BattleServerClient.msg("pong"));
             break;
          case "hello_ack":
-            this.onHelloAck(document);
+            this.handleHandshakeAccepted(document);
             break;
          case "ranked_update":
-            this.readRanked(document);
+            this.replaceRankedCompetitions(document);
             break;
          case "dex_snapshot":
-            this.dex.accept(document);
+            this.remoteDex.accept(document);
             break;
          case "queue_ack":
-            this.battleQueue.onQueueAck(document);
+            this.matchmakingQueue.onQueueAck(document);
             break;
          case "queue_left":
-            this.battleQueue.onQueueLeft(document);
+            this.matchmakingQueue.onQueueLeft(document);
             break;
          case "queue_wait":
-            this.battleQueue.onQueueWait(document);
+            this.matchmakingQueue.onQueueWait(document);
             break;
          case "room_created":
-            this.battleQueue.onRoomCreated(document);
+            this.matchmakingQueue.onRoomCreated(document);
             break;
          case "room_list":
-            this.onServerThread(() -> this.onRoomList(document));
+            this.executeOnServerThread(() -> this.handleRoomList(document));
             break;
          case "room_state":
-            this.onRoomState(document);
+            this.handleRoomState(document);
             break;
          case "room_info":
-            this.battleQueue.onRoomBattleDetails(document);
+            this.matchmakingQueue.onRoomBattleDetails(document);
             break;
          case "room_closed":
-            this.onRoomClosed(document);
+            this.handleRoomClosed(document);
             break;
          case "preview_open":
-            this.onServerThread(() -> this.previews.onOpen(document));
+            this.executeOnServerThread(() -> this.teamPreviewSessions.onOpen(document));
             break;
          case "preview_state":
-            this.onServerThread(() -> this.previews.onState(document));
+            this.executeOnServerThread(() -> this.teamPreviewSessions.onState(document));
             break;
          case "preview_closed":
-            this.onServerThread(() -> this.previews.onClosed(document));
+            this.executeOnServerThread(() -> this.teamPreviewSessions.onClosed(document));
             break;
          case "match_found":
-            this.onMatchFound(document);
+            this.handleMatchFound(document);
             break;
          case "battle_start":
-            this.onBattleStart(document);
+            this.handleBattleStarted(document);
             break;
          case "output":
-            this.onOutput(document);
+            this.handleBattleOutput(document);
             break;
          case "battle_choice":
-            this.onRelayedChoice(document);
+            this.handleRelayedChoice(document);
             break;
          case "spectate_start":
-            this.onServerThread(() -> this.spectators.begin(document));
+            this.executeOnServerThread(() -> this.spectatorSessions.begin(document));
             break;
          case "spectate_end":
-            this.onServerThread(() -> this.spectators.end(document));
+            this.executeOnServerThread(() -> this.spectatorSessions.end(document));
             break;
          case "battle_end":
-            this.onBattleEnd(document);
+            this.handleBattleEnded(document);
             break;
          case "forfeit":
-            this.onOpponentForfeit(document);
+            this.handleOpponentForfeit(document);
             break;
          case "chat":
-            this.onChat(document);
+            this.handleChatLine(document);
             break;
          case "leaderboard":
-            this.onLeaderboard(document);
+            this.handleLeaderboard(document);
             break;
          case "account_ok":
-            this.onAccountOk(document);
+            this.handleAuthenticationAccepted(document);
             break;
          case "account_code_ok":
-            this.onAccountCodeOk(document);
+            this.handleVerificationCodeAccepted(document);
             break;
          case "error":
-            this.onError(document);
+            this.handleServiceError(document);
             break;
          default:
-            LOGGER.warn("Unknown message type '{}' from the battle server", type);
+            SERVICE_LOGGER.warn("Unknown message type '{}' from the battle server", type);
       }
    }
 
-   private void onHelloAck(JsonObject document) {
-      this.client.setHandshaken(true);
+   private void handleHandshakeAccepted(JsonObject document) {
+      this.battleServerClient.setHandshaken(true);
       HandshakeResponseDecoding.Settings settings = HandshakeResponseDecoding.decode(document);
-      this.readRanked(document);
-      this.dex.setStrictBaseStats(settings.getStrictBaseStats());
-      this.dex
+      this.replaceRankedCompetitions(document);
+      this.remoteDex.setStrictBaseStats(settings.getStrictBaseStats());
+      this.remoteDex
          .setTeamRules(
             settings.getStrictAbilities(), settings.getStrictMoves(), settings.getMaxEvPerStat(), settings.getMaxEvTotal(), settings.getMaxIv()
          );
-      this.chatEnabled = settings.getChatEnabled();
-      if (!this.chatEnabled) {
-         LOGGER.info("The battle server has chat switched off; the chat panel stays hidden");
+      this.remoteChatEnabled = settings.getChatEnabled();
+      if (!this.remoteChatEnabled) {
+         SERVICE_LOGGER.info("The battle server has chat switched off; the chat panel stays hidden");
       }
 
-      this.emailEnabled = settings.getEmailEnabled();
-      if (!this.emailEnabled) {
-         LOGGER.info("The battle server has no mailer; the account screen stays on account names");
+      this.emailAuthenticationEnabled = settings.getEmailEnabled();
+      if (!this.emailAuthenticationEnabled) {
+         SERVICE_LOGGER.info("The battle server has no mailer; the account screen stays on account names");
       }
 
-      LOGGER.info(
+      SERVICE_LOGGER.info(
          "Handshake complete with battle server instance '{}' (dex {}, {} species)",
          new Object[]{
             settings.getInstance(), settings.getDexReady() ? "ready" : "NOT ready", settings.getSpeciesCount()
@@ -410,98 +410,98 @@ public final class CrossServerBattleService {
       );
       this.reportChatObservers();
       this.openWaitingChunksAuth();
-      HandshakeResponseDecoding.DexAction dexAction = HandshakeResponseDecoding.decideDex(settings, this.dex.cachedDigest());
+      HandshakeResponseDecoding.DexAction dexAction = HandshakeResponseDecoding.decideDex(settings, this.remoteDex.cachedDigest());
       if (dexAction == HandshakeResponseDecoding.DexAction.Invalidate.INSTANCE) {
-         this.dex.invalidate("the battle server has no dex");
-         LOGGER.warn(
+         this.remoteDex.invalidate("the battle server has no dex");
+         SERVICE_LOGGER.warn(
             "The battle server has no dex yet. Cross-server battles stay unavailable until it has one - the Cobblemon jar belongs in its cobblemon/ folder."
          );
       } else if (dexAction instanceof HandshakeResponseDecoding.DexAction.AcceptCached cached) {
-         this.dex.accept(unchangedDex(cached.getDigest()));
+         this.remoteDex.accept(unchangedDexDocument(cached.getDigest()));
       } else {
-         this.requestDex();
+         this.requestRemoteDex();
       }
    }
 
-   private static JsonObject unchangedDex(String digest) {
-      JsonObject same = new JsonObject();
-      same.addProperty("digest", digest);
-      same.addProperty("unchanged", true);
-      return same;
+   private static JsonObject unchangedDexDocument(String expectedDigest) {
+      JsonObject responseDocument = new JsonObject();
+      responseDocument.addProperty("digest", expectedDigest);
+      responseDocument.addProperty("unchanged", true);
+      return responseDocument;
    }
 
-   private void readRanked(JsonObject document) {
-      this.ranked.clear();
-      this.ranked.putAll(RankedCompetitionDecoding.decode(document));
+   private void replaceRankedCompetitions(JsonObject document) {
+      this.rankedCompetitions.clear();
+      this.rankedCompetitions.putAll(RankedCompetitionDecoding.decode(document));
 
-      if (this.ranked.isEmpty()) {
-         LOGGER.warn("The battle server offers no ranked competitions - nobody can queue. Its ranked/ folder is empty, or every file in it was refused.");
+      if (this.rankedCompetitions.isEmpty()) {
+         SERVICE_LOGGER.warn("The battle server offers no ranked competitions - nobody can queue. Its ranked/ folder is empty, or every file in it was refused.");
       } else {
-         LOGGER.info("Ranked competitions offered: {}", String.join(", ", this.ranked.keySet()));
+         SERVICE_LOGGER.info("Ranked competitions offered: {}", String.join(", ", this.rankedCompetitions.keySet()));
       }
    }
 
-   private void requestDex() {
-      String cached = this.dex.cachedDigest();
-      JsonObject query = ServiceProtocolMessages.dexQuery(this.client.nextRef(), cached);
-      this.client.send(query);
+   private void requestRemoteDex() {
+      String cachedDex = this.remoteDex.cachedDigest();
+      JsonObject requestFrame = ServiceProtocolMessages.dexQuery(this.battleServerClient.nextRef(), cachedDex);
+      this.battleServerClient.send(requestFrame);
    }
 
-   private void onError(JsonObject document) {
-      String code = BattleServerClient.str(document, "code", "?");
-      String text = BattleServerClient.str(document, "message", "");
-      LOGGER.warn("Battle server error [{}]: {}", code, text);
+   private void handleServiceError(JsonObject document) {
+      String errorCode = BattleServerClient.str(document, "code", "?");
+      String errorText = BattleServerClient.str(document, "message", "");
+      SERVICE_LOGGER.warn("Battle server error [{}]: {}", errorCode, errorText);
       if (!"hello".equals(BattleServerClient.str(document, "about", ""))) {
          if ("room_list".equals(BattleServerClient.str(document, "about", ""))) {
-            this.onServerThread(this.roomDirectory::cancelRequests);
+            this.executeOnServerThread(this.roomDirectory::cancelRequests);
          }
 
-         MirrorBattle mirror = CrossServerBattles.byRemoteId(BattleServerClient.str(document, "battleId", ""));
-         if (mirror != null && !mirror.isFinished()) {
-            LOGGER.error("Battle server refused something for battle {} ({}: {}) - closing the local mirror", new Object[]{mirror.remoteBattleId(), code, text});
-            this.lifecycleCleanup.abort(mirror, Msg.of("battle.ended", text).withStyle(ChatFormatting.RED));
-         } else if (this.auth.isAwaiting(document)) {
-            UUID waiting = this.auth.onAccountError(document);
-            if (waiting != null) {
-               Component refusal = describeAuthFailure(code, text);
-               this.tellParticipant(waiting, refusal);
-               this.withParticipant(waiting, participant -> CobbleBattleNetwork.sendResult(participant, false, refusal));
+         MirrorBattle affectedBattle = CrossServerBattles.byRemoteId(BattleServerClient.str(document, "battleId", ""));
+         if (affectedBattle != null && !affectedBattle.isFinished()) {
+            SERVICE_LOGGER.error("Battle server refused something for battle {} ({}: {}) - closing the local mirror", new Object[]{affectedBattle.remoteBattleId(), errorCode, errorText});
+            this.lifecycleCleanup.abort(affectedBattle, Msg.of("battle.ended", errorText).withStyle(ChatFormatting.RED));
+         } else if (this.authenticationService.isAwaiting(document)) {
+            UUID connectionWaiter = this.authenticationService.onAccountError(document);
+            if (connectionWaiter != null) {
+               Component failureMessage = formatAuthenticationFailure(errorCode, errorText);
+               this.tellParticipant(connectionWaiter, failureMessage);
+               this.withParticipant(connectionWaiter, participant -> CobbleBattleNetwork.sendResult(participant, false, failureMessage));
             }
          } else {
-            UUID talker = this.claimChatRef(document.get("ref"));
-            if (talker != null) {
-               this.tellParticipant(talker, describeChatFailure(document, code, text));
+            UUID chatRequester = this.claimChatRequest(document.get("ref"));
+            if (chatRequester != null) {
+               this.tellParticipant(chatRequester, formatChatFailure(document, errorCode, errorText));
             } else {
-               UUID forMenu = this.claimMenuRef(document.get("ref"));
-               if (forMenu != null) {
-                  this.withParticipant(forMenu, player -> this.sendMainMenu(player, ""));
+               UUID menuRequester = this.claimMenuRef(document.get("ref"));
+               if (menuRequester != null) {
+                  this.withParticipant(menuRequester, waitingPlayer -> this.deliverMainMenu(waitingPlayer, ""));
                } else {
-                  UUID asker = this.claimLeaderboardRef(document.get("ref"));
-                  if (asker != null) {
-                     this.tellParticipant(asker, Component.literal(text).withStyle(ChatFormatting.RED));
+                  UUID leaderboardRequester = this.claimLeaderboardRef(document.get("ref"));
+                  if (leaderboardRequester != null) {
+                     this.tellParticipant(leaderboardRequester, Component.literal(errorText).withStyle(ChatFormatting.RED));
                   } else {
-                     UUID looker = this.battleQueue.claimLookupRef(document.get("ref"));
-                     if (looker != null) {
-                        this.tellParticipant(looker, describeLookupFailure(code, text));
+                     UUID roomLookupRequester = this.matchmakingQueue.claimLookupRef(document.get("ref"));
+                     if (roomLookupRequester != null) {
+                        this.tellParticipant(roomLookupRequester, formatLookupFailure(errorCode, errorText));
                      } else {
-                        UUID owner = this.battleQueue.claimRefOwner(document.get("ref"));
-                        if (owner != null) {
-                           this.battleQueue.drop(owner);
+                        UUID roomOwner = this.matchmakingQueue.claimRefOwner(document.get("ref"));
+                        if (roomOwner != null) {
+                           this.matchmakingQueue.drop(roomOwner);
 
-                           String roomKey = QueueErrorRules.roomRefusalKey(code);
-                           if (roomKey != null) {
-                              this.tellParticipant(owner, Msg.of(ChatFormatting.RED, roomKey));
-                              this.refreshRooms(owner);
-                           } else if ("BANNED".equals(code)) {
-                              long left = document.has("left") ? document.get("left").getAsLong() : 0L;
-                              String ranked = BattleServerClient.str(document, "ranked", "?");
+                           String roomReference = QueueErrorRules.roomRefusalKey(errorCode);
+                           if (roomReference != null) {
+                              this.tellParticipant(roomOwner, Msg.of(ChatFormatting.RED, roomReference));
+                              this.refreshRoomDirectory(roomOwner);
+                           } else if ("BANNED".equals(errorCode)) {
+                              long queueLeaver = document.has("left") ? document.get("left").getAsLong() : 0L;
+                              String rankedId = BattleServerClient.str(document, "ranked", "?");
                               this.tellParticipant(
-                                 owner,
-                                 (left == 0L ? Msg.of("queue.banned_permanent", ranked) : Msg.of("queue.banned_for", ranked, describeDuration(left)))
+                                 roomOwner,
+                                 (queueLeaver == 0L ? Msg.of("queue.banned_permanent", rankedId) : Msg.of("queue.banned_for", rankedId, formatDuration(queueLeaver)))
                                     .withStyle(ChatFormatting.RED)
                               );
                            } else {
-                              this.tellParticipant(owner, Msg.of("queue.refused", text).withStyle(ChatFormatting.RED));
+                              this.tellParticipant(roomOwner, Msg.of("queue.refused", errorText).withStyle(ChatFormatting.RED));
                            }
                         }
                      }
@@ -510,73 +510,73 @@ public final class CrossServerBattleService {
             }
          }
       } else {
-         String why = describeHandshakeRefusal(code, text);
-         LOGGER.error(
-            "The battle server refused this server's handshake: {}. Not reconnecting until somebody opens the sign-in screen or runs /cbattle reload.", why
+         String rejectionReason = formatHandshakeRejection(errorCode, errorText);
+         SERVICE_LOGGER.error(
+            "The battle server refused this server's handshake: {}. Not reconnecting until somebody opens the sign-in screen or runs /cbattle reload.", rejectionReason
          );
-         this.client.suspend(why);
+         this.battleServerClient.suspend(rejectionReason);
 
-         for (UUID waiting : List.copyOf(this.waitingChunksAuthOpens)) {
-            this.waitingChunksAuthOpens.remove(waiting);
-            this.tellParticipant(waiting, Msg.of(ChatFormatting.RED, "conn.refused", why));
+         for (UUID authenticationWaiter : List.copyOf(this.waitingChunksAuthOpens)) {
+            this.waitingChunksAuthOpens.remove(authenticationWaiter);
+            this.tellParticipant(authenticationWaiter, Msg.of(ChatFormatting.RED, "conn.refused", rejectionReason));
          }
       }
    }
 
-   private static Component describeLookupFailure(String code, String fallback) {
-      String key = QueueErrorRules.lookupFailureKey(code);
-      Component text = key == null ? Msg.of("queue.refused", fallback) : Msg.of(key);
-      return text.copy().withStyle(ChatFormatting.RED);
+   private static Component formatLookupFailure(String errorCode, String fallbackText) {
+      String translationKey = QueueErrorRules.lookupFailureKey(errorCode);
+      Component failureMessage = translationKey == null ? Msg.of("queue.refused", fallbackText) : Msg.of(translationKey);
+      return failureMessage.copy().withStyle(ChatFormatting.RED);
    }
 
-   private static String describeHandshakeRefusal(String code, String text) {
-      return switch (code) {
-         case "BAD_PROTOCOL" -> Msg.raw("conn.err.protocol", text);
+   private static String formatHandshakeRejection(String errorCode, String serverText) {
+      return switch (errorCode) {
+         case "BAD_PROTOCOL" -> Msg.raw("conn.err.protocol", serverText);
          case "BAD_AUTH" -> Msg.raw("conn.err.auth");
-         default -> text.isEmpty() ? code : text;
+         default -> serverText.isEmpty() ? errorCode : serverText;
       };
    }
 
-   private static String describeDuration(long ms) {
-      long seconds = (ms + 999L) / 1000L;
-      long days = seconds / 86400L;
-      long hours = seconds % 86400L / 3600L;
-      long minutes = seconds % 3600L / 60L;
-      long secs = seconds % 60L;
+   private static String formatDuration(long durationMillis) {
+      long totalSeconds = (durationMillis + 999L) / 1000L;
+      long wholeDays = totalSeconds / 86400L;
+      long remainingHours = totalSeconds % 86400L / 3600L;
+      long remainingMinutes = totalSeconds % 3600L / 60L;
+      long remainingSeconds = totalSeconds % 60L;
       StringBuilder outputStream = new StringBuilder();
-      int parts = 0;
-      if (days > 0L) {
-         outputStream.append(Msg.of("time.days", days).getString());
-         parts++;
+      int durationParts = 0;
+      if (wholeDays > 0L) {
+         outputStream.append(Msg.of("time.days", wholeDays).getString());
+         durationParts++;
       }
 
-      if (hours > 0L && parts < 2) {
-         outputStream.append(Msg.of("time.hours", hours).getString());
-         parts++;
+      if (remainingHours > 0L && durationParts < 2) {
+         outputStream.append(Msg.of("time.hours", remainingHours).getString());
+         durationParts++;
       }
 
-      if (minutes > 0L && parts < 2) {
-         outputStream.append(Msg.of("time.minutes", minutes).getString());
-         parts++;
+      if (remainingMinutes > 0L && durationParts < 2) {
+         outputStream.append(Msg.of("time.minutes", remainingMinutes).getString());
+         durationParts++;
       }
 
-      if (parts == 0) {
-         outputStream.append(Msg.of("time.seconds", Math.max(1L, secs)).getString());
+      if (durationParts == 0) {
+         outputStream.append(Msg.of("time.seconds", Math.max(1L, remainingSeconds)).getString());
       }
 
       return outputStream.toString().trim();
    }
 
-   private static Component describeAuthFailure(String code, String fallback) {
-      String key = AuthenticationErrorRules.translationKey(code);
-      Component text = key == null ? Component.literal(fallback) : Msg.of(key);
-      return text.copy().withStyle(ChatFormatting.RED);
+   private static Component formatAuthenticationFailure(String errorCode, String fallbackText) {
+      String translationKey = AuthenticationErrorRules.translationKey(errorCode);
+      Component failureMessage = translationKey == null ? Component.literal(fallbackText) : Msg.of(translationKey);
+      return failureMessage.copy().withStyle(ChatFormatting.RED);
    }
 
-   private void onServerThread(Runnable work) {
-      MinecraftServer server = this.minecraftServer;
-      if (server != null) {
-         server.execute(work);
+   private void executeOnServerThread(Runnable action) {
+      MinecraftServer activeServer = this.gameServer;
+      if (activeServer != null) {
+         activeServer.execute(action);
       }
    }
 
@@ -585,7 +585,7 @@ public final class CrossServerBattleService {
       UUID localBattleId = mirror.localBattleId();
       if (localBattleId != null) {
          CrossServerBattles.forget(localBattleId);
-         this.onServerThread(() -> {
+         this.executeOnServerThread(() -> {
             PokemonBattle battle = BattleRegistry.getBattle(localBattleId);
             if (battle != null && !battle.getEnded()) {
                battle.end();
@@ -596,61 +596,61 @@ public final class CrossServerBattleService {
       }
    }
 
-   private void onMatchFound(JsonObject document) {
-      MinecraftServer server = this.minecraftServer;
-      if (server != null) {
-         server.execute(() -> this.mirrorFactory.build(document));
+   private void handleMatchFound(JsonObject document) {
+      MinecraftServer activeServer = this.gameServer;
+      if (activeServer != null) {
+         activeServer.execute(() -> this.battleMirrorFactory.build(document));
       }
    }
 
-   private void onBattleStart(JsonObject document) {
-      MirrorBattle mirror = CrossServerBattles.byRemoteId(BattleServerClient.str(document, "battleId", ""));
-      if (mirror != null) {
-         mirror.release();
+   private void handleBattleStarted(JsonObject document) {
+      MirrorBattle activeMirror = CrossServerBattles.byRemoteId(BattleServerClient.str(document, "battleId", ""));
+      if (activeMirror != null) {
+         activeMirror.release();
 
-         for (UUID seated : mirror.localPlayers()) {
-            this.pushChatState(seated);
+         for (UUID battleParticipantUuid : activeMirror.localPlayers()) {
+            this.pushChatState(battleParticipantUuid);
          }
       }
    }
 
-   private void relayOutput(CrossServerBattles.ChoiceRelay relay) {
-      if (this.client != null) {
-         if (this.config.debug) {
-            LOGGER.info("[{}] >> output {}", relay.remoteBattleId(), relay.line().replace("\n", " \\n "));
+   private void sendBattleOutput(CrossServerBattles.ChoiceRelay outputRelay) {
+      if (this.battleServerClient != null) {
+         if (this.serviceConfig.debug) {
+            SERVICE_LOGGER.info("[{}] >> output {}", outputRelay.remoteBattleId(), outputRelay.line().replace("\n", " \\n "));
          }
 
-         JsonObject outputStream = ServiceProtocolMessages.battleOutput(relay.remoteBattleId(), relay.line());
-         this.client.send(outputStream);
+         JsonObject outputStream = ServiceProtocolMessages.battleOutput(outputRelay.remoteBattleId(), outputRelay.line());
+         this.battleServerClient.send(outputStream);
       }
    }
 
-   private void onRelayedChoice(JsonObject document) {
-      String remoteBattleId = BattleServerClient.str(document, "battleId", "");
-      String line = BattleServerClient.str(document, "data", null);
-      MirrorBattle mirror = CrossServerBattles.byRemoteId(remoteBattleId);
-      if (mirror == null || line == null) {
-         LOGGER.warn("Relayed choice for unknown battle {}", remoteBattleId);
-      } else if (!mirror.isAuthoritative()) {
-         LOGGER.warn("Battle {} sent us a choice to run, but we are only mirroring it", remoteBattleId);
+   private void handleRelayedChoice(JsonObject document) {
+      String externalBattleId = BattleServerClient.str(document, "battleId", "");
+      String choiceLine = BattleServerClient.str(document, "data", null);
+      MirrorBattle activeMirror = CrossServerBattles.byRemoteId(externalBattleId);
+      if (activeMirror == null || choiceLine == null) {
+         SERVICE_LOGGER.warn("Relayed choice for unknown battle {}", externalBattleId);
+      } else if (!activeMirror.isAuthoritative()) {
+         SERVICE_LOGGER.warn("Battle {} sent us a choice to run, but we are only mirroring it", externalBattleId);
       } else {
-         UUID localBattleId = mirror.localBattleId();
-         if (localBattleId == null) {
-            LOGGER.warn("Relayed choice for battle {} arrived before the local battle existed", remoteBattleId);
+         UUID internalBattleId = activeMirror.localBattleId();
+         if (internalBattleId == null) {
+            SERVICE_LOGGER.warn("Relayed choice for battle {} arrived before the local battle existed", externalBattleId);
          } else {
-            if (this.config.debug) {
-               LOGGER.info("[{}] << choice {}", remoteBattleId, line);
+            if (this.serviceConfig.debug) {
+               SERVICE_LOGGER.info("[{}] << choice {}", externalBattleId, choiceLine);
             }
 
-            MinecraftServer server = this.server();
-            if (server == null) {
-               LOGGER.warn("Relayed choice for battle {} arrived with no server to run it on", remoteBattleId);
+            MinecraftServer activeServer = this.runningServer();
+            if (activeServer == null) {
+               SERVICE_LOGGER.warn("Relayed choice for battle {} arrived with no server to run it on", externalBattleId);
             } else {
-               server.execute(() -> {
+               activeServer.execute(() -> {
                   try {
-                     CrossServerBattles.injecting(() -> ShowdownService.Companion.getService().send(localBattleId, new String[]{line}));
+                     CrossServerBattles.injecting(() -> ShowdownService.Companion.getService().send(internalBattleId, new String[]{choiceLine}));
                   } catch (RuntimeException failure) {
-                     LOGGER.error("Battle {}: could not feed the relayed choice to showdown", remoteBattleId, failure);
+                     SERVICE_LOGGER.error("Battle {}: could not feed the relayed choice to showdown", externalBattleId, failure);
                   }
                });
             }
@@ -658,28 +658,28 @@ public final class CrossServerBattleService {
       }
    }
 
-   private void onOutput(JsonObject document) {
-      String remoteBattleId = BattleServerClient.str(document, "battleId", "");
-      MirrorBattle mirror = CrossServerBattles.byRemoteId(remoteBattleId);
-      if (mirror == null) {
-         LOGGER.warn("Output for unknown battle {}", remoteBattleId);
+   private void handleBattleOutput(JsonObject document) {
+      String externalBattleId = BattleServerClient.str(document, "battleId", "");
+      MirrorBattle activeMirror = CrossServerBattles.byRemoteId(externalBattleId);
+      if (activeMirror == null) {
+         SERVICE_LOGGER.warn("Output for unknown battle {}", externalBattleId);
       } else {
-         mirror.accept(document.get("seq").getAsLong(), document.get("data").getAsString());
+         activeMirror.accept(document.get("seq").getAsLong(), document.get("data").getAsString());
       }
    }
 
-   private void onOpponentForfeit(JsonObject document) {
-      MirrorBattle mirror = CrossServerBattles.byRemoteId(BattleServerClient.str(document, "battleId", ""));
-      MinecraftServer server = this.minecraftServer;
-      if (mirror != null && server != null) {
-         String seat = BattleServerClient.str(document, "seat", "");
-         String reportedName = BattleServerClient.str(document, "name", "?");
-         server.execute(
+   private void handleOpponentForfeit(JsonObject document) {
+      MirrorBattle activeMirror = CrossServerBattles.byRemoteId(BattleServerClient.str(document, "battleId", ""));
+      MinecraftServer activeServer = this.gameServer;
+      if (activeMirror != null && activeServer != null) {
+         String forfeitingSeat = BattleServerClient.str(document, "seat", "");
+         String fallbackName = BattleServerClient.str(document, "name", "?");
+         activeServer.execute(
             () -> {
-               PokemonBattle battle = mirror.battle();
-               if (battle != null && !battle.getEnded()) {
-                  battle.broadcastChatMessage(
-                     Component.translatable("cobblemon.battle.forfeit", new Object[]{actorName(battle, seat, reportedName)}).withStyle(ChatFormatting.RED)
+               PokemonBattle localBattle = activeMirror.battle();
+               if (localBattle != null && !localBattle.getEnded()) {
+                  localBattle.broadcastChatMessage(
+                     Component.translatable("cobblemon.battle.forfeit", new Object[]{resolveActorName(localBattle, forfeitingSeat, fallbackName)}).withStyle(ChatFormatting.RED)
                   );
                }
             }
@@ -687,77 +687,77 @@ public final class CrossServerBattleService {
       }
    }
 
-   private static Component actorName(PokemonBattle battle, String seat, String fallback) {
-      for (BattleActor actor : battle.getActors()) {
-         if (actor.isInitialized() && actor.getShowdownId().equals(seat)) {
-            return actor.getName();
+   private static Component resolveActorName(PokemonBattle localBattle, String actorSeat, String fallbackName) {
+      for (BattleActor resolvedActor : localBattle.getActors()) {
+         if (resolvedActor.isInitialized() && resolvedActor.getShowdownId().equals(actorSeat)) {
+            return resolvedActor.getName();
          }
       }
 
-      return Component.literal(fallback);
+      return Component.literal(fallbackName);
    }
 
-   private void onBattleEnd(JsonObject document) {
-      String remoteBattleId = BattleServerClient.str(document, "battleId", "");
-      String reason = BattleServerClient.str(document, "reason", "unknown");
-      MirrorBattle mirror = CrossServerBattles.byRemoteId(remoteBattleId);
-      if (mirror != null) {
-         mirror.markFinished();
-         if (!mirror.isSpectator()) {
-            for (UUID seated : mirror.localPlayers()) {
-               this.pushChatState(seated);
+   private void handleBattleEnded(JsonObject document) {
+      String externalBattleId = BattleServerClient.str(document, "battleId", "");
+      String endReason = BattleServerClient.str(document, "reason", "unknown");
+      MirrorBattle activeMirror = CrossServerBattles.byRemoteId(externalBattleId);
+      if (activeMirror != null) {
+         activeMirror.markFinished();
+         if (!activeMirror.isSpectator()) {
+            for (UUID battleParticipantUuid : activeMirror.localPlayers()) {
+               this.pushChatState(battleParticipantUuid);
             }
 
-            this.announceScores(document);
-            this.fireBattleEnded(mirror, document, reason);
+            this.announceScoreChanges(document);
+            this.publishBattleEnded(activeMirror, document, endReason);
          } else {
-            for (UUID watcher : mirror.watchers()) {
-               this.tellParticipant(watcher, Msg.of(ChatFormatting.YELLOW, "battle.spectate_over"));
+            for (UUID spectatorUuid : activeMirror.watchers()) {
+               this.tellParticipant(spectatorUuid, Msg.of(ChatFormatting.YELLOW, "battle.spectate_over"));
             }
          }
 
-         if (!"win".equals(reason) && !"tie".equals(reason)) {
-            LOGGER.warn("Battle {} ended abnormally ({}) - forcing the local mirror closed", remoteBattleId, reason);
-            this.lifecycleCleanup.abort(mirror, Msg.of("battle.ended", reason).withStyle(ChatFormatting.RED));
+         if (!"win".equals(endReason) && !"tie".equals(endReason)) {
+            SERVICE_LOGGER.warn("Battle {} ended abnormally ({}) - forcing the local mirror closed", externalBattleId, endReason);
+            this.lifecycleCleanup.abort(activeMirror, Msg.of("battle.ended", endReason).withStyle(ChatFormatting.RED));
          } else {
-            CrossServerBattles.forget(mirror.localBattleId());
-            this.lifecycleCleanup.sweepEntities(mirror, MirrorLifecycleCleanup.RECALL_GRACE_MS);
+            CrossServerBattles.forget(activeMirror.localBattleId());
+            this.lifecycleCleanup.sweepEntities(activeMirror, MirrorLifecycleCleanup.RECALL_GRACE_MS);
          }
       }
    }
 
-   private void relayChoice(CrossServerBattles.ChoiceRelay relay) {
-      if (this.client != null) {
-         if (this.config.debug) {
-            LOGGER.info("[{}] >> {}", relay.remoteBattleId(), relay.line());
+   private void sendBattleChoice(CrossServerBattles.ChoiceRelay choiceRelay) {
+      if (this.battleServerClient != null) {
+         if (this.serviceConfig.debug) {
+            SERVICE_LOGGER.info("[{}] >> {}", choiceRelay.remoteBattleId(), choiceRelay.line());
          }
 
-         JsonObject choice = ServiceProtocolMessages.choice(relay.remoteBattleId(), relay.line());
-         this.client.send(choice);
+         JsonObject choiceText = ServiceProtocolMessages.choice(choiceRelay.remoteBattleId(), choiceRelay.line());
+         this.battleServerClient.send(choiceText);
       }
    }
 
-   void sendAbort(String remoteBattleId, String reason) {
-      this.client.send(BattleControlMessages.abort(remoteBattleId, reason));
+   void sendBattleAbort(String externalBattleId, String abortReason) {
+      this.battleServerClient.send(BattleControlMessages.abort(externalBattleId, abortReason));
    }
 
    public AuthService auth() {
-      return this.auth;
+      return this.authenticationService;
    }
 
    public Component openMainMenu(ServerPlayer participant) {
       if (!this.isConnected()) {
          return this.notConnected("auth.not_connected");
       } else {
-         List<CrossServerBattleService.Ranked> competitions = new ArrayList<>(this.ranked());
-         if (competitions.isEmpty()) {
-            return this.sendMainMenu(participant, "");
+         List<CrossServerBattleService.Ranked> visibleCompetitions = new ArrayList<>(this.ranked());
+         if (visibleCompetitions.isEmpty()) {
+            return this.deliverMainMenu(participant, "");
          } else {
-            String chosen = this.hasRanked(this.config().defaultRanked) ? this.config().defaultRanked : competitions.get(0).id();
-            int ref = this.client.nextRef();
-            JsonObject request = ServiceRequests.leaderboard(ref, chosen, participant.getUUID(), participant.getGameProfile().getName());
-            if (!this.requestLedger.sendMenu(ref, participant.getUUID(), () -> this.client.send(request))) {
-               return this.sendMainMenu(participant, "");
+            String selectedRankedId = this.hasRanked(this.config().defaultRanked) ? this.config().defaultRanked : visibleCompetitions.get(0).id();
+            int requestReference = this.battleServerClient.nextRef();
+            JsonObject requestFrame = ServiceRequests.leaderboard(requestReference, selectedRankedId, participant.getUUID(), participant.getGameProfile().getName());
+            if (!this.requestLedger.sendMenu(requestReference, participant.getUUID(), () -> this.battleServerClient.send(requestFrame))) {
+               return this.deliverMainMenu(participant, "");
             } else {
                return null;
             }
@@ -765,113 +765,113 @@ public final class CrossServerBattleService {
       }
    }
 
-   private Component sendMainMenu(ServerPlayer participant, String favourite) {
-      List<OpenMainMenuPayload.RankedInfo> competitions = new ArrayList<>();
+   private Component deliverMainMenu(ServerPlayer participant, String favouriteRankedId) {
+      List<OpenMainMenuPayload.RankedInfo> visibleCompetitions = new ArrayList<>();
 
-      for (CrossServerBattleService.Ranked ranked : this.ranked()) {
-         competitions.add(
+      for (CrossServerBattleService.Ranked competition : this.ranked()) {
+         visibleCompetitions.add(
             new OpenMainMenuPayload.RankedInfo(
-               ranked.id(),
-               ranked.name(),
-               ranked.battleType(),
-               ranked.slots(),
-               ranked.adjustLevel(),
-               ranked.fullHeal(),
-               ranked.winScore(),
-               ranked.failScore(),
-               ranked.rules()
+               competition.id(),
+               competition.name(),
+               competition.battleType(),
+               competition.slots(),
+               competition.adjustLevel(),
+               competition.fullHeal(),
+               competition.winScore(),
+               competition.failScore(),
+               competition.rules()
             )
          );
       }
 
       String displayLabel = participant.getGameProfile().getName();
-      return !CobbleBattleNetwork.sendMainMenu(participant, new OpenMainMenuPayload(displayLabel, favourite, competitions))
+      return !CobbleBattleNetwork.sendMainMenu(participant, new OpenMainMenuPayload(displayLabel, favouriteRankedId, visibleCompetitions))
          ? Msg.of(ChatFormatting.RED, "cmd.dex.no_client")
          : null;
    }
 
-   public void onTeamPicked(ServerPlayer participant, String battleId, List<Integer> picks) {
-      this.previews.onPicked(participant, battleId, picks);
+   public void onTeamPicked(ServerPlayer participant, String externalBattleId, List<Integer> selectedSlots) {
+      this.teamPreviewSessions.onPicked(participant, externalBattleId, selectedSlots);
    }
 
-   public void onMenuAction(ServerPlayer participant, MenuActionPayload action) {
-      String var3 = action.action();
-      switch (var3) {
+   public void onMenuAction(ServerPlayer participant, MenuActionPayload menuAction) {
+      String actionName = menuAction.action();
+      switch (actionName) {
          case "queue":
-            String chosen = !action.arg().isEmpty() && this.hasRanked(action.arg()) ? action.arg() : this.config().defaultRanked;
-            Component refusal = this.queue(participant, chosen);
-            if (refusal != null) {
-               this.tellParticipant(participant.getUUID(), refusal);
+            String selectedRankedId = !menuAction.arg().isEmpty() && this.hasRanked(menuAction.arg()) ? menuAction.arg() : this.config().defaultRanked;
+            Component failureMessage = this.queue(participant, selectedRankedId);
+            if (failureMessage != null) {
+               this.tellParticipant(participant.getUUID(), failureMessage);
             }
             break;
          case "logout":
-            if (this.auth.isSignedIn(participant.getUUID())) {
+            if (this.authenticationService.isSignedIn(participant.getUUID())) {
                this.signOut(participant);
             }
       }
    }
 
-   public void openPage(ServerPlayer participant, String page, String ranked, String have) {
-      Component refusal;
-      if ("dex".equals(page)) {
-         refusal = this.openServerDex(participant, have);
-      } else if ("rooms".equals(page)) {
-         refusal = this.requestRooms(participant);
-      } else if ("main".equals(page)) {
-         refusal = this.auth.isSignedIn(participant.getUUID()) ? this.openMainMenu(participant) : this.openAuthScreen(participant);
+   public void openPage(ServerPlayer participant, String pageId, String rankedId, String clientDexDigest) {
+      Component failureMessage;
+      if ("dex".equals(pageId)) {
+         failureMessage = this.openServerDex(participant, clientDexDigest);
+      } else if ("rooms".equals(pageId)) {
+         failureMessage = this.requestRooms(participant);
+      } else if ("main".equals(pageId)) {
+         failureMessage = this.authenticationService.isSignedIn(participant.getUUID()) ? this.openMainMenu(participant) : this.openAuthScreen(participant);
       } else {
-         String chosen = ranked != null && !ranked.isEmpty() && this.hasRanked(ranked) ? ranked : this.config().defaultRanked;
-         refusal = this.requestLeaderboard(participant, chosen);
+         String selectedRankedId = rankedId != null && !rankedId.isEmpty() && this.hasRanked(rankedId) ? rankedId : this.config().defaultRanked;
+         failureMessage = this.requestLeaderboard(participant, selectedRankedId);
       }
 
-      if (refusal != null) {
-         this.tellParticipant(participant.getUUID(), refusal);
+      if (failureMessage != null) {
+         this.tellParticipant(participant.getUUID(), failureMessage);
       }
    }
 
-   public void onRoomAction(ServerPlayer participant, RoomActionPayload action) {
-      String var4 = action.action();
+   public void onRoomAction(ServerPlayer participant, RoomActionPayload roomAction) {
+      String actionName = roomAction.action();
 
-      Component refusal = switch (var4) {
+      Component failureMessage = switch (actionName) {
          case "list" -> this.requestRooms(participant, true);
          case "create" -> {
-            String name = action.name().isBlank() ? Msg.raw("room.default_name", participant.getGameProfile().getName()) : action.name();
-            yield this.battleQueue
+            String roomName = roomAction.name().isBlank() ? Msg.raw("room.default_name", participant.getGameProfile().getName()) : roomAction.name();
+            yield this.matchmakingQueue
                .createRoom(
                   participant,
-                  name,
-                  action.password(),
-                  action.battleType(),
-                  action.level(),
-                  action.pick(),
-                  action.fullHeal(),
-                  action.hostEngine(),
-                  action.legality()
+                  roomName,
+                  roomAction.password(),
+                  roomAction.battleType(),
+                  roomAction.level(),
+                  roomAction.pick(),
+                  roomAction.fullHeal(),
+                  roomAction.hostEngine(),
+                  roomAction.legality()
                );
          }
-         case "join" -> this.battleQueue.joinRoom(participant, action.roomId(), action.password(), action.battleType(), action.hostEngine(), action.legality(), "");
-         case "join_code" -> this.battleQueue.lookupRoom(participant, action.inviteCode());
-         case "leave" -> this.battleQueue.leaveRoom(participant);
-         case "start" -> this.battleQueue.startRoom(participant);
+         case "join" -> this.matchmakingQueue.joinRoom(participant, roomAction.roomId(), roomAction.password(), roomAction.battleType(), roomAction.hostEngine(), roomAction.legality(), "");
+         case "join_code" -> this.matchmakingQueue.lookupRoom(participant, roomAction.inviteCode());
+         case "leave" -> this.matchmakingQueue.leaveRoom(participant);
+         case "start" -> this.matchmakingQueue.startRoom(participant);
          default -> null;
       };
-      if (refusal != null) {
-         this.tellParticipant(participant.getUUID(), refusal);
+      if (failureMessage != null) {
+         this.tellParticipant(participant.getUUID(), failureMessage);
       }
    }
 
-   private void onRoomState(JsonObject document) {
+   private void handleRoomState(JsonObject document) {
       RoomStateDecoding.Result decoded = RoomStateDecoding.decode(document);
       if (decoded != null) {
          this.withParticipant(decoded.getParticipant(), participant -> CobbleBattleNetwork.sendRoomState(participant, decoded.getPayload()));
       }
    }
 
-   private void onRoomClosed(JsonObject document) {
-      this.battleQueue.onRoomClosed(document);
-      UUID who = BattleIdentifierParsing.uuidOrNull(BattleServerClient.str(document, "player", ""));
-      if (who != null) {
-         this.refreshRooms(who);
+   private void handleRoomClosed(JsonObject document) {
+      this.matchmakingQueue.onRoomClosed(document);
+      UUID participantUuid = BattleIdentifierParsing.uuidOrNull(BattleServerClient.str(document, "player", ""));
+      if (participantUuid != null) {
+         this.refreshRoomDirectory(participantUuid);
       }
    }
 
@@ -879,23 +879,23 @@ public final class CrossServerBattleService {
       return this.requestRooms(participant, false);
    }
 
-   public Component requestRooms(ServerPlayer participant, boolean refresh) {
+   public Component requestRooms(ServerPlayer participant, boolean forceRefresh) {
       if (!this.isConnected()) {
          return this.notConnected("auth.not_connected");
       } else {
-         RoomDirectoryState.Snapshot<List<RoomListPayload.Room>> snapshot = this.roomDirectory.reusable(System.currentTimeMillis(), refresh);
+         RoomDirectoryState.Snapshot<List<RoomListPayload.Room>> snapshot = this.roomDirectory.reusable(System.currentTimeMillis(), forceRefresh);
          if (snapshot != null) {
-            this.deliverRooms(participant.getUUID(), snapshot, refresh);
+            this.deliverRoomDirectory(participant.getUUID(), snapshot, forceRefresh);
             return null;
          } else {
-            this.roomDirectory.enqueue(participant.getUUID(), refresh);
+            this.roomDirectory.enqueue(participant.getUUID(), forceRefresh);
             if (!this.roomDirectory.needsFetch()) {
                return null;
             } else {
                RoomDirectoryState.Snapshot<List<RoomListPayload.Room>> current = this.roomDirectory.current();
-               JsonObject request = ServiceProtocolMessages.roomList(this.client.nextRef(), current == null ? null : current.getHash());
+               JsonObject requestFrame = ServiceProtocolMessages.roomList(this.battleServerClient.nextRef(), current == null ? null : current.getHash());
 
-               if (!this.client.send(request)) {
+               if (!this.battleServerClient.send(requestFrame)) {
                   this.roomDirectory.abandon(participant.getUUID());
                   return Msg.of(ChatFormatting.RED, "auth.send_failed");
                } else {
@@ -907,7 +907,7 @@ public final class CrossServerBattleService {
       }
    }
 
-   void refreshRooms(UUID participantUuid) {
+   void refreshRoomDirectory(UUID participantUuid) {
       if (CrossServerBattles.byLocalPlayer(participantUuid) == null) {
          this.withParticipant(participantUuid, participant -> {
             this.roomDirectory.invalidate();
@@ -916,29 +916,29 @@ public final class CrossServerBattleService {
       }
    }
 
-   private void onRoomList(JsonObject document) {
-      List<RoomListPayload.Room> rooms;
+   private void handleRoomList(JsonObject document) {
+      List<RoomListPayload.Room> decodedRooms;
       String hash;
       RoomDirectoryState.Snapshot<List<RoomListPayload.Room>> current = this.roomDirectory.current();
       if (BattleServerClient.bool(document, "unchanged", false) && current != null) {
-         rooms = current.getContent();
+         decodedRooms = current.getContent();
          hash = current.getHash();
       } else {
-         rooms = RoomListDecoding.decodeRooms(document);
+         decodedRooms = RoomListDecoding.decodeRooms(document);
          hash = BattleServerClient.str(document, "hash", "");
       }
 
-      RoomDirectoryState.Completion<List<RoomListPayload.Room>> completion = this.roomDirectory.complete(rooms, hash, System.currentTimeMillis());
+      RoomDirectoryState.Completion<List<RoomListPayload.Room>> completion = this.roomDirectory.complete(decodedRooms, hash, System.currentTimeMillis());
       for (RoomDirectoryState.Waiter waiter : completion.getWaiters()) {
-         this.deliverRooms(waiter.getParticipant(), completion.getSnapshot(), waiter.getRefresh());
+         this.deliverRoomDirectory(waiter.getParticipant(), completion.getSnapshot(), waiter.getRefresh());
       }
    }
 
-   private void deliverRooms(UUID participantUuid, RoomDirectoryState.Snapshot<List<RoomListPayload.Room>> snapshot, boolean refresh) {
+   private void deliverRoomDirectory(UUID participantUuid, RoomDirectoryState.Snapshot<List<RoomListPayload.Room>> snapshot, boolean refresh) {
       this.withParticipant(
          participantUuid,
          participant -> {
-            long accountNumber = this.auth.uidOf(participant.getUUID());
+            long accountNumber = this.authenticationService.uidOf(participant.getUUID());
             RoomListPersonalization.Result personalized = RoomListPersonalization.apply(snapshot.getContent(), snapshot.getHash(), accountNumber);
             String stamp = personalized.getDeliveryStamp();
             if (this.roomDirectory.shouldDeliver(participant.getUUID(), stamp, refresh)) {
@@ -954,96 +954,96 @@ public final class CrossServerBattleService {
       return this.openServerDex(participant, "");
    }
 
-   public Component openServerDex(ServerPlayer participant, String have) {
+   public Component openServerDex(ServerPlayer participant, String clientDigest) {
       if (!this.isConnected()) {
          return this.notConnected("auth.not_connected");
-      } else if (!this.dex.isReady()) {
+      } else if (!this.remoteDex.isReady()) {
          return Msg.of(ChatFormatting.RED, "cmd.dex.not_ready");
       } else {
-         String digest = this.dex.digest() == null ? "" : this.dex.digest();
-         if (have.isEmpty() || !have.equals(digest)) {
-            List<ServerDexPayload.Entry> entries = new ArrayList<>();
+         String serverDigest = this.remoteDex.digest() == null ? "" : this.remoteDex.digest();
+         if (clientDigest.isEmpty() || !clientDigest.equals(serverDigest)) {
+            List<ServerDexPayload.Entry> dexEntries = new ArrayList<>();
 
-            for (RemoteDex.Entry entry : this.dex.entries()) {
-               Map<String, Integer> stats = entry.baseStats();
-               entries.add(
+            for (RemoteDex.Entry dexEntry : this.remoteDex.entries()) {
+               Map<String, Integer> baseStats = dexEntry.baseStats();
+               dexEntries.add(
                   new ServerDexPayload.Entry(
-                     entry.id(),
-                     stats.getOrDefault("hp", 0),
-                     stats.getOrDefault("atk", 0),
-                     stats.getOrDefault("def", 0),
-                     stats.getOrDefault("spa", 0),
-                     stats.getOrDefault("spd", 0),
-                     stats.getOrDefault("spe", 0)
+                     dexEntry.id(),
+                     baseStats.getOrDefault("hp", 0),
+                     baseStats.getOrDefault("atk", 0),
+                     baseStats.getOrDefault("def", 0),
+                     baseStats.getOrDefault("spa", 0),
+                     baseStats.getOrDefault("spd", 0),
+                     baseStats.getOrDefault("spe", 0)
                   )
                );
             }
 
-            return !CobbleBattleNetwork.sendServerDex(participant, ServerDexPayload.of(digest, entries)) ? Msg.of(ChatFormatting.RED, "cmd.dex.no_client") : null;
+            return !CobbleBattleNetwork.sendServerDex(participant, ServerDexPayload.of(serverDigest, dexEntries)) ? Msg.of(ChatFormatting.RED, "cmd.dex.no_client") : null;
          } else {
-            return !CobbleBattleNetwork.sendServerDex(participant, ServerDexPayload.unchanged(digest)) ? Msg.of(ChatFormatting.RED, "cmd.dex.no_client") : null;
+            return !CobbleBattleNetwork.sendServerDex(participant, ServerDexPayload.unchanged(serverDigest)) ? Msg.of(ChatFormatting.RED, "cmd.dex.no_client") : null;
          }
       }
    }
 
    public Component openAuthScreen(ServerPlayer participant) {
       if (!this.isConnected()) {
-         return this.connectThenOpenAuth(participant);
+         return this.connectAndOpenAuthentication(participant);
       } else {
-         String suggested = this.auth.accountOf(participant.getUUID());
-         if (suggested == null) {
-            suggested = participant.getGameProfile().getName();
+         String suggestedAccount = this.authenticationService.accountOf(participant.getUUID());
+         if (suggestedAccount == null) {
+            suggestedAccount = participant.getGameProfile().getName();
          }
 
-         return !CobbleBattleNetwork.openScreen(participant, AuthMode.LOGIN, suggested, this.emailEnabled)
+         return !CobbleBattleNetwork.openScreen(participant, AuthMode.LOGIN, suggestedAccount, this.emailAuthenticationEnabled)
             ? Msg.of(ChatFormatting.RED, "auth.client_required")
             : null;
       }
    }
 
-   public void onCredentialsSubmitted(ServerPlayer participant, AuthMode mode, String accountId, String email, String password, String verificationCode) {
-      Component refusal = this.auth.submit(this.client, participant, mode, accountId, email, password, verificationCode, this.emailEnabled);
-      if (refusal != null) {
-         CobbleBattleNetwork.sendResult(participant, false, refusal);
+   public void onCredentialsSubmitted(ServerPlayer participant, AuthMode authenticationMode, String submittedAccountId, String emailAddress, String submittedPassword, String submittedVerificationCode) {
+      Component failureMessage = this.authenticationService.submit(this.battleServerClient, participant, authenticationMode, submittedAccountId, emailAddress, submittedPassword, submittedVerificationCode, this.emailAuthenticationEnabled);
+      if (failureMessage != null) {
+         CobbleBattleNetwork.sendResult(participant, false, failureMessage);
       }
    }
 
    public void signOut(ServerPlayer participant) {
       this.announceSignOutputStream(participant);
-      this.auth.signOut(this.client, participant);
+      this.authenticationService.signOut(this.battleServerClient, participant);
       this.pushChatState(participant);
    }
 
    private void announceSignOutputStream(ServerPlayer participant) {
-      if (this.auth.isSignedIn(participant.getUUID())) {
-         ApiEvents.signedOut(participant, this.auth.accountOf(participant.getUUID()), this.auth.nicknameOf(participant.getUUID()), this.auth.uidOf(participant.getUUID()));
+      if (this.authenticationService.isSignedIn(participant.getUUID())) {
+         ApiEvents.signedOut(participant, this.authenticationService.accountOf(participant.getUUID()), this.authenticationService.nicknameOf(participant.getUUID()), this.authenticationService.uidOf(participant.getUUID()));
       }
    }
 
-   private void onChat(JsonObject document) {
+   private void handleChatLine(JsonObject document) {
       ChatLineDecoding.Result decoded = ChatLineDecoding.decode(document);
       if (decoded != null) {
-         ChatLinePayload line = decoded.getPayload();
-         MinecraftServer server = this.server();
-         if (server != null) {
+         ChatLinePayload chatLine = decoded.getPayload();
+         MinecraftServer activeServer = this.runningServer();
+         if (activeServer != null) {
             if ("battle".equals(decoded.getChannel())) {
-               MirrorBattle mirror = CrossServerBattles.byRemoteId(decoded.getBattleId());
-               if (mirror != null) {
-                  for (UUID seated : mirror.localPlayers()) {
-                     this.withParticipant(seated, participant -> CobbleBattleNetwork.sendChatLine(participant, line));
+               MirrorBattle activeMirror = CrossServerBattles.byRemoteId(decoded.getBattleId());
+               if (activeMirror != null) {
+                  for (UUID battleParticipantUuid : activeMirror.localPlayers()) {
+                     this.withParticipant(battleParticipantUuid, participant -> CobbleBattleNetwork.sendChatLine(participant, chatLine));
                   }
                }
             } else {
-               for (UUID participantUuid : this.auth.signedInPlayers()) {
-                  this.withParticipant(participantUuid, player -> CobbleBattleNetwork.sendChatLine(player, line));
+               for (UUID participantUuid : this.authenticationService.signedInPlayers()) {
+                  this.withParticipant(participantUuid, chatRecipient -> CobbleBattleNetwork.sendChatLine(chatRecipient, chatLine));
                }
             }
          }
       }
    }
 
-   private UUID claimChatRef(JsonElement ref) {
-      return ref != null && !ref.isJsonNull() ? this.requestLedger.claimChat(ref.getAsInt()) : null;
+   private UUID claimChatRequest(JsonElement reference) {
+      return reference != null && !reference.isJsonNull() ? this.requestLedger.claimChat(reference.getAsInt()) : null;
    }
 
    private UUID claimMenuRef(JsonElement ref) {
@@ -1054,13 +1054,13 @@ public final class CrossServerBattleService {
       return ref != null && !ref.isJsonNull() ? this.requestLedger.claimLeaderboard(ref.getAsInt()) : null;
    }
 
-   public Component requestLeaderboard(ServerPlayer participant, String rankedId) {
+   public Component requestLeaderboard(ServerPlayer participant, String competitionId) {
       if (!this.isConnected()) {
          return this.notConnected("auth.not_connected");
       } else {
-         int ref = this.client.nextRef();
-         JsonObject request = ServiceRequests.leaderboard(ref, rankedId, participant.getUUID(), participant.getGameProfile().getName());
-         if (!this.requestLedger.sendLeaderboard(ref, participant.getUUID(), () -> this.client.send(request))) {
+         int requestReference = this.battleServerClient.nextRef();
+         JsonObject requestFrame = ServiceRequests.leaderboard(requestReference, competitionId, participant.getUUID(), participant.getGameProfile().getName());
+         if (!this.requestLedger.sendLeaderboard(requestReference, participant.getUUID(), () -> this.battleServerClient.send(requestFrame))) {
             return Msg.of(ChatFormatting.RED, "auth.send_failed");
          } else {
             return null;
@@ -1068,50 +1068,50 @@ public final class CrossServerBattleService {
       }
    }
 
-   private void onLeaderboard(JsonObject document) {
-      UUID forMenu = this.claimMenuRef(document.get("ref"));
-      if (forMenu != null) {
-         String favourite = document.has("you") && document.get("you").isJsonObject()
+   private void handleLeaderboard(JsonObject document) {
+      UUID menuRequester = this.claimMenuRef(document.get("ref"));
+      if (menuRequester != null) {
+         String favouriteRankedId = document.has("you") && document.get("you").isJsonObject()
             ? BattleServerClient.str(document.getAsJsonObject("you"), "favourite", "")
             : "";
-         this.withParticipant(forMenu, participant -> {
-            Component refusal = this.sendMainMenu(participant, favourite);
-            if (refusal != null) {
-               this.tellParticipant(forMenu, refusal);
+         this.withParticipant(menuRequester, participant -> {
+            Component failureMessage = this.deliverMainMenu(participant, favouriteRankedId);
+            if (failureMessage != null) {
+               this.tellParticipant(menuRequester, failureMessage);
             }
          });
       } else {
-         UUID asker = this.claimLeaderboardRef(document.get("ref"));
-         if (asker != null) {
-            LeaderboardPayload board = LeaderboardDecoding.decode(document);
-            this.withParticipant(asker, player -> CobbleBattleNetwork.sendLeaderboard(player, board));
+         UUID leaderboardRequester = this.claimLeaderboardRef(document.get("ref"));
+         if (leaderboardRequester != null) {
+            LeaderboardPayload leaderboard = LeaderboardDecoding.decode(document);
+            this.withParticipant(leaderboardRequester, leaderboardRecipient -> CobbleBattleNetwork.sendLeaderboard(leaderboardRecipient, leaderboard));
          }
       }
    }
 
-   private void fireBattleEnded(MirrorBattle mirror, JsonObject document, String reason) {
-      String winnerSeat = BattleServerClient.str(document, "winnerSeat", "");
+   private void publishBattleEnded(MirrorBattle endedBattle, JsonObject document, String endReason) {
+      String winningSeat = BattleServerClient.str(document, "winnerSeat", "");
 
-      for (UUID who : mirror.localPlayers()) {
-         BattleInfo battleDetails = mirror.infoFor(who);
+      for (UUID participantUuid : endedBattle.localPlayers()) {
+         BattleInfo battleDetails = endedBattle.infoFor(participantUuid);
          if (battleDetails != null) {
-            BattleOutcome outcome = BattleResultProjection.outcome(reason, winnerSeat, mirror.seatOf(who));
-            ScoreChange score = BattleResultProjection.scoreFor(document, who);
-            this.withParticipant(who, participant -> ApiEvents.battleEnded(participant, battleDetails, outcome, reason, score));
+            BattleOutcome battleOutcome = BattleResultProjection.outcome(endReason, winningSeat, endedBattle.seatOf(participantUuid));
+            ScoreChange scoreChange = BattleResultProjection.scoreFor(document, participantUuid);
+            this.withParticipant(participantUuid, participant -> ApiEvents.battleEnded(participant, battleDetails, battleOutcome, endReason, scoreChange));
          }
       }
    }
 
-   private void announceScores(JsonObject document) {
+   private void announceScoreChanges(JsonObject document) {
       for (BattleResultProjection.ParticipantScore score : BattleResultProjection.participantScores(document)) {
-         long delta = score.getAfter() - score.getBefore();
-         String signed = (delta >= 0L ? "+" : "") + delta;
+         long scoreDelta = score.getAfter() - score.getBefore();
+         String signedDelta = (scoreDelta >= 0L ? "+" : "") + scoreDelta;
          this.tellParticipant(
             score.getParticipant(),
             Msg.of(
                score.getWon() ? ChatFormatting.GREEN : ChatFormatting.RED,
                score.getWon() ? "rank.won" : "rank.lost",
-               signed,
+               signedDelta,
                score.getBefore(),
                score.getAfter()
             )
@@ -1119,44 +1119,44 @@ public final class CrossServerBattleService {
       }
    }
 
-   private static Component describeChatFailure(JsonObject document, String code, String fallback) {
-      if ("MUTED".equals(code)) {
-         long left = document.has("left") ? document.get("left").getAsLong() : 0L;
-         Component muted = left == 0L ? Msg.of("chat.err.muted_permanent") : Msg.of("chat.err.muted_for", describeDuration(left));
-         return muted.copy().withStyle(ChatFormatting.RED);
+   private static Component formatChatFailure(JsonObject document, String errorCode, String fallbackText) {
+      if ("MUTED".equals(errorCode)) {
+         long remainingMillis = document.has("left") ? document.get("left").getAsLong() : 0L;
+         Component mutedMessage = remainingMillis == 0L ? Msg.of("chat.err.muted_permanent") : Msg.of("chat.err.muted_for", formatDuration(remainingMillis));
+         return mutedMessage.copy().withStyle(ChatFormatting.RED);
       } else {
-         String key = ChatErrorRules.translationKey(code);
-         Component text = key == null ? Component.literal(fallback) : Msg.of(key);
-         return text.copy().withStyle(ChatFormatting.RED);
+         String translationKey = ChatErrorRules.translationKey(errorCode);
+         Component failureMessage = translationKey == null ? Component.literal(fallbackText) : Msg.of(translationKey);
+         return failureMessage.copy().withStyle(ChatFormatting.RED);
       }
    }
 
-   public void onChatSubmitted(ServerPlayer participant, String selectedConversation, String text) {
-      if (text != null && !text.isBlank()) {
-         if (!this.auth.isSignedIn(participant.getUUID())) {
+   public void onChatSubmitted(ServerPlayer participant, String selectedConversation, String messageText) {
+      if (messageText != null && !messageText.isBlank()) {
+         if (!this.authenticationService.isSignedIn(participant.getUUID())) {
             this.tellParticipant(participant.getUUID(), Msg.of(ChatFormatting.YELLOW, "queue.not_signed_in"));
          } else if (!this.isConnected()) {
             this.tellParticipant(participant.getUUID(), this.notConnected("chat.not_connected"));
-         } else if (!this.chatEnabled) {
+         } else if (!this.remoteChatEnabled) {
             this.tellParticipant(participant.getUUID(), Msg.of(ChatFormatting.RED, "chat.err.disabled"));
          } else {
-            int ref = this.client.nextRef();
-            JsonObject request = ServiceRequests.chat(ref, selectedConversation, text, participant.getUUID(), participant.getGameProfile().getName());
-            this.requestLedger.sendChat(ref, participant.getUUID(), () -> this.client.send(request));
+            int requestReference = this.battleServerClient.nextRef();
+            JsonObject requestFrame = ServiceRequests.chat(requestReference, selectedConversation, messageText, participant.getUUID(), participant.getGameProfile().getName());
+            this.requestLedger.sendChat(requestReference, participant.getUUID(), () -> this.battleServerClient.send(requestFrame));
          }
       }
    }
 
    public void pushChatState(ServerPlayer participant) {
-      UUID uuid = participant.getUUID();
-      if (!this.auth.isSignedIn(uuid)) {
+      UUID participantUuid = participant.getUUID();
+      if (!this.authenticationService.isSignedIn(participantUuid)) {
          CobbleBattleNetwork.sendChatState(participant, ChatStatePayload.signedOut());
          this.reportChatObservers();
       } else {
          CobbleBattleNetwork.sendChatState(
             participant,
             new ChatStatePayload(
-               true, CrossServerBattles.byLocalPlayer(uuid) != null, this.auth.uidOf(uuid), String.valueOf(this.auth.nicknameOf(uuid)), this.chatEnabled
+               true, CrossServerBattles.byLocalPlayer(participantUuid) != null, this.authenticationService.uidOf(participantUuid), String.valueOf(this.authenticationService.nicknameOf(participantUuid)), this.remoteChatEnabled
             )
          );
          this.reportChatObservers();
@@ -1164,11 +1164,11 @@ public final class CrossServerBattleService {
    }
 
    private void reportChatObservers() {
-      if (this.client != null && this.client.isHandshaken()) {
-         int observers = this.auth.signedInPlayers().size();
+      if (this.battleServerClient != null && this.battleServerClient.isHandshaken()) {
+         int observers = this.authenticationService.signedInPlayers().size();
          if (observers != this.chatObserversReported) {
             JsonObject frame = ServiceProtocolMessages.chatWatch(observers);
-            if (this.client.send(frame)) {
+            if (this.battleServerClient.send(frame)) {
                this.chatObserversReported = observers;
             }
          }
@@ -1176,36 +1176,36 @@ public final class CrossServerBattleService {
    }
 
    public boolean chatEnabled() {
-      return this.chatEnabled;
+      return this.remoteChatEnabled;
    }
 
    public boolean emailEnabled() {
-      return this.emailEnabled;
+      return this.emailAuthenticationEnabled;
    }
 
    public void pushChatState(UUID participantUuid) {
       this.withParticipant(participantUuid, this::pushChatState);
    }
 
-   private void onAccountCodeOk(JsonObject document) {
-      UUID participant = this.auth.onAccountCodeOk(document);
-      this.withParticipant(participant, p -> CobbleBattleNetwork.sendResult(p, true, Component.translatable("auth.code_sent")));
+   private void handleVerificationCodeAccepted(JsonObject document) {
+      UUID participant = this.authenticationService.onAccountCodeOk(document);
+      this.withParticipant(participant, accountPlayer -> CobbleBattleNetwork.sendResult(accountPlayer, true, Component.translatable("auth.code_sent")));
    }
 
-   private void onAccountOk(JsonObject document) {
-      AuthService.Outcome outcome = this.auth.onAccountOk(document);
-      if (outcome != null) {
-         Component text = Msg.of(
-            ChatFormatting.GREEN, outcome.registered() ? "auth.registered" : "auth.logged_in", outcome.accountId(), outcome.nickname(), outcome.uid()
+   private void handleAuthenticationAccepted(JsonObject document) {
+      AuthService.Outcome authenticationOutcome = this.authenticationService.onAccountOk(document);
+      if (authenticationOutcome != null) {
+         Component successMessage = Msg.of(
+            ChatFormatting.GREEN, authenticationOutcome.registered() ? "auth.registered" : "auth.logged_in", authenticationOutcome.accountId(), authenticationOutcome.nickname(), authenticationOutcome.uid()
          );
-         this.tellParticipant(outcome.playerUuid(), text);
-         this.withParticipant(outcome.playerUuid(), participant -> {
-            CobbleBattleNetwork.sendResult(participant, true, text);
+         this.tellParticipant(authenticationOutcome.playerUuid(), successMessage);
+         this.withParticipant(authenticationOutcome.playerUuid(), participant -> {
+            CobbleBattleNetwork.sendResult(participant, true, successMessage);
             this.pushChatState(participant);
-            ApiEvents.signedIn(participant, outcome.accountId(), outcome.nickname(), outcome.uid(), outcome.registered());
-            Component refusal = this.openMainMenu(participant);
-            if (refusal != null) {
-               this.tellParticipant(outcome.playerUuid(), refusal);
+            ApiEvents.signedIn(participant, authenticationOutcome.accountId(), authenticationOutcome.nickname(), authenticationOutcome.uid(), authenticationOutcome.registered());
+            Component menuFailure = this.openMainMenu(participant);
+            if (menuFailure != null) {
+               this.tellParticipant(authenticationOutcome.playerUuid(), menuFailure);
             }
          });
       }
@@ -1216,7 +1216,7 @@ public final class CrossServerBattleService {
    }
 
    private void withParticipant(UUID participantUuid, Consumer<ServerPlayer> action) {
-      MinecraftServer server = this.minecraftServer;
+      MinecraftServer server = this.gameServer;
       if (server != null) {
          server.execute(() -> {
             ServerPlayer participant = server.getPlayerList().getPlayer(participantUuid);
@@ -1227,38 +1227,38 @@ public final class CrossServerBattleService {
       }
    }
 
-   public Component queue(ServerPlayer participant, String rankedId) {
-      return this.battleQueue.join(participant, rankedId);
+   public Component queue(ServerPlayer participant, String competitionId) {
+      return this.matchmakingQueue.join(participant, competitionId);
    }
 
    public Component leaveQueue(ServerPlayer participant) {
-      return this.battleQueue.leave(participant);
+      return this.matchmakingQueue.leave(participant);
    }
 
    public Component describePartyCompatibility(ServerPlayer participant) {
-      return this.battleQueue.describePartyCompatibility(participant);
+      return this.matchmakingQueue.describePartyCompatibility(participant);
    }
 
    public void onPlayerDisconnect(ServerPlayer participant) {
       this.waitingChunksAuthOpens.remove(participant.getUUID());
-      this.scheduleIdleDisconnect();
-      this.battleQueue.onParticipantDisconnect(participant);
-      this.previews.forget(participant.getUUID());
-      MirrorBattle mirror = CrossServerBattles.byLocalPlayer(participant.getUUID());
-      if (mirror != null && !mirror.isFinished()) {
-         LOGGER.info("{} disconnected during battle {} - closing this side and telling the host", participant.getGameProfile().getName(), mirror.remoteBattleId());
-         this.sendAbort(mirror.remoteBattleId(), "player disconnected");
-         this.lifecycleCleanup.abort(mirror, Msg.of("battle.player_left").withStyle(ChatFormatting.RED));
+      this.scheduleDisconnectWhenUnused();
+      this.matchmakingQueue.onParticipantDisconnect(participant);
+      this.teamPreviewSessions.forget(participant.getUUID());
+      MirrorBattle activeMirror = CrossServerBattles.byLocalPlayer(participant.getUUID());
+      if (activeMirror != null && !activeMirror.isFinished()) {
+         SERVICE_LOGGER.info("{} disconnected during battle {} - closing this side and telling the host", participant.getGameProfile().getName(), activeMirror.remoteBattleId());
+         this.sendBattleAbort(activeMirror.remoteBattleId(), "player disconnected");
+         this.lifecycleCleanup.abort(activeMirror, Msg.of("battle.player_left").withStyle(ChatFormatting.RED));
       }
 
       this.announceSignOutputStream(participant);
-      this.auth.signOut(this.client, participant);
+      this.authenticationService.signOut(this.battleServerClient, participant);
       this.reportChatObservers();
       this.roomDirectory.forgetDelivery(participant.getUUID());
    }
 
    void tellParticipant(UUID participantUuid, Component document) {
-      MinecraftServer server = this.minecraftServer;
+      MinecraftServer server = this.gameServer;
       if (server != null) {
          server.execute(() -> {
             ServerPlayer participant = server.getPlayerList().getPlayer(participantUuid);

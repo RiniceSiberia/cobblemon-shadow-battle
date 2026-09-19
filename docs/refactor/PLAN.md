@@ -148,3 +148,5 @@ B6-chat-panel-symbols（2026-09-17）：完成 ChatPanel 的面板坐标、频�
 B6-ranked-screen-symbols（2026-09-17）：完成 RankedScreen 安全内部符号重命名，保留 Screen 覆写、构造入口、网络载荷和返回界面行为；离线构建与契约测试通过，真实客户端交互留待集成验证。
 
 B6-main-menu-screen-symbols（2026-09-17）：主菜单仅完成内部声明职责命名和私有类型重命名，保留公开构造与 Screen 覆写、六个动作、网络载荷、纹理路径、布局数值和渲染顺序；真实客户端渲染与交互仍列入 B5/B6 集成验收。
+
+B6-cross-server-service-symbols（2026-09-19）：完成 CrossServerBattleService 的连接生命周期、远端消息分发、镜像对战、房间、认证、聊天和排行榜安全内部声明语义改名，并同步 Java 与 Kotlin 调用点。公开方法签名、协议字段、配置、事件与副作用顺序保持；真实跨服服务和游戏内对象继续作为集成验收项。

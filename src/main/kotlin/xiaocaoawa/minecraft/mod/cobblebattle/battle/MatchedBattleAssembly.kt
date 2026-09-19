@@ -36,7 +36,7 @@ class MatchedBattleAssembly(private val service: CrossServerBattleService) {
                     service.tellParticipant(UUID.fromString(participantText), Msg.of(ChatFormatting.RED, "battle.setup_failed"))
                 } catch (_: RuntimeException) { }
             }
-            if (battleId != null) service.sendAbort(battleId, "mirror build threw: ${failure.javaClass.simpleName}: ${failure.message}")
+            if (battleId != null) service.sendBattleAbort(battleId, "mirror build threw: ${failure.javaClass.simpleName}: ${failure.message}")
         }
     }
 
@@ -64,7 +64,7 @@ class MatchedBattleAssembly(private val service: CrossServerBattleService) {
     }
 
     private fun buildRemote(document: JsonObject, battleId: String, localSeat: String, participantId: UUID, opponent: MatchOpponent) {
-        val queued = service.battleQueue().claim(participantId)
+        val queued = service.queueCoordinator().claim(participantId)
         if (queued == null) {
             logger.error("match_found for {} but we have no queued team for them", participantId)
             fail(battleId, listOf(participantId), "battle.setup_failed", "no queued team on this server")
@@ -90,7 +90,7 @@ class MatchedBattleAssembly(private val service: CrossServerBattleService) {
             return
         }
         val localActor = PlayerBattleActor(participantId, localRoster)
-        val player = service.server()?.playerList?.getPlayer(participantId)
+        val player = service.runningServer()?.playerList?.getPlayer(participantId)
         val body = player?.let { MirrorNpc.spawn(it, opponent.name) }
         val remoteActor = if (body != null) EntityBackedRemoteBattleActor(opponent.playerId, opponent.name, opponent.serverId, opponent.seatId, remoteRoster, body)
             else RemoteBattleActor(opponent.playerId, opponent.name, opponent.serverId, opponent.seatId, remoteRoster)
@@ -130,7 +130,7 @@ class MatchedBattleAssembly(private val service: CrossServerBattleService) {
     }
 
     private fun buildLocalPair(document: JsonObject, battleId: String, localSeat: String, participantId: UUID, opponent: MatchOpponent) {
-        val claims = LocalMatchClaims.take(participantId, opponent.playerId, service.battleQueue()::claim)
+        val claims = LocalMatchClaims.take(participantId, opponent.playerId, service.queueCoordinator()::claim)
         val localQueue = claims.first
         val opponentQueue = claims.second
         val participants = listOf(participantId, opponent.playerId)
@@ -146,7 +146,7 @@ class MatchedBattleAssembly(private val service: CrossServerBattleService) {
             fail(battleId, participants, "battle.setup_failed", "no Pokemon left after the team preview")
             return
         }
-        val server = service.server()
+        val server = service.runningServer()
         val localPlayer = server?.playerList?.getPlayer(participantId)
         val opponentPlayer = server?.playerList?.getPlayer(opponent.playerId)
         val localName = if (localPlayer != null) localPlayer.gameProfile.name else BattleServerClient.str(document, "yourName", "?")
@@ -189,11 +189,11 @@ class MatchedBattleAssembly(private val service: CrossServerBattleService) {
 
     private fun fail(battleId: String, participants: List<UUID>, messageKey: String, reason: String) {
         for (participant in participants) service.tellParticipant(participant, Msg.of(ChatFormatting.RED, messageKey))
-        service.sendAbort(battleId, reason)
+        service.sendBattleAbort(battleId, reason)
     }
 
     private fun acknowledge(battleId: String) {
-        service.client().send(BattleControlMessages.acknowledgement(battleId))
+        service.serverClient().send(BattleControlMessages.acknowledgement(battleId))
     }
 
     private companion object {

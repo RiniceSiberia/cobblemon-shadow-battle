@@ -272,3 +272,7 @@ B6-ranked-screen-symbols（2026-09-17）：排位界面固定纹理尺寸居中�
 ## B6-main-menu-screen-symbols（2026-09-17）
 
 主菜单保持 ranked、rooms、dex、settings、chat、logout 六个入口及原顺序。logout 继续先发送原有 MenuActionPayload 再关闭界面；头像、收藏宝可梦、未知标记、裁切范围、坐标、颜色和姿态参数保持。JDK21 离线 clean build 成功，259 项测试、0 失败、0 错误，javac 符号分析为97个文件、4277个声明、0错误。真实客户端渲染、鼠标交互及远端动作仍待验证。
+
+## B6-cross-server-service-symbols（2026-09-19）
+
+CrossServerBattleService 的字段、包内方法、私有处理器、参数和局部变量按连接、握手、图鉴、排位、匹配、战斗、房间、认证、聊天和排行榜职责完成语义改名。BattleQueue、TeamPreviews、MatchedBattleAssembly、MirrorLifecycleCleanup 与 SpectatorSessions 的包内调用点同步更新。消息类型、JSON 字段、翻译键、网络发送时机、事件顺序、错误传播和清理分支未改。JDK21 离线 clean build 成功，259 项测试、0 失败、0 错误；javac 快照为 97 个文件、4277 个声明、0 个分析错误；CrossServerBattleService 的公开 javap 签名与原 JAR 无差异。真实跨服连接、镜像实体、Mixin、玩家消息和客户端界面仍待联调。日志 `D:/workspace/gradle-cross-server-symbols.log`。

@@ -36,7 +36,7 @@ class SpectatorSessions(private val service: CrossServerBattleService) {
     }
 
     private fun seatWatcher(document: JsonObject, remoteBattleId: String, watcherId: UUID) {
-        val player = service.server()?.playerList?.getPlayer(watcherId) ?: return
+        val player = service.runningServer()?.playerList?.getPlayer(watcherId) ?: return
         val existing = CrossServerBattles.byRemoteId(remoteBattleId)
         if (existing != null) {
             attach(existing, player)
@@ -49,7 +49,7 @@ class SpectatorSessions(private val service: CrossServerBattleService) {
         }
         val mirror = build(document, remoteBattleId, player) ?: return
         attach(mirror, player)
-        service.client().send(BattleControlMessages.acknowledgement(remoteBattleId))
+        service.serverClient().send(BattleControlMessages.acknowledgement(remoteBattleId))
         mirror.release()
     }
 
@@ -129,7 +129,7 @@ class SpectatorSessions(private val service: CrossServerBattleService) {
         mirror.battle()?.spectators?.remove(watcherId)
         val wasLast = mirror.removeWatcher(watcherId)
         service.tellParticipant(watcherId, Msg.of(ChatFormatting.YELLOW, "battle.spectate_over"))
-        service.server()?.playerList?.getPlayer(watcherId)?.let { ApiEvents.spectateEnded(it, remoteBattleId) }
+        service.runningServer()?.playerList?.getPlayer(watcherId)?.let { ApiEvents.spectateEnded(it, remoteBattleId) }
         if (wasLast && mirror.isSpectator) service.closeReplayViewMirror(mirror)
     }
 

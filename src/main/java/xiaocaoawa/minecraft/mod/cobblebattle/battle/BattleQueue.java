@@ -182,7 +182,7 @@ final class BattleQueue {
       } else if (!this.service.auth().isSignedIn(participant.getUUID())) {
          return Msg.of(ChatFormatting.RED, "queue.not_signed_in");
       } else {
-         BattleServerClient client = this.service.client();
+         BattleServerClient client = this.service.serverClient();
          int ref = client.nextRef();
          JsonObject lookup = RoomQueueRequests.lookup(ref, participant.getUUID(), participant.getGameProfile().getName(), code);
          if (!this.references.sendLookup(ref, participant.getUUID(), () -> client.send(lookup))) {
@@ -209,14 +209,14 @@ final class BattleQueue {
    }
 
    Component leaveRoom(ServerPlayer participant) {
-      BattleServerClient client = this.service.client();
+      BattleServerClient client = this.service.serverClient();
       JsonObject leave = RoomQueueRequests.leave(client.nextRef(), participant.getUUID(), participant.getGameProfile().getName());
       client.send(leave);
       return null;
    }
 
    Component startRoom(ServerPlayer participant) {
-      BattleServerClient client = this.service.client();
+      BattleServerClient client = this.service.serverClient();
       int ref = client.nextRef();
       JsonObject start = RoomQueueRequests.start(ref, participant.getUUID(), participant.getGameProfile().getName());
       if (!this.references.sendOwner(ref, participant.getUUID(), () -> client.send(start))) {
@@ -238,7 +238,7 @@ final class BattleQueue {
    }
 
    private Component sendPreparedRequest(ServerPlayer participant, JsonObject request, BattleQueue.PreparedRoster preparedTeam, String rankedId) {
-      BattleServerClient client = this.service.client();
+      BattleServerClient client = this.service.serverClient();
       int ref = client.nextRef();
       request.addProperty("ref", ref);
       request.add("player", PlayerIdentityPayload.create(participant.getUUID(), participant.getGameProfile().getName()));
@@ -275,7 +275,7 @@ final class BattleQueue {
       if (!this.references.contains(participant.getUUID())) {
          return Msg.of(ChatFormatting.YELLOW, "queue.not_in_queue");
       } else {
-         BattleServerClient client = this.service.client();
+         BattleServerClient client = this.service.serverClient();
          JsonObject leave = QueueRequests.leave(client.nextRef(), participant.getUUID(), participant.getGameProfile().getName());
          client.send(leave);
          return null;
@@ -284,7 +284,7 @@ final class BattleQueue {
 
    void onParticipantDisconnect(ServerPlayer participant) {
       if (this.references.forgetParticipant(participant.getUUID())) {
-         BattleServerClient client = this.service.client();
+         BattleServerClient client = this.service.serverClient();
          if (client != null) {
             JsonObject leave = QueueRequests.leave(null, participant.getUUID(), participant.getGameProfile().getName());
             client.send(leave);

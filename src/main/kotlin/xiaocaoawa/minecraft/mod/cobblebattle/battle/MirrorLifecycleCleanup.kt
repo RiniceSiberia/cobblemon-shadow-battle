@@ -21,7 +21,7 @@ internal class MirrorLifecycleCleanup(
                 body.actor()?.let { MirrorPokemon.release(it.mirrorTeam()) }
             }
 
-            override fun mainThread(): Executor? = service.server()
+            override fun mainThread(): Executor? = service.runningServer()
 
             override fun discardProp(prop: PokemonEntity) {
                 if (!prop.isRemoved) prop.discard()
@@ -47,7 +47,7 @@ internal class MirrorLifecycleCleanup(
         val localBattleId = mirror.localBattleId()
         if (localBattleId != null) {
             CrossServerBattles.forget(localBattleId)
-            val server = service.server()
+            val server = service.runningServer()
             if (server != null) {
                 server.execute {
                     val battle = BattleRegistry.getBattle(localBattleId)
