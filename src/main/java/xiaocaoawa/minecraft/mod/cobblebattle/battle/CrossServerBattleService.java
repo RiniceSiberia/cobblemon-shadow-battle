@@ -70,7 +70,7 @@ public final class CrossServerBattleService {
    private static final Logger SERVICE_LOGGER = LoggerFactory.getLogger("CobbleBattle");
    private final CobbleBattleConfig serviceConfig;
    private final RemoteDex remoteDex = new RemoteDex();
-   private final BattleQueue matchmakingQueue = new BattleQueue(this);
+   private final MatchmakingQueueCoordinator matchmakingQueue = new MatchmakingQueueCoordinator(this);
    private final MirrorFactory battleMirrorFactory = new MirrorFactory(this);
    private final MirrorLifecycleCleanup lifecycleCleanup = new MirrorLifecycleCleanup(this);
    private final SpectatorFactory spectatorSessions = new SpectatorFactory(this);
@@ -139,7 +139,7 @@ public final class CrossServerBattleService {
    }
 
    public boolean isQueued(UUID participantUuid) {
-      return this.matchmakingQueue.contains(participantUuid);
+      return this.matchmakingQueue.hasWaitingTeam(participantUuid);
    }
 
    BattleServerClient serverClient() {
@@ -150,7 +150,7 @@ public final class CrossServerBattleService {
       return this.gameServer;
    }
 
-   BattleQueue queueCoordinator() {
+   MatchmakingQueueCoordinator queueCoordinator() {
       return this.matchmakingQueue;
    }
 
@@ -258,7 +258,7 @@ public final class CrossServerBattleService {
       }
 
       CrossServerBattles.clear();
-      this.matchmakingQueue.clear();
+      this.matchmakingQueue.clearQueueState();
       this.teamPreviewSessions.clear();
    }
 
@@ -282,7 +282,7 @@ public final class CrossServerBattleService {
       this.remoteDex.suspend(disconnectReason);
       this.chatObserversReported = -1;
       this.executeOnServerThread(this.roomDirectory::clearSession);
-      this.matchmakingQueue.clear();
+      this.matchmakingQueue.clearQueueState();
       this.teamPreviewSessions.clear();
       this.authenticationService.clear();
 
@@ -307,16 +307,16 @@ public final class CrossServerBattleService {
             this.remoteDex.accept(document);
             break;
          case "queue_ack":
-            this.matchmakingQueue.onQueueAck(document);
+            this.matchmakingQueue.handleQueueAccepted(document);
             break;
          case "queue_left":
-            this.matchmakingQueue.onQueueLeft(document);
+            this.matchmakingQueue.handleQueueDeparted(document);
             break;
          case "queue_wait":
-            this.matchmakingQueue.onQueueWait(document);
+            this.matchmakingQueue.handleQueuePosition(document);
             break;
          case "room_created":
-            this.matchmakingQueue.onRoomCreated(document);
+            this.matchmakingQueue.handleRoomCreated(document);
             break;
          case "room_list":
             this.executeOnServerThread(() -> this.handleRoomList(document));
@@ -480,13 +480,13 @@ public final class CrossServerBattleService {
                   if (leaderboardRequester != null) {
                      this.tellParticipant(leaderboardRequester, Component.literal(errorText).withStyle(ChatFormatting.RED));
                   } else {
-                     UUID roomLookupRequester = this.matchmakingQueue.claimLookupRef(document.get("ref"));
+                     UUID roomLookupRequester = this.matchmakingQueue.claimLookupRequester(document.get("ref"));
                      if (roomLookupRequester != null) {
                         this.tellParticipant(roomLookupRequester, formatLookupFailure(errorCode, errorText));
                      } else {
-                        UUID roomOwner = this.matchmakingQueue.claimRefOwner(document.get("ref"));
+                        UUID roomOwner = this.matchmakingQueue.claimRequestOwner(document.get("ref"));
                         if (roomOwner != null) {
-                           this.matchmakingQueue.drop(roomOwner);
+                           this.matchmakingQueue.discardWaitingTeam(roomOwner);
 
                            String roomReference = QueueErrorRules.roomRefusalKey(errorCode);
                            if (roomReference != null) {
@@ -837,7 +837,7 @@ public final class CrossServerBattleService {
          case "create" -> {
             String roomName = roomAction.name().isBlank() ? Msg.raw("room.default_name", participant.getGameProfile().getName()) : roomAction.name();
             yield this.matchmakingQueue
-               .createRoom(
+               .createBattleRoom(
                   participant,
                   roomName,
                   roomAction.password(),
@@ -849,10 +849,10 @@ public final class CrossServerBattleService {
                   roomAction.legality()
                );
          }
-         case "join" -> this.matchmakingQueue.joinRoom(participant, roomAction.roomId(), roomAction.password(), roomAction.battleType(), roomAction.hostEngine(), roomAction.legality(), "");
-         case "join_code" -> this.matchmakingQueue.lookupRoom(participant, roomAction.inviteCode());
-         case "leave" -> this.matchmakingQueue.leaveRoom(participant);
-         case "start" -> this.matchmakingQueue.startRoom(participant);
+         case "join" -> this.matchmakingQueue.joinBattleRoom(participant, roomAction.roomId(), roomAction.password(), roomAction.battleType(), roomAction.hostEngine(), roomAction.legality(), "");
+         case "join_code" -> this.matchmakingQueue.findRoomByInvite(participant, roomAction.inviteCode());
+         case "leave" -> this.matchmakingQueue.leaveBattleRoom(participant);
+         case "start" -> this.matchmakingQueue.startBattleRoom(participant);
          default -> null;
       };
       if (failureMessage != null) {
@@ -868,7 +868,7 @@ public final class CrossServerBattleService {
    }
 
    private void handleRoomClosed(JsonObject document) {
-      this.matchmakingQueue.onRoomClosed(document);
+      this.matchmakingQueue.handleRoomClosed(document);
       UUID participantUuid = BattleIdentifierParsing.uuidOrNull(BattleServerClient.str(document, "player", ""));
       if (participantUuid != null) {
          this.refreshRoomDirectory(participantUuid);
@@ -1228,15 +1228,15 @@ public final class CrossServerBattleService {
    }
 
    public Component queue(ServerPlayer participant, String competitionId) {
-      return this.matchmakingQueue.join(participant, competitionId);
+      return this.matchmakingQueue.joinCompetitionQueue(participant, competitionId);
    }
 
    public Component leaveQueue(ServerPlayer participant) {
-      return this.matchmakingQueue.leave(participant);
+      return this.matchmakingQueue.leaveMatchmakingQueue(participant);
    }
 
    public Component describePartyCompatibility(ServerPlayer participant) {
-      return this.matchmakingQueue.describePartyCompatibility(participant);
+      return this.matchmakingQueue.evaluatePartyCompatibility(participant);
    }
 
    public void onPlayerDisconnect(ServerPlayer participant) {

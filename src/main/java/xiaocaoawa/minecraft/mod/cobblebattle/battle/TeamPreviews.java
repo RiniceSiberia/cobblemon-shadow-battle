@@ -110,7 +110,7 @@ final class TeamPreviews {
                }
 
                this.service.tellParticipant(session.getPlayer(), Msg.of(ChatFormatting.YELLOW, "preview.closed"));
-               this.service.queueCoordinator().drop(session.getPlayer());
+               this.service.queueCoordinator().discardWaitingTeam(session.getPlayer());
          }
       }
    }

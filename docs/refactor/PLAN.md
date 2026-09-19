@@ -154,3 +154,5 @@ B6-cross-server-service-symbols（2026-09-19）：完成 CrossServerBattleServic
 B6-remote-dex-symbols（2026-09-19）：完成 RemoteDex 的缓存、快照、合法性检查和队伍元数据安全内部声明语义改名。公开方法名、JVM 签名、JSON 字段、缓存路径、拒绝顺序和文件副作用保持；真实 Pokémon 注册对象、拒绝文本和远端图鉴握手继续作为集成验收项。
 
 B6-server-dex-symbols（2026-09-19）：完成 ServerDex 的服务端图鉴状态、原图鉴备份、候选条目、完整知识记录和反射字段访问安全内部声明语义改名。公开方法、网络载荷、Dex 标识、反射目标字符串和 GUI 副作用顺序保持；真实 Dexes 替换、反射字段、GUI 与 Mixin 继续作为集成验收项。
+
+B6-matchmaking-queue-symbols（2026-09-19）：将原 `BattleQueue` 顶层协调器改名为 `MatchmakingQueueCoordinator`，并完成等待队伍、请求引用、排位队列、房间动作、响应处理和队伍兼容性声明的语义改名。Java 与 Kotlin 调用点同步迁移；公开网络协议、JSON 字段、翻译键、消息顺序和失败回滚保持。真实远端队列、房间、玩家消息和镜像建场继续作为集成验收项。

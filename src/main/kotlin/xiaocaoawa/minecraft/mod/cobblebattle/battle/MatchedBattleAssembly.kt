@@ -64,7 +64,7 @@ class MatchedBattleAssembly(private val service: CrossServerBattleService) {
     }
 
     private fun buildRemote(document: JsonObject, battleId: String, localSeat: String, participantId: UUID, opponent: MatchOpponent) {
-        val queued = service.queueCoordinator().claim(participantId)
+        val queued = service.queueCoordinator().claimWaitingTeam(participantId)
         if (queued == null) {
             logger.error("match_found for {} but we have no queued team for them", participantId)
             fail(battleId, listOf(participantId), "battle.setup_failed", "no queued team on this server")
@@ -130,7 +130,7 @@ class MatchedBattleAssembly(private val service: CrossServerBattleService) {
     }
 
     private fun buildLocalPair(document: JsonObject, battleId: String, localSeat: String, participantId: UUID, opponent: MatchOpponent) {
-        val claims = LocalMatchClaims.take(participantId, opponent.playerId, service.queueCoordinator()::claim)
+        val claims = LocalMatchClaims.take(participantId, opponent.playerId, service.queueCoordinator()::claimWaitingTeam)
         val localQueue = claims.first
         val opponentQueue = claims.second
         val participants = listOf(participantId, opponent.playerId)

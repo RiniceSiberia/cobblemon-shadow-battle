@@ -284,3 +284,9 @@ RemoteDex 的 72 个基线剩余声明已按缓存文件、图鉴快照、种族
 ## B6-server-dex-symbols（2026-09-19）
 
 ServerDex 的 65 个基线剩余声明已按服务端图鉴激活状态、原图鉴备份、许可条目收集、形态知识填充和反射字段访问职责完成语义改名。公开方法名与 JVM 签名、`DEX_ID`、网络请求、Cobblemon 反射字段名、图鉴替换与恢复顺序、空图鉴提示和 GUI 打开关闭时机未改。JDK21 离线 clean build 成功，259 项测试、0 失败、0 错误、0 跳过；javac 快照为 97 个文件、4277 个声明、0 个分析错误；ServerDex 的公开 javap 签名与原 JAR 无差异。真实 Dexes 全局替换、反射字段、GUI、Mixin 和客户端生命周期仍待联调。日志 `D:/workspace/gradle-server-dex-symbols.log`。
+
+## B6-matchmaking-queue-symbols（2026-09-19）
+
+原 `BattleQueue` 改为 `MatchmakingQueueCoordinator`，等待队伍记录改为 `ClaimedQueueTeam`；等待队伍的登记、领取和丢弃，请求引用领取，排位加入，房间创建、加入、查询、离开和开战，关闭与创建响应，排队确认、离队和位置响应，以及队伍兼容性检查均只调整内部声明和调用点。协议类型、JSON 字段、翻译键、队伍检查顺序、引用登记与领取、发送失败回滚、API 事件和玩家消息顺序保持。
+
+首次快速编译检出 `MatchedBattleAssembly.kt` 仍有两个旧 `claim` 调用，其中一个为方法引用；同步改为 `claimWaitingTeam` 后快速 `classes` 和 JDK21 离线 `clean build` 均成功。全量 259 项测试、0 失败、0 错误、0 跳过；javac 快照为 97 个文件、4277 个声明、0 个分析错误；`CrossServerBattleService` 公开 javap 与原 JAR 无差异，构建产物中旧 `BattleQueue` 类数量为 0，新协调器及内部类共 4 个。真实队列、房间、远端服务、在线玩家消息和镜像建场仍待联调，因此相关源码保持待验证。日志 `D:/workspace/gradle-matchmaking-queue-symbols.log`。
