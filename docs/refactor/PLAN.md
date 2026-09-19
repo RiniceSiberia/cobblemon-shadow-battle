@@ -168,3 +168,9 @@ B6-message-catalogue-symbols（2026-09-19）：完成 Msg 的日志器、默认�
 B6-mirror-battle-symbols（2026-09-19）：完成 `MirrorBattle` 的日志器、顺序输出、本地对战绑定、主次席位、远端参与者、输出路由、临时实体登记和解释器交付声明语义改名，并同步 Java/Kotlin 包内调用点。公开构造与方法签名、路由结果、输出缓存顺序、实体领取顺序和 Showdown 解释器调用保持；真实实体、BattleRegistry、Showdown 解释及对战生命周期继续作为集成验收项。
 
 B6-cobblemon-compat-symbols（2026-09-19）：完成 `CobblemonCompat` 的日志器、反射句柄、变换枚举、画像绘制参数、图鉴进度回退和静态初始化声明语义改名。公开绘制入口、现代与旧版 `drawProfilePokemon` 签名、参数插入位置、异常传播和图鉴枚举回退顺序保持；真实客户端画像绘制及跨 Cobblemon 版本反射继续作为集成验收项。
+
+## B6-chat-screen-symbols（2026-09-19）
+
+`ChatScreen` 的来源界面、绘制上下文、指针位置、帧插值、面板相对坐标、频道命中、滚动输入、字符输入、键盘输入和草稿提交声明完成语义改名。公开构造与 Screen 覆写签名保持。
+
+打开界面仍启动聊天草稿，关闭时仍取消草稿并返回来源界面。渲染顺序继续为聊天面板、父类界面和玩家身份卡；频道点击、面板内滚动、字符输入、Tab 切换、Unicode 退格、回车和小键盘回车提交后关闭的行为保持。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；26 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实客户端键鼠交互仍待验证。日志 `D:/workspace/gradle-chat-screen-symbols.log`。

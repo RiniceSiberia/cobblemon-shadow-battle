@@ -324,3 +324,11 @@ ServerDex 的 65 个基线剩余声明已按服务端图鉴激活状态、原图
 `CobblemonCompat` 的日志器、画像绘制 MethodHandle、无变换枚举、PoseStack、模型旋转、姿态、帧插值、缩放、颜色、头部偏移、光照、图鉴进度候选和反射初始化声明完成语义改名。公开 `drawProfile`、`modernProfile` 和 `OWNED` 签名保持。
 
 静态初始化仍先查找带 `ProfileTransformType` 与方块光照的现代 `drawProfilePokemon`，在索引 7 固定 `NONE`；反射失败后仍查找两个 boolean 且无光照的旧签名，在索引 7 固定 false，并在索引 14补入未使用的 int 参数。两种签名均缺失时继续记录错误且不绘制。调用时 Error 和 RuntimeException 原样传播，其他 Throwable 包装为 IllegalStateException。图鉴进度仍依次尝试 `OWNED`、`CAUGHT`，最后回退枚举末项。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；26 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实客户端画像绘制、跨版本反射和图鉴枚举仍待验证。日志 `D:/workspace/gradle-cobblemon-compat-symbols.log`。
+
+## B6-chat-screen-symbols（2026-09-19）
+
+`ChatScreen` 打开时继续调用 `ChatInput.start()` 建立草稿，`onClose()` 继续先取消草稿，再切回构造时传入的来源界面。该屏幕仍不暂停游戏，背景覆写继续保持空实现。
+
+每帧仍先绘制聊天面板，再调用 Screen 父类渲染，最后绘制玩家身份卡。鼠标点击继续以聊天面板原点换算相对坐标；命中频道时只切换频道并消费事件，未命中时交给父类。滚轮仅在聊天面板范围内调整垂直滚动，面板外继续交给父类，水平滚动参数保持透传。
+
+字符输入继续交给 `ChatInput.type`。Enter 与小键盘 Enter 继续发送当前草稿并关闭界面，Tab 切换频道，Backspace 删除一个 Unicode code point，其余按键交给父类。公开构造和 Screen 覆写的 JVM 签名与原 JAR 一致；259 项自动测试与公开 ABI 对照通过。真实客户端键鼠事件、焦点、频道切换、滚动、提交和返回界面仍待验证，源码状态保持待验证。证据日志：`D:/workspace/gradle-chat-screen-symbols.log`。
