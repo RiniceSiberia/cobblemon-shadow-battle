@@ -15,7 +15,7 @@ internal class MirrorLifecycleCleanup(
 ) {
     fun sweepEntities(mirror: MirrorBattle, delayMs: Long) {
         val bodies = mirror.takeBodies()
-        val props = mirror.takeProps()
+        val props = mirror.drainPropEntities()
         MirrorSweepSequence.arrange(bodies, props, delayMs, object : MirrorSweepTarget<MirrorBattle.Body, PokemonEntity> {
             override fun releaseRoster(body: MirrorBattle.Body) {
                 body.actor()?.let { MirrorPokemon.release(it.mirrorTeam()) }

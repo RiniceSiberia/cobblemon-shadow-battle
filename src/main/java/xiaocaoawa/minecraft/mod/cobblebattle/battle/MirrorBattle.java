@@ -15,62 +15,92 @@ import org.slf4j.LoggerFactory;
 import xiaocaoawa.minecraft.mod.cobblebattle.api.BattleInfo;
 
 public final class MirrorBattle {
-   private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle/Mirror");
-   private final SequencedOutputBuffer outputBuffer;
+   private static final Logger MIRROR_LOG = LoggerFactory.getLogger("CobbleBattle/Mirror");
+   private final SequencedOutputBuffer sequencedOutput;
    private final MirrorParticipantState participants;
-   private final boolean debug;
-   private volatile UUID localBattleId;
-   private volatile PokemonBattle battle;
+   private final boolean protocolTraceEnabled;
+   private volatile UUID registeredBattleId;
+   private volatile PokemonBattle attachedBattle;
    private final MirrorEntityRegistry<MirrorBattle.Body, PokemonEntity> entities = new MirrorEntityRegistry<>();
 
-   public static MirrorBattle spectator(String remoteBattleId, boolean debug) {
-      return new MirrorBattle(remoteBattleId, null, null, null, null, "", "", false, debug, true);
+   public static MirrorBattle spectator(String upstreamBattleId, boolean protocolTraceEnabled) {
+      return new MirrorBattle(upstreamBattleId, null, null, null, null, "", "", false, protocolTraceEnabled, true);
    }
 
    public MirrorBattle(
-      String remoteBattleId,
-      String seat,
-      String opponentSeat,
+      String upstreamBattleId,
+      String primarySeat,
+      String secondarySeat,
       UUID localParticipantUuid,
-      String opponentName,
-      String opponentServerId,
+      String remoteParticipantName,
+      String remoteServerId,
       boolean sourceOfTruth,
-      boolean debug
+      boolean protocolTraceEnabled
    ) {
-      this(remoteBattleId, seat, opponentSeat, localParticipantUuid, null, opponentName, opponentServerId, sourceOfTruth, debug, false);
+      this(
+         upstreamBattleId,
+         primarySeat,
+         secondarySeat,
+         localParticipantUuid,
+         null,
+         remoteParticipantName,
+         remoteServerId,
+         sourceOfTruth,
+         protocolTraceEnabled,
+         false
+      );
    }
 
    public MirrorBattle(
-      String remoteBattleId,
-      String seat,
-      String opponentSeat,
+      String upstreamBattleId,
+      String primarySeat,
+      String secondarySeat,
       UUID localParticipantUuid,
       UUID secondLocalParticipantUuid,
-      String opponentName,
-      String opponentServerId,
+      String remoteParticipantName,
+      String remoteServerId,
       boolean sourceOfTruth,
-      boolean debug
+      boolean protocolTraceEnabled
    ) {
-      this(remoteBattleId, seat, opponentSeat, localParticipantUuid, secondLocalParticipantUuid, opponentName, opponentServerId, sourceOfTruth, debug, false);
+      this(
+         upstreamBattleId,
+         primarySeat,
+         secondarySeat,
+         localParticipantUuid,
+         secondLocalParticipantUuid,
+         remoteParticipantName,
+         remoteServerId,
+         sourceOfTruth,
+         protocolTraceEnabled,
+         false
+      );
    }
 
    private MirrorBattle(
-      String remoteBattleId,
-      String seat,
-      String opponentSeat,
+      String upstreamBattleId,
+      String primarySeat,
+      String secondarySeat,
       UUID localParticipantUuid,
       UUID secondLocalParticipantUuid,
-      String opponentName,
-      String opponentServerId,
+      String remoteParticipantName,
+      String remoteServerId,
       boolean sourceOfTruth,
-      boolean debug,
+      boolean protocolTraceEnabled,
       boolean replayView
    ) {
-      this.outputBuffer = new SequencedOutputBuffer(remoteBattleId, replayView, this::apply);
+      this.sequencedOutput = new SequencedOutputBuffer(upstreamBattleId, replayView, this::deliverBufferedOutput);
       this.participants = new MirrorParticipantState(
-         remoteBattleId, seat, opponentSeat, localParticipantUuid, secondLocalParticipantUuid, opponentName, opponentServerId, sourceOfTruth, replayView
+         upstreamBattleId,
+         primarySeat,
+         secondarySeat,
+         localParticipantUuid,
+         secondLocalParticipantUuid,
+         remoteParticipantName,
+         remoteServerId,
+         sourceOfTruth,
+         replayView
       );
-      this.debug = debug;
+      this.protocolTraceEnabled = protocolTraceEnabled;
    }
 
    public String remoteBattleId() {
@@ -109,22 +139,24 @@ public final class MirrorBattle {
       if (this.bothLocal()) {
          return new MirrorBattle.Routing(true, true);
       } else {
-         int nl = content.indexOf(10);
-         String kind = nl == -1 ? content : content.substring(0, nl);
-         if (!"sideupdate".equals(kind)) {
+         int headerTerminator = content.indexOf(10);
+         String messageType = headerTerminator == -1 ? content : content.substring(0, headerTerminator);
+         if (!"sideupdate".equals(messageType)) {
             return new MirrorBattle.Routing(true, true);
          } else {
-            String rest = content.substring(nl + 1);
-            int rnl = rest.indexOf(10);
-            String target = (rnl == -1 ? rest : rest.substring(0, rnl)).trim();
-         return target.equals(this.participants.secondarySeat()) ? new MirrorBattle.Routing(true, false) : new MirrorBattle.Routing(false, true);
+            String messageBody = content.substring(headerTerminator + 1);
+            int seatTerminator = messageBody.indexOf(10);
+            String targetSeat = (seatTerminator == -1 ? messageBody : messageBody.substring(0, seatTerminator)).trim();
+            return targetSeat.equals(this.participants.secondarySeat())
+               ? new MirrorBattle.Routing(true, false)
+               : new MirrorBattle.Routing(false, true);
          }
       }
    }
 
-   public void attachBody(NPCEntity npc, RemoteBattleActor actor) {
-      if (npc != null || actor != null) {
-         this.entities.addBody(new MirrorBattle.Body(npc, actor));
+   public void attachBody(NPCEntity mirrorNpc, RemoteBattleActor remoteActor) {
+      if (mirrorNpc != null || remoteActor != null) {
+         this.entities.addBody(new MirrorBattle.Body(mirrorNpc, remoteActor));
       }
    }
 
@@ -132,11 +164,11 @@ public final class MirrorBattle {
       return this.entities.bodySnapshot();
    }
 
-   void attachProp(PokemonEntity entity) {
-      this.entities.addProp(entity);
+   void registerPropEntity(PokemonEntity propEntity) {
+      this.entities.addProp(propEntity);
    }
 
-   List<PokemonEntity> takeProps() {
+   List<PokemonEntity> drainPropEntities() {
       return this.entities.takeProps();
    }
 
@@ -189,45 +221,45 @@ public final class MirrorBattle {
    }
 
    public UUID localBattleId() {
-      return this.localBattleId;
+      return this.registeredBattleId;
    }
 
    public PokemonBattle battle() {
-      return this.battle;
+      return this.attachedBattle;
    }
 
    public boolean isFinished() {
-      return this.outputBuffer.isTerminated();
+      return this.sequencedOutput.isTerminated();
    }
 
-   void bindLocalId(UUID id) {
-      this.localBattleId = id;
+   void bindLocalBattleId(UUID boundBattleId) {
+      this.registeredBattleId = boundBattleId;
    }
 
-   public void attach(PokemonBattle battle) {
-      this.battle = battle;
+   public void attach(PokemonBattle attachedBattle) {
+      this.attachedBattle = attachedBattle;
    }
 
-   public void release() { this.outputBuffer.enableDelivery(); }
+   public void release() { this.sequencedOutput.enableDelivery(); }
 
-   public void accept(long sequence, String content) { this.outputBuffer.enqueue(sequence, content); }
+   public void accept(long sequence, String content) { this.sequencedOutput.enqueue(sequence, content); }
 
-   private void apply(String content) {
-      UUID id = this.localBattleId;
-      if (id == null) {
-         LOGGER.error("Battle {} received output before the local battle existed", this.remoteBattleId());
+   private void deliverBufferedOutput(String content) {
+      UUID boundBattleId = this.registeredBattleId;
+      if (boundBattleId == null) {
+         MIRROR_LOG.error("Battle {} received output before the local battle existed", this.remoteBattleId());
       } else {
-         if (this.debug) {
-            LOGGER.info("[{}] << {}", this.remoteBattleId(), content.replace("\n", " \\n "));
+         if (this.protocolTraceEnabled) {
+            MIRROR_LOG.info("[{}] << {}", this.remoteBattleId(), content.replace("\n", " \\n "));
          }
 
-         ShowdownInterpreter.INSTANCE.interpretMessage(id, content);
+         ShowdownInterpreter.INSTANCE.interpretMessage(boundBattleId, content);
       }
    }
 
-   public void markFinished() { this.outputBuffer.terminate(); }
+   public void markFinished() { this.sequencedOutput.terminate(); }
 
-   public boolean hasStalledChunks() { return this.outputBuffer.hasPendingOutput(); }
+   public boolean hasStalledChunks() { return this.sequencedOutput.hasPendingOutput(); }
 
    public record Body(NPCEntity npc, RemoteBattleActor actor) {
    }

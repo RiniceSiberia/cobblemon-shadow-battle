@@ -34,7 +34,7 @@ object MirrorPropEntities {
         val creature: Pokemon? = entity.pokemon
         return props.onAdded(creature?.uuid, { entity.tags.contains(MirrorPokemon.TAG) }, { owner ->
             entity.addTag(MirrorPokemon.TAG)
-            owner.attachProp(entity)
+            owner.registerPropEntity(entity)
         }) {
             logger.info("Removed a leftover mirror Pokemon ({}) at {}", if (creature == null) "?" else creature.species.name, entity.blockPosition())
             entity.discard()

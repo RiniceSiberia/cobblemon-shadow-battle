@@ -6,7 +6,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 public final class CrossServerBattles {
-    private static final BattleProjectionIndex INDEX = new BattleProjectionIndex(MirrorBattle::bindLocalId, System::currentTimeMillis);
+    private static final BattleProjectionIndex INDEX = new BattleProjectionIndex(MirrorBattle::bindLocalBattleId, System::currentTimeMillis);
     private CrossServerBattles() {}
     public static void injecting(Runnable write) { INDEX.withInjectedInput(write); }
     public static void setChoiceRelay(Consumer<ChoiceRelay> relay) { INDEX.observeChoices(relay); }
