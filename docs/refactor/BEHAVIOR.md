@@ -280,3 +280,7 @@ CrossServerBattleService 的字段、包内方法、私有处理器、参数和�
 ## B6-remote-dex-symbols（2026-09-19）
 
 RemoteDex 的 72 个基线剩余声明已按缓存文件、图鉴快照、种族值、能力、招式、EV/IV 和队伍元数据职责完成语义改名。公开方法名、record 字段、JSON 字段、缓存路径、日志文本、判断顺序、拒绝顺序、异常处理和磁盘替换副作用未改。JDK21 离线 clean build 成功，259 项测试、0 失败、0 错误、0 跳过；javac 快照为 97 个文件、4277 个声明、0 个分析错误；RemoteDex 的公开 javap 签名与原 JAR 无差异。真实 Pokémon 注册对象、拒绝文本、缓存文件和远端图鉴握手仍待联调。日志 `D:/workspace/gradle-remote-dex-symbols.log`。
+
+## B6-server-dex-symbols（2026-09-19）
+
+ServerDex 的 65 个基线剩余声明已按服务端图鉴激活状态、原图鉴备份、许可条目收集、形态知识填充和反射字段访问职责完成语义改名。公开方法名与 JVM 签名、`DEX_ID`、网络请求、Cobblemon 反射字段名、图鉴替换与恢复顺序、空图鉴提示和 GUI 打开关闭时机未改。JDK21 离线 clean build 成功，259 项测试、0 失败、0 错误、0 跳过；javac 快照为 97 个文件、4277 个声明、0 个分析错误；ServerDex 的公开 javap 签名与原 JAR 无差异。真实 Dexes 全局替换、反射字段、GUI、Mixin 和客户端生命周期仍待联调。日志 `D:/workspace/gradle-server-dex-symbols.log`。

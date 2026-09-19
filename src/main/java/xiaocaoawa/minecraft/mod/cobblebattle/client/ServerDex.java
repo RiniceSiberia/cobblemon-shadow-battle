@@ -33,21 +33,21 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.ServerDexPayload;
 
 public final class ServerDex {
    public static final ResourceLocation DEX_ID = ResourceLocation.fromNamespaceAndPath("cobblebattle", "server");
-   private static final ResourceLocation NATIONAL = ResourceLocation.fromNamespaceAndPath("cobblemon", "national");
+   private static final ResourceLocation NATIONAL_DEX_ID = ResourceLocation.fromNamespaceAndPath("cobblemon", "national");
    private static final ServerDexSnapshotState SNAPSHOT = new ServerDexSnapshotState();
-   private static boolean active;
-   private static Map<ResourceLocation, PokedexDef> savedDexes;
-   private static ClientPokedexManager knowledge;
+   private static boolean serverDexActive;
+   private static Map<ResourceLocation, PokedexDef> previousDexDefinitions;
+   private static ClientPokedexManager serverKnowledge;
 
    private ServerDex() {
    }
 
    public static boolean active() {
-      return active;
+      return serverDexActive;
    }
 
-   public static void rememberRanked(String rankedId) {
-      SNAPSHOT.rememberRanked(rankedId);
+   public static void rememberRanked(String rankedCompetitionId) {
+      SNAPSHOT.rememberRanked(rankedCompetitionId);
    }
 
    public static void requestDex() {
@@ -67,97 +67,97 @@ public final class ServerDex {
    }
 
    public static ClientPokedexManager knowledge() {
-      return active ? knowledge : null;
+      return serverDexActive ? serverKnowledge : null;
    }
 
    public static void onPokedexSync() {
-      if (active) {
+      if (serverDexActive) {
          close();
-         Minecraft minecraft = Minecraft.getInstance();
-         if (minecraft.screen instanceof PokedexGUI) {
-            minecraft.setScreen(null);
+         Minecraft client = Minecraft.getInstance();
+         if (client.screen instanceof PokedexGUI) {
+            client.setScreen(null);
          }
       }
    }
 
    public static void open(ServerDexPayload body) {
-      Minecraft minecraft = Minecraft.getInstance();
-      if (minecraft.player != null) {
+      Minecraft client = Minecraft.getInstance();
+      if (client.player != null) {
          close();
          if (SNAPSHOT.accept(body) == ServerDexAcceptance.RETRY_FULL_SNAPSHOT) {
             requestDex();
             return;
          }
 
-         List<PokedexEntry> entries = approvedEntries();
-         if (entries.isEmpty()) {
-            minecraft.player.sendSystemMessage(Component.translatable("cobblebattle.dex.empty"));
+         List<PokedexEntry> approvedDexEntries = collectApprovedEntries();
+         if (approvedDexEntries.isEmpty()) {
+            client.player.sendSystemMessage(Component.translatable("cobblebattle.dex.empty"));
          } else {
-            SimplePokedexDef region = new SimplePokedexDef(DEX_ID);
-            region.appendEntries(entries.stream().map(PokedexEntry::getId).toList());
-            LinkedHashMap<ResourceLocation, PokedexDef> dexes = Dexes.INSTANCE.getDexEntryMap();
-            savedDexes = new LinkedHashMap<>(dexes);
-            dexes.clear();
-            dexes.put(DEX_ID, region);
-            knowledge = fullKnowledge(entries);
-            active = true;
-            PokedexGUI.Companion.open(knowledge, PokedexType.RED, null, null);
+            SimplePokedexDef serverDexDefinition = new SimplePokedexDef(DEX_ID);
+            serverDexDefinition.appendEntries(approvedDexEntries.stream().map(PokedexEntry::getId).toList());
+            LinkedHashMap<ResourceLocation, PokedexDef> dexDefinitions = Dexes.INSTANCE.getDexEntryMap();
+            previousDexDefinitions = new LinkedHashMap<>(dexDefinitions);
+            dexDefinitions.clear();
+            dexDefinitions.put(DEX_ID, serverDexDefinition);
+            serverKnowledge = buildCompleteKnowledge(approvedDexEntries);
+            serverDexActive = true;
+            PokedexGUI.Companion.open(serverKnowledge, PokedexType.RED, null, null);
          }
       }
    }
 
    public static void close() {
-      if (active) {
-         active = false;
-         knowledge = null;
-         LinkedHashMap<ResourceLocation, PokedexDef> dexes = Dexes.INSTANCE.getDexEntryMap();
-         dexes.clear();
-         if (savedDexes != null) {
-            dexes.putAll(savedDexes);
+      if (serverDexActive) {
+         serverDexActive = false;
+         serverKnowledge = null;
+         LinkedHashMap<ResourceLocation, PokedexDef> dexDefinitions = Dexes.INSTANCE.getDexEntryMap();
+         dexDefinitions.clear();
+         if (previousDexDefinitions != null) {
+            dexDefinitions.putAll(previousDexDefinitions);
          }
 
-         savedDexes = null;
+         previousDexDefinitions = null;
       }
    }
 
    public static void tick() {
-      if (active && !(Minecraft.getInstance().screen instanceof PokedexGUI)) {
+      if (serverDexActive && !(Minecraft.getInstance().screen instanceof PokedexGUI)) {
          close();
       }
    }
 
-   public static Map<Stat, Integer> statsFor(PokedexEntry entry, PokedexForm form) {
-      if (entry == null) {
+   public static Map<Stat, Integer> statsFor(PokedexEntry selectedEntry, PokedexForm selectedForm) {
+      if (selectedEntry == null) {
          return null;
       } else {
-         Species speciesTemplate = PokemonSpecies.getByIdentifier(entry.getSpeciesId());
+         Species speciesTemplate = PokemonSpecies.getByIdentifier(selectedEntry.getSpeciesId());
          if (speciesTemplate == null) {
             return null;
          } else {
-            FormData data = form == null ? null : speciesTemplate.getFormByName(form.getDisplayForm());
-            if (data == null) {
-               data = speciesTemplate.getStandardForm();
+            FormData resolvedForm = selectedForm == null ? null : speciesTemplate.getFormByName(selectedForm.getDisplayForm());
+            if (resolvedForm == null) {
+               resolvedForm = speciesTemplate.getStandardForm();
             }
 
-            return SNAPSHOT.statsFor(data.showdownId(), speciesTemplate.showdownId());
+            return SNAPSHOT.statsFor(resolvedForm.showdownId(), speciesTemplate.showdownId());
          }
       }
    }
 
-   private static List<PokedexEntry> approvedEntries() {
-      Map<ResourceLocation, PokedexDef> dexes = Dexes.INSTANCE.getDexEntryMap();
-      PokedexDef national = dexes.get(NATIONAL);
-      List<PokedexEntry> source;
-      if (national != null) {
-         source = national.getEntries();
+   private static List<PokedexEntry> collectApprovedEntries() {
+      Map<ResourceLocation, PokedexDef> dexDefinitions = Dexes.INSTANCE.getDexEntryMap();
+      PokedexDef nationalDex = dexDefinitions.get(NATIONAL_DEX_ID);
+      List<PokedexEntry> candidateEntries;
+      if (nationalDex != null) {
+         candidateEntries = nationalDex.getEntries();
       } else {
-         source = new ArrayList<>();
-         Set<ResourceLocation> seen = new LinkedHashSet<>();
+         candidateEntries = new ArrayList<>();
+         Set<ResourceLocation> seenEntryIds = new LinkedHashSet<>();
 
-         for (PokedexDef def : dexes.values()) {
-            for (PokedexEntry entry : def.getEntries()) {
-               if (seen.add(entry.getId())) {
-                  source.add(entry);
+         for (PokedexDef dexDefinition : dexDefinitions.values()) {
+            for (PokedexEntry dexEntry : dexDefinition.getEntries()) {
+               if (seenEntryIds.add(dexEntry.getId())) {
+                  candidateEntries.add(dexEntry);
                }
             }
          }
@@ -165,22 +165,22 @@ public final class ServerDex {
 
       List<PokedexEntry> outputStream = new ArrayList<>();
 
-      for (PokedexEntry entryx : source) {
-         Species speciesTemplate = PokemonSpecies.getByIdentifier(entryx.getSpeciesId());
-         if (speciesTemplate != null && approved(speciesTemplate)) {
-            outputStream.add(entryx);
+      for (PokedexEntry candidateEntry : candidateEntries) {
+         Species speciesTemplate = PokemonSpecies.getByIdentifier(candidateEntry.getSpeciesId());
+         if (speciesTemplate != null && isApprovedSpecies(speciesTemplate)) {
+            outputStream.add(candidateEntry);
          }
       }
 
       return outputStream;
    }
 
-   private static boolean approved(Species speciesTemplate) {
+   private static boolean isApprovedSpecies(Species speciesTemplate) {
       if (SNAPSHOT.contains(speciesTemplate.showdownId())) {
          return true;
       } else {
-         for (FormData form : speciesTemplate.getForms()) {
-            if (SNAPSHOT.contains(form.showdownId())) {
+         for (FormData speciesForm : speciesTemplate.getForms()) {
+            if (SNAPSHOT.contains(speciesForm.showdownId())) {
                return true;
             }
          }
@@ -189,104 +189,104 @@ public final class ServerDex {
       }
    }
 
-   private static ClientPokedexManager fullKnowledge(List<PokedexEntry> entries) {
-      Map<ResourceLocation, SpeciesDexRecord> records = new LinkedHashMap<>();
-      ClientPokedexManager manager = new ClientPokedexManager(records);
+   private static ClientPokedexManager buildCompleteKnowledge(List<PokedexEntry> approvedEntries) {
+      Map<ResourceLocation, SpeciesDexRecord> speciesRecords = new LinkedHashMap<>();
+      ClientPokedexManager knowledgeManager = new ClientPokedexManager(speciesRecords);
 
-      for (PokedexEntry entry : entries) {
-         Species speciesTemplate = PokemonSpecies.getByIdentifier(entry.getSpeciesId());
-         SpeciesDexRecord record = records.computeIfAbsent(entry.getSpeciesId(), id -> new SpeciesDexRecord());
-         Set<String> aspects = new LinkedHashSet<>(entry.getConditionAspects());
-         aspects.addAll(entry.getDisplayAspects());
-         ServerDex.Records.aspects(record).addAll(aspects);
-         Set<String> formNames = new LinkedHashSet<>();
+      for (PokedexEntry pokedexEntry : approvedEntries) {
+         Species speciesTemplate = PokemonSpecies.getByIdentifier(pokedexEntry.getSpeciesId());
+         SpeciesDexRecord speciesRecord = speciesRecords.computeIfAbsent(pokedexEntry.getSpeciesId(), speciesId -> new SpeciesDexRecord());
+         Set<String> discoveredAspects = new LinkedHashSet<>(pokedexEntry.getConditionAspects());
+         discoveredAspects.addAll(pokedexEntry.getDisplayAspects());
+         ServerDex.RecordFields.mutableAspects(speciesRecord).addAll(discoveredAspects);
+         Set<String> knownFormNames = new LinkedHashSet<>();
 
-         for (PokedexForm form : entry.getForms()) {
-            formNames.add(form.getDisplayForm());
-            formNames.addAll(form.getUnlockForms());
+         for (PokedexForm pokedexForm : pokedexEntry.getForms()) {
+            knownFormNames.add(pokedexForm.getDisplayForm());
+            knownFormNames.addAll(pokedexForm.getUnlockForms());
          }
 
          if (speciesTemplate != null) {
-            for (FormData form : speciesTemplate.getForms()) {
-               formNames.add(form.getName());
+            for (FormData speciesForm : speciesTemplate.getForms()) {
+               knownFormNames.add(speciesForm.getName());
             }
          }
 
-         for (String name : new ArrayList<>(formNames)) {
-            formNames.add(name.toLowerCase(Locale.ROOT));
+         for (String formName : new ArrayList<>(knownFormNames)) {
+            knownFormNames.add(formName.toLowerCase(Locale.ROOT));
          }
 
-         Map<String, FormDexRecord> forms = ServerDex.Records.forms(record);
+         Map<String, FormDexRecord> formRecords = ServerDex.RecordFields.mutableForms(speciesRecord);
 
-         for (String name : formNames) {
-            if (!forms.containsKey(name)) {
-               FormDexRecord form = new FormDexRecord();
-               FormData data = speciesTemplate == null ? null : speciesTemplate.getFormByName(name);
-               Set<Gender> genders = ServerDex.Records.genders(form);
-               if (data != null && !data.getPossibleGenders().isEmpty()) {
-                  genders.addAll(data.getPossibleGenders());
+         for (String knownFormName : knownFormNames) {
+            if (!formRecords.containsKey(knownFormName)) {
+               FormDexRecord formRecord = new FormDexRecord();
+               FormData formData = speciesTemplate == null ? null : speciesTemplate.getFormByName(knownFormName);
+               Set<Gender> allowedGenders = ServerDex.RecordFields.mutableGenders(formRecord);
+               if (formData != null && !formData.getPossibleGenders().isEmpty()) {
+                  allowedGenders.addAll(formData.getPossibleGenders());
                } else {
-                  genders.add(Gender.MALE);
-                  genders.add(Gender.FEMALE);
+                  allowedGenders.add(Gender.MALE);
+                  allowedGenders.add(Gender.FEMALE);
                }
 
-               ServerDex.Records.shinyStates(form).add("normal");
-               ServerDex.Records.shinyStates(form).add("shiny");
-               ServerDex.Records.setKnowledge(form, CobblemonCompat.OWNED);
-               forms.put(name, form);
+               ServerDex.RecordFields.mutableShinyStates(formRecord).add("normal");
+               ServerDex.RecordFields.mutableShinyStates(formRecord).add("shiny");
+               ServerDex.RecordFields.writeKnowledge(formRecord, CobblemonCompat.OWNED);
+               formRecords.put(knownFormName, formRecord);
             }
          }
 
-         record.initialize(manager, entry.getSpeciesId());
+         speciesRecord.initialize(knowledgeManager, pokedexEntry.getSpeciesId());
       }
 
-      return manager;
+      return knowledgeManager;
    }
 
-   private static final class Records {
-      private static final Field ASPECTS = field(SpeciesDexRecord.class, "aspects");
-      private static final Field FORMS = field(SpeciesDexRecord.class, "formRecords");
-      private static final Field GENDERS = field(FormDexRecord.class, "genders");
-      private static final Field SHINY = field(FormDexRecord.class, "seenShinyStates");
-      private static final Field KNOWLEDGE = field(FormDexRecord.class, "knowledge");
+   private static final class RecordFields {
+      private static final Field SPECIES_ASPECTS_FIELD = locateField(SpeciesDexRecord.class, "aspects");
+      private static final Field FORM_RECORDS_FIELD = locateField(SpeciesDexRecord.class, "formRecords");
+      private static final Field GENDERS_FIELD = locateField(FormDexRecord.class, "genders");
+      private static final Field SHINY_STATES_FIELD = locateField(FormDexRecord.class, "seenShinyStates");
+      private static final Field KNOWLEDGE_FIELD = locateField(FormDexRecord.class, "knowledge");
 
-      private static Field field(Class<?> owner, String name) {
+      private static Field locateField(Class<?> recordType, String fieldName) {
          try {
-            Field field = owner.getDeclaredField(name);
-            field.setAccessible(true);
-            return field;
+            Field reflectedField = recordType.getDeclaredField(fieldName);
+            reflectedField.setAccessible(true);
+            return reflectedField;
          } catch (NoSuchFieldException failure) {
-            throw new IllegalStateException("Cobblemon's " + owner.getSimpleName() + " no longer has a field named '" + name + "'", failure);
+            throw new IllegalStateException("Cobblemon's " + recordType.getSimpleName() + " no longer has a field named '" + fieldName + "'", failure);
          }
       }
 
-      static Set<String> aspects(SpeciesDexRecord record) {
-         return (Set<String>)read(ASPECTS, record);
+      static Set<String> mutableAspects(SpeciesDexRecord speciesRecord) {
+         return (Set<String>)readFieldValue(SPECIES_ASPECTS_FIELD, speciesRecord);
       }
 
-      static Map<String, FormDexRecord> forms(SpeciesDexRecord record) {
-         return (Map<String, FormDexRecord>)read(FORMS, record);
+      static Map<String, FormDexRecord> mutableForms(SpeciesDexRecord speciesRecord) {
+         return (Map<String, FormDexRecord>)readFieldValue(FORM_RECORDS_FIELD, speciesRecord);
       }
 
-      static Set<Gender> genders(FormDexRecord form) {
-         return (Set<Gender>)read(GENDERS, form);
+      static Set<Gender> mutableGenders(FormDexRecord formRecord) {
+         return (Set<Gender>)readFieldValue(GENDERS_FIELD, formRecord);
       }
 
-      static Set<String> shinyStates(FormDexRecord form) {
-         return (Set<String>)read(SHINY, form);
+      static Set<String> mutableShinyStates(FormDexRecord formRecord) {
+         return (Set<String>)readFieldValue(SHINY_STATES_FIELD, formRecord);
       }
 
-      static void setKnowledge(FormDexRecord form, PokedexEntryProgress knowledge) {
+      static void writeKnowledge(FormDexRecord formRecord, PokedexEntryProgress progress) {
          try {
-            KNOWLEDGE.set(form, knowledge);
+            KNOWLEDGE_FIELD.set(formRecord, progress);
          } catch (IllegalAccessException failure) {
             throw new IllegalStateException(failure);
          }
       }
 
-      private static Object read(Field field, Object owner) {
+      private static Object readFieldValue(Field reflectedField, Object recordInstance) {
          try {
-            return field.get(owner);
+            return reflectedField.get(recordInstance);
          } catch (IllegalAccessException failure) {
             throw new IllegalStateException(failure);
          }
