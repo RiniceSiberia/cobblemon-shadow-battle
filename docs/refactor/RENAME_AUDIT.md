@@ -2,17 +2,17 @@
 
 本审计以基线 javac 语义绑定结果为准。成员候选沿用早期批次规则：排除 public/protected 成员、构造器、枚举常量、record 自动成员、API 包、Mixin 和无方法体声明；另计非 Mixin 的具名内部类型。声明按路径、种类、owner 和原名与当前 Java 零错误快照精确匹配。
 
-2026-09-19 当前快照共有 3487 个候选，其中 389 个原名仍存在，3098 个原声明键已消失，原声明键消失比例上限为 88.84%。删除、迁入 Kotlin 和真正改名仍需逐项对应，该数值不能单独作为最终 90% 验收结果。当前 Java 快照含 97 个文件、4277 个声明，javac 分析错误为 0。
+2026-09-19 当前快照共有 3487 个候选，其中 363 个原名仍存在，3124 个原声明键已消失，原声明键消失比例上限为 89.59%。删除、迁入 Kotlin 和真正改名仍需逐项对应，该数值不能单独作为最终 90% 验收结果。当前 Java 快照含 97 个文件、4277 个声明，javac 分析错误为 0。
 
 剩余原名逐项记录在 `RENAME_REMAINING.csv`。当前数量较多的文件为：
 
-- `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/CobblemonCompat.java`：26 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/ChatScreen.java`：26 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/battle/TeamPreviews.java`：25 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/net/BattleServerClient.java`：23 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/network/RoomStatePayload.java`：20 项
+- `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/Backdrop.java`：20 项
 
-已完成命名批次：`RoomLobbyScreen`、`LeaderboardScreen`、`AuthScreen`、`TeamPreviewScreen`、`RoomScreen`、`ChatRoomScreen`、`ChatPanel`、`RankedScreen`、`MainMenuScreen`、`SettingsScreen`、`Ui`、`ChatHud`、`Msg`、`MirrorBattle`、`CrossServerBattleService`、`RemoteDex`、`ServerDex` 和原 `BattleQueue` 的安全内部声明已按业务职责完成语义改名。当前精确匹配不到这些文件的基线安全原名。
+已完成命名批次：`RoomLobbyScreen`、`LeaderboardScreen`、`AuthScreen`、`TeamPreviewScreen`、`RoomScreen`、`ChatRoomScreen`、`ChatPanel`、`RankedScreen`、`MainMenuScreen`、`SettingsScreen`、`Ui`、`ChatHud`、`Msg`、`MirrorBattle`、`CobblemonCompat`、`CrossServerBattleService`、`RemoteDex`、`ServerDex` 和原 `BattleQueue` 的安全内部声明已按业务职责完成语义改名。当前精确匹配不到这些文件的基线安全原名。
 
 每个命名批次完成后重新生成零错误快照和剩余清单；只在旧声明与新职责建立对应且适用验证通过后计入最终覆盖率。
 
@@ -36,3 +36,5 @@ B6-chat-hud-symbols（2026-09-19）：ChatHud 的 45 个基线剩余字段、方
 B6-message-catalogue-symbols（2026-09-19）：Msg 的 45 个基线剩余字段、方法、参数、资源变量和局部变量已全部建立语义对应；另修正早期误名 `connectionRequested` 及两个 `outputStream`。默认语言与内置目录常量恢复为实际引用。快速 `classes` 与 JDK21 离线 clean build 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误，公开 javap 与原 JAR 无差异。真实外部语言文件、读取失败日志和全部消息目录仍待验证。
 
 B6-mirror-battle-symbols（2026-09-19）：MirrorBattle 的 40 个基线剩余字段、方法、参数和局部变量已全部建立语义对应并改名；CrossServerBattles 的方法引用及 MirrorPropEntities、MirrorLifecycleCleanup 的 Kotlin 调用同步迁移。快速 `classes` 与 JDK21 离线 clean build 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误，40 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实实体、BattleRegistry、Showdown 解释和对战生命周期仍待联调。
+
+B6-cobblemon-compat-symbols（2026-09-19）：CobblemonCompat 的 26 个基线剩余字段、方法、参数、局部变量和异常参数已全部建立语义对应并改名。快速 `classes` 与 JDK21 离线 clean build 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误，26 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实客户端画像绘制、跨 Cobblemon 版本反射和图鉴枚举仍待验证。

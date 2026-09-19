@@ -318,3 +318,9 @@ ServerDex 的 65 个基线剩余声明已按服务端图鉴激活状态、原图
 `MirrorBattle` 的日志器、顺序输出缓存、协议追踪开关、本地 BattleRegistry 标识、已挂接战斗、上游对战标识、主次席位、远端参与者、路由分段、临时 Pokemon 登记和输出解释声明完成语义改名。包内 `attachProp`、`takeProps`、`bindLocalId` 分别改为 `registerPropEntity`、`drainPropEntities`、`bindLocalBattleId`，Java 方法引用与 Kotlin 调用同步迁移。
 
 公开构造、`spectator`、`route`、`attachBody`、`attach`、访问器及输出接收方法签名保持。双本地对战仍向发送端和解释器同时路由；非 `sideupdate` 帧保持双向路由；`sideupdate` 仍按次席位决定发送端与本地解释端。输出继续先等待 `release`，绑定前到达时只记录错误，调试开关仍控制帧日志，最终调用 `ShowdownInterpreter.interpretMessage`。实体登记、快照和领取顺序未改变。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；40 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实实体、BattleRegistry、Showdown 解释和完整对战生命周期仍待验证。日志 `D:/workspace/gradle-mirror-battle-symbols.log`。
+
+## B6-cobblemon-compat-symbols（2026-09-19）
+
+`CobblemonCompat` 的日志器、画像绘制 MethodHandle、无变换枚举、PoseStack、模型旋转、姿态、帧插值、缩放、颜色、头部偏移、光照、图鉴进度候选和反射初始化声明完成语义改名。公开 `drawProfile`、`modernProfile` 和 `OWNED` 签名保持。
+
+静态初始化仍先查找带 `ProfileTransformType` 与方块光照的现代 `drawProfilePokemon`，在索引 7 固定 `NONE`；反射失败后仍查找两个 boolean 且无光照的旧签名，在索引 7 固定 false，并在索引 14补入未使用的 int 参数。两种签名均缺失时继续记录错误且不绘制。调用时 Error 和 RuntimeException 原样传播，其他 Throwable 包装为 IllegalStateException。图鉴进度仍依次尝试 `OWNED`、`CAUGHT`，最后回退枚举末项。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；26 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实客户端画像绘制、跨版本反射和图鉴枚举仍待验证。日志 `D:/workspace/gradle-cobblemon-compat-symbols.log`。

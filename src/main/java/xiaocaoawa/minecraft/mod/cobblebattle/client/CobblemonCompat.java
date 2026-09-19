@@ -15,83 +15,83 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class CobblemonCompat {
-   private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle/Compat");
-   private static final MethodHandle DRAW_PROFILE;
-   private static final Object TRANSFORM_NONE;
-   public static final PokedexEntryProgress OWNED = highestProgress();
+   private static final Logger COMPAT_LOG = LoggerFactory.getLogger("CobbleBattle/Compat");
+   private static final MethodHandle DRAW_PROFILE_HANDLE;
+   private static final Object NO_PROFILE_TRANSFORM;
+   public static final PokedexEntryProgress OWNED = resolveOwnedProgress();
 
    private CobblemonCompat() {
    }
 
    public static boolean modernProfile() {
-      return TRANSFORM_NONE != null;
+      return NO_PROFILE_TRANSFORM != null;
    }
 
    public static void drawProfile(
       RenderablePokemon creature,
-      PoseStack pose,
-      Quaternionf rotation,
-      PoseType poseType,
-      PosableState state,
-      float partialTicks,
-      float scale,
-      boolean applyBaseScale,
-      float r,
-      float g,
-      float b,
-      float a,
-      float headYaw,
-      float headPitch,
-      int blockLight
+      PoseStack poseStack,
+      Quaternionf modelRotation,
+      PoseType requestedPose,
+      PosableState poseState,
+      float frameDelta,
+      float renderScale,
+      boolean useBaseScale,
+      float red,
+      float green,
+      float blue,
+      float alpha,
+      float headYawOffset,
+      float headPitchOffset,
+      int packedBlockLight
    ) {
-      if (DRAW_PROFILE != null) {
+      if (DRAW_PROFILE_HANDLE != null) {
          try {
-            DRAW_PROFILE.invokeExact(
+            DRAW_PROFILE_HANDLE.invokeExact(
                (RenderablePokemon)creature,
-               (PoseStack)pose,
-               (Quaternionf)rotation,
-               (PoseType)poseType,
-               (PosableState)state,
-               (float)partialTicks,
-               (float)scale,
-               (boolean)applyBaseScale,
-               (float)r,
-               (float)g,
-               (float)b,
-               (float)a,
-               (float)headYaw,
-               (float)headPitch,
-               (int)blockLight
+               (PoseStack)poseStack,
+               (Quaternionf)modelRotation,
+               (PoseType)requestedPose,
+               (PosableState)poseState,
+               (float)frameDelta,
+               (float)renderScale,
+               (boolean)useBaseScale,
+               (float)red,
+               (float)green,
+               (float)blue,
+               (float)alpha,
+               (float)headYawOffset,
+               (float)headPitchOffset,
+               (int)packedBlockLight
             );
          } catch (Error | RuntimeException failure) {
             throw failure;
-         } catch (Throwable var17) {
-            throw new IllegalStateException(var17);
+         } catch (Throwable invocationFailure) {
+            throw new IllegalStateException(invocationFailure);
          }
       }
    }
 
-   private static PokedexEntryProgress highestProgress() {
-      for (String name : new String[]{"OWNED", "CAUGHT"}) {
+   private static PokedexEntryProgress resolveOwnedProgress() {
+      for (String candidateName : new String[]{"OWNED", "CAUGHT"}) {
          try {
-            return PokedexEntryProgress.valueOf(name);
+            return PokedexEntryProgress.valueOf(candidateName);
          } catch (IllegalArgumentException failure) {
          }
       }
 
-      PokedexEntryProgress[] all = PokedexEntryProgress.values();
-      return all[all.length - 1];
+      PokedexEntryProgress[] progressLevels = PokedexEntryProgress.values();
+      return progressLevels[progressLevels.length - 1];
    }
 
    static {
-      Lookup lookup = MethodHandles.publicLookup();
-      MethodHandle draw = null;
-      Object none = null;
+      Lookup publicLookup = MethodHandles.publicLookup();
+      MethodHandle profileRenderer = null;
+      Object noTransformValue = null;
 
       try {
-         Class<?> transform = Class.forName("com.cobblemon.mod.common.client.gui.ProfileTransformType");
-         none = Enum.valueOf(transform.asSubclass(Enum.class), "NONE");
-         draw = lookup.findStatic(
+         Class<?> transformType = Class.forName("com.cobblemon.mod.common.client.gui.ProfileTransformType");
+         noTransformValue = Enum.valueOf(transformType.asSubclass(Enum.class), "NONE");
+         profileRenderer = publicLookup.findStatic(
             PokemonGuiUtilsKt.class,
             "drawProfilePokemon",
             MethodType.methodType(
@@ -103,7 +103,7 @@ public final class CobblemonCompat {
                PosableState.class,
                float.class,
                float.class,
-               transform,
+               transformType,
                boolean.class,
                float.class,
                float.class,
@@ -114,10 +114,10 @@ public final class CobblemonCompat {
                int.class
             )
          );
-         draw = MethodHandles.insertArguments(draw, 7, none);
+         profileRenderer = MethodHandles.insertArguments(profileRenderer, 7, noTransformValue);
       } catch (ReflectiveOperationException failure) {
          try {
-            draw = lookup.findStatic(
+            profileRenderer = publicLookup.findStatic(
                PokemonGuiUtilsKt.class,
                "drawProfilePokemon",
                MethodType.methodType(
@@ -139,14 +139,17 @@ public final class CobblemonCompat {
                   float.class
                )
             );
-            draw = MethodHandles.insertArguments(draw, 7, false);
-            draw = MethodHandles.dropArguments(draw, 14, int.class);
-         } catch (ReflectiveOperationException var5) {
-            LOGGER.error("Cobblemon's drawProfilePokemon has a shape this mod does not know; Pokemon will not be drawn on the mod's screens", var5);
+            profileRenderer = MethodHandles.insertArguments(profileRenderer, 7, false);
+            profileRenderer = MethodHandles.dropArguments(profileRenderer, 14, int.class);
+         } catch (ReflectiveOperationException signatureFailure) {
+            COMPAT_LOG.error(
+               "Cobblemon's drawProfilePokemon has a shape this mod does not know; Pokemon will not be drawn on the mod's screens",
+               signatureFailure
+            );
          }
       }
 
-      DRAW_PROFILE = draw;
-      TRANSFORM_NONE = none;
+      DRAW_PROFILE_HANDLE = profileRenderer;
+      NO_PROFILE_TRANSFORM = noTransformValue;
    }
 }
