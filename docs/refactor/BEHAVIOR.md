@@ -290,3 +290,9 @@ ServerDex 的 65 个基线剩余声明已按服务端图鉴激活状态、原图
 原 `BattleQueue` 改为 `MatchmakingQueueCoordinator`，等待队伍记录改为 `ClaimedQueueTeam`；等待队伍的登记、领取和丢弃，请求引用领取，排位加入，房间创建、加入、查询、离开和开战，关闭与创建响应，排队确认、离队和位置响应，以及队伍兼容性检查均只调整内部声明和调用点。协议类型、JSON 字段、翻译键、队伍检查顺序、引用登记与领取、发送失败回滚、API 事件和玩家消息顺序保持。
 
 首次快速编译检出 `MatchedBattleAssembly.kt` 仍有两个旧 `claim` 调用，其中一个为方法引用；同步改为 `claimWaitingTeam` 后快速 `classes` 和 JDK21 离线 `clean build` 均成功。全量 259 项测试、0 失败、0 错误、0 跳过；javac 快照为 97 个文件、4277 个声明、0 个分析错误；`CrossServerBattleService` 公开 javap 与原 JAR 无差异，构建产物中旧 `BattleQueue` 类数量为 0，新协调器及内部类共 4 个。真实队列、房间、远端服务、在线玩家消息和镜像建场仍待联调，因此相关源码保持待验证。日志 `D:/workspace/gradle-matchmaking-queue-symbols.log`。
+
+## B6-settings-screen-symbols（2026-09-19）
+
+`SettingsScreen` 的纹理与布局常量、颜色、父界面、选项列表、面板原点、渲染参数、选项行绘制、行位置、命中检测和鼠标点击声明完成语义改名，私有 `Row` 记录改为 `PreferenceToggle`。公开构造和 Screen 覆写签名、标题及说明翻译键、纹理路径、345×207 面板、裁剪区域、行坐标、颜色值、左键分支、布尔值翻转和返回父界面的副作用保持。
+
+快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试、0 失败、0 错误、0 跳过；javac 快照为 97 个文件、4277 个声明、0 个分析错误；64 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。客户端设置存储已有契约继续覆盖配置读写；真实界面渲染、返回按钮和偏好开关点击仍待客户端验证，因此源码保持待验证。日志 `D:/workspace/gradle-settings-screen-symbols.log`。
