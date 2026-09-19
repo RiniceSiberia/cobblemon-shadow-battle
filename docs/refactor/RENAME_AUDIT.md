@@ -2,17 +2,16 @@
 
 本审计以基线 javac 语义绑定结果为准。成员候选沿用早期批次规则：排除 public/protected 成员、构造器、枚举常量、record 自动成员、API 包、Mixin 和无方法体声明；另计非 Mixin 的具名内部类型。声明按路径、种类、owner 和原名与当前 Java 零错误快照精确匹配。
 
-2026-09-19 当前快照共有 3487 个候选，其中 312 个原名仍存在，3175 个原声明键已消失，原声明键消失比例上限为 91.06%。删除、迁入 Kotlin 和真正改名仍需逐项对应，该数值不能单独作为最终 90% 验收结果。当前 Java 快照含 97 个文件、4277 个声明，javac 分析错误为 0。
+2026-09-19 当前快照共有 3487 个候选，其中 289 个原名仍存在，3198 个原声明键已消失，原声明键消失比例上限为 91.72%。删除、迁入 Kotlin 和真正改名仍需逐项对应，该数值不能单独作为最终 90% 验收结果。当前 Java 快照含 97 个文件、4277 个声明，javac 分析错误为 0。
 
 剩余原名逐项记录在 `RENAME_REMAINING.csv`。当前数量较多的文件为：
 
-- `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/net/BattleServerClient.java`：23 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/network/RoomStatePayload.java`：20 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/Backdrop.java`：20 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/BackButton.java`：19 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/battle/ApiEvents.java`：18 项
 
-已完成命名批次：`RoomLobbyScreen`、`LeaderboardScreen`、`AuthScreen`、`TeamPreviewScreen`、`RoomScreen`、`ChatRoomScreen`、`ChatPanel`、`RankedScreen`、`MainMenuScreen`、`SettingsScreen`、`Ui`、`ChatHud`、`Msg`、`MirrorBattle`、`CobblemonCompat`、`ChatScreen`、`TeamPreviewCoordinator`（原 `TeamPreviews`）、`CrossServerBattleService`、`RemoteDex`、`ServerDex` 和原 `BattleQueue` 的安全内部声明已按业务职责完成语义改名。当前精确匹配不到这些文件的基线安全原名。
+已完成命名批次：`RoomLobbyScreen`、`LeaderboardScreen`、`AuthScreen`、`TeamPreviewScreen`、`RoomScreen`、`ChatRoomScreen`、`ChatPanel`、`RankedScreen`、`MainMenuScreen`、`SettingsScreen`、`Ui`、`ChatHud`、`Msg`、`MirrorBattle`、`CobblemonCompat`、`ChatScreen`、`TeamPreviewCoordinator`（原 `TeamPreviews`）、`BattleServerClient`、`CrossServerBattleService`、`RemoteDex`、`ServerDex` 和原 `BattleQueue` 的安全内部声明已按业务职责完成语义改名。当前精确匹配不到这些文件的基线安全原名。
 
 每个命名批次完成后重新生成零错误快照和剩余清单；只在旧声明与新职责建立对应且适用验证通过后计入最终覆盖率。
 
@@ -42,3 +41,4 @@ B6-cobblemon-compat-symbols（2026-09-19）：CobblemonCompat 的 26 个基线�
 B6-chat-screen-symbols（2026-09-19）：ChatScreen 的 26 个基线剩余字段、方法、参数和局部变量已全部建立语义对应并改名。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误，26 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实客户端键鼠输入、频道切换、滚动、提交和返回界面仍待验证。
 
 B6-team-preview-coordinator-symbols（2026-09-19）：原 TeamPreviews 的 25 个基线剩余类、字段、方法、参数和局部变量已全部建立语义对应并改名，文件迁移为 TeamPreviewCoordinator.java；CrossServerBattleService 调用点同步更新。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误，25 个基线旧声明精确匹配为 0，旧内部类未进入产物，CrossServerBattleService 公开 javap 与原 JAR 无差异。真实客户端、在线玩家、远端事件和队列副作用仍待联调。
+B6-battle-server-client-symbols（2026-09-19）：`BattleServerClient` 的 23 个基线剩余字段和参数已全部建立语义对应并改名，公开方法签名与传输边界保持。JDK21 离线 `clean build` 成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；23 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实远端连接、帧往返、断线重连和认证握手仍待联调。

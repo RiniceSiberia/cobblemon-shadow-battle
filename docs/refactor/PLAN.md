@@ -180,3 +180,8 @@ B6-cobblemon-compat-symbols（2026-09-19）：完成 `CobblemonCompat` 的日志
 包内 `TeamPreviews` 重命名为 `TeamPreviewCoordinator`，日志器、跨服服务引用、会话清理、参与者清理、打开/状态/关闭事件处理、玩家选择处理、选择上报及其局部声明完成语义改名。`CrossServerBattleService` 调用点同步迁移。
 
 预览打开时的字段解码、离线玩家自动选择前若干槽位、无客户端提示和自动选择、客户端可用时保存会话保持。状态事件仍只刷新在线玩家并保存新载荷；关闭事件仍先移除会话，再发送关闭载荷、提示玩家并丢弃等待队伍。玩家选择继续先核对战斗标识，再按数量和槽位合法性校验，成功时先保存己方已准备载荷，再上报原始槽位顺序。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；25 个基线旧声明精确匹配为 0，`CrossServerBattleService` 公开 javap 与原 JAR 无差异。真实客户端、在线玩家、远端事件和队列副作用仍待联调。日志 `D:/workspace/gradle-team-preview-coordinator-symbols.log`。
+## B6-battle-server-client-symbols（2026-09-19）
+
+`BattleServerClient` 的传输对象、连接构造回调、握手状态、断开/暂停/重连原因、失败回调和 JSON 字段读取参数完成语义改名。公开构造、连接控制、发送和静态字段读取方法签名保持。
+
+连接启动、按需连接、会话就绪标志、引用分配、发送失败结果、主动断开、拒绝暂停、失败观察和关闭状态保持。`msg`、`str`、`integer`、`bool`、`longer` 继续使用相同消息字段、默认值和解析顺序。JDK21 离线 `clean build` 成功，259 项测试零失败；23 个基线旧声明精确匹配为 0；公开 javap 与原 JAR 无差异。真实远端连接、帧往返、断线重连和认证握手仍待联调。日志 `D:/workspace/gradle-battle-server-client-symbols.log`。

@@ -7,29 +7,48 @@ import java.util.function.Consumer;
 import xiaocaoawa.minecraft.mod.cobblebattle.config.CobbleBattleConfig;
 
 public final class BattleServerClient {
-    private final RemoteBattleConnection connection;
+    private final RemoteBattleConnection transport;
 
-    public BattleServerClient(CobbleBattleConfig config, Consumer<JsonObject> inboundHandler, Runnable onConnected, Consumer<String> onDisconnected) {
-        connection = new RemoteBattleConnection(config, inboundHandler, onConnected, onDisconnected);
+    public BattleServerClient(
+        CobbleBattleConfig connectionConfig,
+        Consumer<JsonObject> inboundMessageHandler,
+        Runnable connectedCallback,
+        Consumer<String> disconnectedCallback
+    ) {
+        transport = new RemoteBattleConnection(
+            connectionConfig,
+            inboundMessageHandler,
+            connectedCallback,
+            disconnectedCallback
+        );
     }
-    public boolean isConnected() { return connection.isSocketOpen(); }
-    public boolean isHandshaken() { return connection.isSessionReady(); }
-    public void setHandshaken(boolean value) { connection.markSessionReady(value); }
-    public int nextRef() { return connection.allocateReference(); }
-    public void start() { connection.launch(); }
-    public void stop() { connection.shutdown(); }
-    public void connect() { connection.requestConnection(); }
-    public void disconnect(String why) { connection.closeByRequest(why); }
-    public void suspend(String why) { connection.pauseAfterRefusal(why); }
-    public void setOnConnectFailed(Consumer<String> handler) { connection.observeConnectionFailure(handler); }
-    public String refusedReason() { return connection.refusalCause(); }
-    public boolean isWanted() { return connection.hasConnectionDemand(); }
-    public void reconnect(String why) { connection.restartConnection(why); }
-    public boolean send(JsonObject document) { return connection.sendMessage(document); }
-    public boolean sendHandshake(JsonObject document) { return connection.sendGreeting(document); }
-    public static JsonObject msg(String type) { return MessageFields.envelope(type); }
-    public static String str(JsonObject object, String key, String fallback) { return MessageFields.text(object, key, fallback); }
-    public static int integer(JsonObject object, String key, int fallback) { return MessageFields.number(object, key, fallback); }
-    public static boolean bool(JsonObject object, String key, boolean fallback) { return MessageFields.flag(object, key, fallback); }
-    public static long longer(JsonObject object, String key, long fallback) { return MessageFields.longNumber(object, key, fallback); }
+
+    public boolean isConnected() { return transport.isSocketOpen(); }
+    public boolean isHandshaken() { return transport.isSessionReady(); }
+    public void setHandshaken(boolean sessionReady) { transport.markSessionReady(sessionReady); }
+    public int nextRef() { return transport.allocateReference(); }
+    public void start() { transport.launch(); }
+    public void stop() { transport.shutdown(); }
+    public void connect() { transport.requestConnection(); }
+    public void disconnect(String reason) { transport.closeByRequest(reason); }
+    public void suspend(String refusalReason) { transport.pauseAfterRefusal(refusalReason); }
+    public void setOnConnectFailed(Consumer<String> failureHandler) { transport.observeConnectionFailure(failureHandler); }
+    public String refusedReason() { return transport.refusalCause(); }
+    public boolean isWanted() { return transport.hasConnectionDemand(); }
+    public void reconnect(String reason) { transport.restartConnection(reason); }
+    public boolean send(JsonObject document) { return transport.sendMessage(document); }
+    public boolean sendHandshake(JsonObject document) { return transport.sendGreeting(document); }
+    public static JsonObject msg(String messageType) { return MessageFields.envelope(messageType); }
+    public static String str(JsonObject document, String fieldName, String defaultValue) {
+        return MessageFields.text(document, fieldName, defaultValue);
+    }
+    public static int integer(JsonObject document, String fieldName, int defaultValue) {
+        return MessageFields.number(document, fieldName, defaultValue);
+    }
+    public static boolean bool(JsonObject document, String fieldName, boolean defaultValue) {
+        return MessageFields.flag(document, fieldName, defaultValue);
+    }
+    public static long longer(JsonObject document, String fieldName, long defaultValue) {
+        return MessageFields.longNumber(document, fieldName, defaultValue);
+    }
 }
