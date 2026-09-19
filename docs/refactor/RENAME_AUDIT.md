@@ -2,7 +2,7 @@
 
 本审计以基线 javac 语义绑定结果为准。成员候选沿用早期批次规则：排除 public/protected 成员、构造器、枚举常量、record 自动成员、API 包、Mixin 和无方法体声明；另计非 Mixin 的具名内部类型。声明按路径、种类、owner 和原名与当前 Java 零错误快照精确匹配。
 
-2026-09-19 当前快照共有 3487 个候选，其中 289 个原名仍存在，3198 个原声明键已消失，原声明键消失比例上限为 91.72%。删除、迁入 Kotlin 和真正改名仍需逐项对应，该数值不能单独作为最终 90% 验收结果。当前 Java 快照含 97 个文件、4277 个声明，javac 分析错误为 0。
+2026-09-19 当前快照共有 3487 个候选，其中 230 个原名仍存在，3257 个原声明键已消失，原声明键消失比例上限为 93.40%。删除、迁入 Kotlin 和真正改名仍需逐项对应，该数值不能单独作为最终 90% 验收结果。当前 Java 快照含 97 个文件、4277 个声明，javac 分析错误为 0。
 
 剩余原名逐项记录在 `RENAME_REMAINING.csv`。当前数量较多的文件为：
 
@@ -46,3 +46,5 @@ B6-battle-server-client-symbols（2026-09-19）：`BattleServerClient` 的 23 �
 B6-room-state-payload-symbols（2026-09-19）：移除 RoomStatePayload 的 20 个安全内部命名候选并记录新语义名；公开 record 组件、TYPE、CODEC 和协议顺序未改。构建与 259 项测试通过，源码 SHA-256：C90D57AE9DEA6BF40E2D6FB47410BF500BBF2719763E3320A2AEC2ABD71D07AD。
 
 B6-backdrop-symbols（2026-09-19）：移除 Backdrop 的 20 个安全内部命名候选并记录新语义名；公开 draw、贴图路径、动画与裁剪参数保持。构建与 259 项测试通过，源码 SHA-256：19269970B988FCE4EF20A8900BA15C690239229CF9037AD0DBB2C65E4E35A438。
+
+B6-back-button-symbols（2026-09-19）：`BackButton` 的 19 个基线剩余声明已建立对应并改名：私有颜色常量改为 `NORMAL_FILL_COLOR`、`HOVER_FILL_COLOR`、`BORDER_COLOR`、`LABEL_COLOR`，绘制和命中检测参数/局部变量改为屏幕原点、指针、按钮几何和悬停语义。公开常量及方法签名保持。JDK21 离线 clean build 成功，259 项测试零失败；真实客户端按钮渲染与点击仍待集成验证。
