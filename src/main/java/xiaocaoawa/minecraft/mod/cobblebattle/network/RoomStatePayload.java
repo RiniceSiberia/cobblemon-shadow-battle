@@ -32,68 +32,68 @@ public record RoomStatePayload(
    public static final String WATCHER = "watcher";
    public static final Type<RoomStatePayload> TYPE = PayloadTypeCatalog.named("room_state");
    public static final StreamCodec<RegistryFriendlyByteBuf, RoomStatePayload> CODEC = StreamCodec.of(
-      (buf, s) -> {
-         buf.writeUtf(s.roomId(), 16);
-         buf.writeUtf(s.inviteCode(), 32);
-         buf.writeUtf(s.name(), 64);
-         buf.writeBoolean(s.locked());
-         buf.writeUtf(s.battleType(), 32);
-         buf.writeVarInt(s.level());
-         buf.writeVarInt(s.pick());
-         buf.writeBoolean(s.fullHeal());
-         buf.writeBoolean(s.hostEngine());
-         buf.writeBoolean(s.legality());
-         buf.writeBoolean(s.fighting());
-         RoomStatePayload.Member.CODEC.encode(buf, s.host());
-         buf.writeBoolean(s.hasGuest());
-         RoomStatePayload.Member.CODEC.encode(buf, s.guest());
-         buf.writeVarInt(s.watchers().size());
+      (encoderBuffer, payload) -> {
+         encoderBuffer.writeUtf(payload.roomId(), 16);
+         encoderBuffer.writeUtf(payload.inviteCode(), 32);
+         encoderBuffer.writeUtf(payload.name(), 64);
+         encoderBuffer.writeBoolean(payload.locked());
+         encoderBuffer.writeUtf(payload.battleType(), 32);
+         encoderBuffer.writeVarInt(payload.level());
+         encoderBuffer.writeVarInt(payload.pick());
+         encoderBuffer.writeBoolean(payload.fullHeal());
+         encoderBuffer.writeBoolean(payload.hostEngine());
+         encoderBuffer.writeBoolean(payload.legality());
+         encoderBuffer.writeBoolean(payload.fighting());
+         RoomStatePayload.Member.CODEC.encode(encoderBuffer, payload.host());
+         encoderBuffer.writeBoolean(payload.hasGuest());
+         RoomStatePayload.Member.CODEC.encode(encoderBuffer, payload.guest());
+         encoderBuffer.writeVarInt(payload.watchers().size());
 
-         for (RoomStatePayload.Member watcher : s.watchers()) {
-            RoomStatePayload.Member.CODEC.encode(buf, watcher);
+         for (RoomStatePayload.Member watcherMember : payload.watchers()) {
+            RoomStatePayload.Member.CODEC.encode(encoderBuffer, watcherMember);
          }
 
-         buf.writeUtf(s.youAre(), 16);
+         encoderBuffer.writeUtf(payload.youAre(), 16);
       },
-      buf -> {
-         String roomId = buf.readUtf(16);
-         String inviteCode = buf.readUtf(32);
-         String name = buf.readUtf(64);
-         boolean locked = buf.readBoolean();
-         String battleType = buf.readUtf(32);
-         int level = buf.readVarInt();
-         int pick = buf.readVarInt();
-         boolean fullHeal = buf.readBoolean();
-         boolean hostEngine = buf.readBoolean();
-         boolean legality = buf.readBoolean();
-         boolean fighting = buf.readBoolean();
-         RoomStatePayload.Member host = (RoomStatePayload.Member)RoomStatePayload.Member.CODEC.decode(buf);
-         boolean hasGuest = buf.readBoolean();
-         RoomStatePayload.Member guest = (RoomStatePayload.Member)RoomStatePayload.Member.CODEC.decode(buf);
-         int count = Math.min(buf.readVarInt(), 256);
-         ArrayList<RoomStatePayload.Member> observers = new ArrayList<>(count);
+      decoderBuffer -> {
+         String roomIdentifier = decoderBuffer.readUtf(16);
+         String invitationCode = decoderBuffer.readUtf(32);
+         String displayName = decoderBuffer.readUtf(64);
+         boolean roomLocked = decoderBuffer.readBoolean();
+         String battleFormat = decoderBuffer.readUtf(32);
+         int levelCap = decoderBuffer.readVarInt();
+         int selectionCount = decoderBuffer.readVarInt();
+         boolean fullRestore = decoderBuffer.readBoolean();
+         boolean hostEngineEnabled = decoderBuffer.readBoolean();
+         boolean legalityEnforced = decoderBuffer.readBoolean();
+         boolean battleInProgress = decoderBuffer.readBoolean();
+         RoomStatePayload.Member hostMember = (RoomStatePayload.Member)RoomStatePayload.Member.CODEC.decode(decoderBuffer);
+         boolean guestPresent = decoderBuffer.readBoolean();
+         RoomStatePayload.Member guestMember = (RoomStatePayload.Member)RoomStatePayload.Member.CODEC.decode(decoderBuffer);
+         int watcherCount = Math.min(decoderBuffer.readVarInt(), 256);
+         ArrayList<RoomStatePayload.Member> watcherMembers = new ArrayList<>(watcherCount);
 
-         for (int i = 0; i < count; i++) {
-            observers.add((RoomStatePayload.Member)RoomStatePayload.Member.CODEC.decode(buf));
+         for (int watcherIndex = 0; watcherIndex < watcherCount; watcherIndex++) {
+            watcherMembers.add((RoomStatePayload.Member)RoomStatePayload.Member.CODEC.decode(decoderBuffer));
          }
 
          return new RoomStatePayload(
-            roomId,
-            inviteCode,
-            name,
-            locked,
-            battleType,
-            level,
-            pick,
-            fullHeal,
-            hostEngine,
-            legality,
-            fighting,
-            host,
-            hasGuest,
-            guest,
-            List.copyOf(observers),
-            buf.readUtf(16)
+            roomIdentifier,
+            invitationCode,
+            displayName,
+            roomLocked,
+            battleFormat,
+            levelCap,
+            selectionCount,
+            fullRestore,
+            hostEngineEnabled,
+            legalityEnforced,
+            battleInProgress,
+            hostMember,
+            guestPresent,
+            guestMember,
+            List.copyOf(watcherMembers),
+            decoderBuffer.readUtf(16)
          );
       }
    );

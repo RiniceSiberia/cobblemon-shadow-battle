@@ -9,3 +9,5 @@ JDK21 离线 `clean build` 成功。78 个测试套件、259 项测试、0 失�
 恢复时先核对 Git 差异、CSV 可解析性和当前提交；若本批次尚未提交，运行 `git diff --check` 并提交 `refactor: clarify battle server client transport`。随后从 `RoomStatePayload.java` 的 20 个剩余安全声明继续，之后处理 `Backdrop.java`、`BackButton.java`、`ApiEvents.java` 和 `PlayerPortrait.java`。
 
 完整验证命令：`$env:JAVA_HOME='D:\.jdks\ms-21.0.7'; .\gradlew.bat --offline clean build --console=plain`。整体仍未完成：90% 命名对应审计、真实实体与 Mixin、远端联调、IDEA 验证、远程提交和最终目录清理均待完成。
+
+B6-room-state-payload-symbols（2026-09-19）已完成：RoomStatePayload 20 个编解码器内部声明完成语义重命名，协议和公开 record 保持。JDK21 离线 clean build 成功，78 个测试套件、259 项测试零失败；日志 D:/workspace/gradle-room-state-payload.log。当前覆盖上限更新为 3487 个候选、3218 个原声明键已消失、92.29%。下一批处理 Backdrop.java。真实客户端网络路由仍待集成验证。
