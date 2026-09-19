@@ -74,7 +74,7 @@ public final class CrossServerBattleService {
    private final MirrorFactory battleMirrorFactory = new MirrorFactory(this);
    private final MirrorLifecycleCleanup lifecycleCleanup = new MirrorLifecycleCleanup(this);
    private final SpectatorFactory spectatorSessions = new SpectatorFactory(this);
-   private final TeamPreviews teamPreviewSessions = new TeamPreviews(this);
+   private final TeamPreviewCoordinator teamPreviewSessions = new TeamPreviewCoordinator(this);
    private final AuthService authenticationService = new AuthService();
    private final Map<String, CrossServerBattleService.Ranked> rankedCompetitions = new LinkedHashMap<>();
    private final ServiceRequestLedger requestLedger = new ServiceRequestLedger();
@@ -259,7 +259,7 @@ public final class CrossServerBattleService {
 
       CrossServerBattles.clear();
       this.matchmakingQueue.clearQueueState();
-      this.teamPreviewSessions.clear();
+      this.teamPreviewSessions.clearSessions();
    }
 
    private void sendHandshakeAfterConnect() {
@@ -283,7 +283,7 @@ public final class CrossServerBattleService {
       this.chatObserversReported = -1;
       this.executeOnServerThread(this.roomDirectory::clearSession);
       this.matchmakingQueue.clearQueueState();
-      this.teamPreviewSessions.clear();
+      this.teamPreviewSessions.clearSessions();
       this.authenticationService.clear();
 
       for (MirrorBattle activeMirror : CrossServerBattles.all()) {
@@ -331,13 +331,13 @@ public final class CrossServerBattleService {
             this.handleRoomClosed(document);
             break;
          case "preview_open":
-            this.executeOnServerThread(() -> this.teamPreviewSessions.onOpen(document));
+            this.executeOnServerThread(() -> this.teamPreviewSessions.handlePreviewOpened(document));
             break;
          case "preview_state":
-            this.executeOnServerThread(() -> this.teamPreviewSessions.onState(document));
+            this.executeOnServerThread(() -> this.teamPreviewSessions.handlePreviewState(document));
             break;
          case "preview_closed":
-            this.executeOnServerThread(() -> this.teamPreviewSessions.onClosed(document));
+            this.executeOnServerThread(() -> this.teamPreviewSessions.handlePreviewClosed(document));
             break;
          case "match_found":
             this.handleMatchFound(document);
@@ -791,7 +791,7 @@ public final class CrossServerBattleService {
    }
 
    public void onTeamPicked(ServerPlayer participant, String externalBattleId, List<Integer> selectedSlots) {
-      this.teamPreviewSessions.onPicked(participant, externalBattleId, selectedSlots);
+      this.teamPreviewSessions.handleTeamPicked(participant, externalBattleId, selectedSlots);
    }
 
    public void onMenuAction(ServerPlayer participant, MenuActionPayload menuAction) {
@@ -1243,7 +1243,7 @@ public final class CrossServerBattleService {
       this.waitingChunksAuthOpens.remove(participant.getUUID());
       this.scheduleDisconnectWhenUnused();
       this.matchmakingQueue.onParticipantDisconnect(participant);
-      this.teamPreviewSessions.forget(participant.getUUID());
+      this.teamPreviewSessions.forgetParticipant(participant.getUUID());
       MirrorBattle activeMirror = CrossServerBattles.byLocalPlayer(participant.getUUID());
       if (activeMirror != null && !activeMirror.isFinished()) {
          SERVICE_LOGGER.info("{} disconnected during battle {} - closing this side and telling the host", participant.getGameProfile().getName(), activeMirror.remoteBattleId());

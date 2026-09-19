@@ -174,3 +174,9 @@ B6-cobblemon-compat-symbols（2026-09-19）：完成 `CobblemonCompat` 的日志
 `ChatScreen` 的来源界面、绘制上下文、指针位置、帧插值、面板相对坐标、频道命中、滚动输入、字符输入、键盘输入和草稿提交声明完成语义改名。公开构造与 Screen 覆写签名保持。
 
 打开界面仍启动聊天草稿，关闭时仍取消草稿并返回来源界面。渲染顺序继续为聊天面板、父类界面和玩家身份卡；频道点击、面板内滚动、字符输入、Tab 切换、Unicode 退格、回车和小键盘回车提交后关闭的行为保持。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；26 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实客户端键鼠交互仍待验证。日志 `D:/workspace/gradle-chat-screen-symbols.log`。
+
+## B6-team-preview-coordinator-symbols（2026-09-19）
+
+包内 `TeamPreviews` 重命名为 `TeamPreviewCoordinator`，日志器、跨服服务引用、会话清理、参与者清理、打开/状态/关闭事件处理、玩家选择处理、选择上报及其局部声明完成语义改名。`CrossServerBattleService` 调用点同步迁移。
+
+预览打开时的字段解码、离线玩家自动选择前若干槽位、无客户端提示和自动选择、客户端可用时保存会话保持。状态事件仍只刷新在线玩家并保存新载荷；关闭事件仍先移除会话，再发送关闭载荷、提示玩家并丢弃等待队伍。玩家选择继续先核对战斗标识，再按数量和槽位合法性校验，成功时先保存己方已准备载荷，再上报原始槽位顺序。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；25 个基线旧声明精确匹配为 0，`CrossServerBattleService` 公开 javap 与原 JAR 无差异。真实客户端、在线玩家、远端事件和队列副作用仍待联调。日志 `D:/workspace/gradle-team-preview-coordinator-symbols.log`。
