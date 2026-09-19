@@ -158,3 +158,5 @@ B6-server-dex-symbols（2026-09-19）：完成 ServerDex 的服务端图鉴状�
 B6-matchmaking-queue-symbols（2026-09-19）：将原 `BattleQueue` 顶层协调器改名为 `MatchmakingQueueCoordinator`，并完成等待队伍、请求引用、排位队列、房间动作、响应处理和队伍兼容性声明的语义改名。Java 与 Kotlin 调用点同步迁移；公开网络协议、JSON 字段、翻译键、消息顺序和失败回滚保持。真实远端队列、房间、玩家消息和镜像建场继续作为集成验收项。
 
 B6-settings-screen-symbols（2026-09-19）：完成 `SettingsScreen` 的纹理、布局、颜色、父界面、选项行、渲染、命中检测和切换声明语义改名，私有 `Row` 记录改为 `PreferenceToggle`。公开构造、Screen 覆写、配置键、纹理路径、坐标、颜色和配置写入时机保持；真实客户端渲染、返回和开关点击继续作为集成验收项。
+
+B6-ui-symbols（2026-09-19）：完成 `Ui` 文本包装、拼接、绘制、居中绘制和宽度测量参数及局部声明语义改名。公开静态方法、重载签名、字体资源、分隔符、阴影参数和 Minecraft 绘制调用保持；真实字体资源和各界面显示继续作为客户端集成验收项。

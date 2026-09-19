@@ -2,18 +2,18 @@
 
 本审计以基线 javac 语义绑定结果为准。成员候选沿用早期批次规则：排除 public/protected 成员、构造器、枚举常量、record 自动成员、API 包、Mixin 和无方法体声明；另计非 Mixin 的具名内部类型。声明按路径、种类、owner 和原名与当前 Java 零错误快照精确匹配。
 
-2026-09-19 当前快照共有 3487 个候选，其中 578 个原名仍存在，2909 个原声明键已消失，原声明键消失比例上限为 83.42%。删除、迁入 Kotlin 和真正改名仍需逐项对应，该数值不能单独作为最终 90% 验收结果。当前 Java 快照含 97 个文件、4277 个声明，javac 分析错误为 0。
+2026-09-19 当前快照共有 3487 个候选，其中 519 个原名仍存在，2968 个原声明键已消失，原声明键消失比例上限为 85.12%。删除、迁入 Kotlin 和真正改名仍需逐项对应，该数值不能单独作为最终 90% 验收结果。当前 Java 快照含 97 个文件、4277 个声明，javac 分析错误为 0。
 
 剩余原名逐项记录在 `RENAME_REMAINING.csv`。当前数量较多的文件为：
 
-- `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/Ui.java`：59 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/ChatHud.java`：45 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/lang/Msg.java`：45 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/battle/MirrorBattle.java`：40 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/CobblemonCompat.java`：26 项
 - `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/client/ChatScreen.java`：26 项
+- `src/main/java/xiaocaoawa/minecraft/mod/cobblebattle/battle/TeamPreviews.java`：25 项
 
-已完成命名批次：`RoomLobbyScreen`、`LeaderboardScreen`、`AuthScreen`、`TeamPreviewScreen`、`RoomScreen`、`ChatRoomScreen`、`ChatPanel`、`RankedScreen`、`MainMenuScreen`、`SettingsScreen`、`CrossServerBattleService`、`RemoteDex`、`ServerDex` 和原 `BattleQueue` 的安全内部声明已按业务职责完成语义改名。当前精确匹配不到这些文件的基线安全原名。
+已完成命名批次：`RoomLobbyScreen`、`LeaderboardScreen`、`AuthScreen`、`TeamPreviewScreen`、`RoomScreen`、`ChatRoomScreen`、`ChatPanel`、`RankedScreen`、`MainMenuScreen`、`SettingsScreen`、`Ui`、`CrossServerBattleService`、`RemoteDex`、`ServerDex` 和原 `BattleQueue` 的安全内部声明已按业务职责完成语义改名。当前精确匹配不到这些文件的基线安全原名。
 
 每个命名批次完成后重新生成零错误快照和剩余清单；只在旧声明与新职责建立对应且适用验证通过后计入最终覆盖率。
 
@@ -30,3 +30,5 @@ B6-server-dex-symbols（2026-09-19）：ServerDex 的 65 个基线剩余声明�
 B6-matchmaking-queue-symbols（2026-09-19）：原 BattleQueue 的 65 个基线剩余声明已全部建立语义对应，其中顶层协调器改为 `MatchmakingQueueCoordinator`，内部记录 `QueuedTeam` 改为 `ClaimedQueueTeam`，其余 63 项字段、方法、参数和局部变量完成语义改名。首次快速编译发现 Kotlin 方法引用和调用仍使用旧 `claim`，同步改为 `claimWaitingTeam` 后，JDK21 离线 clean build 成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误，旧 BattleQueue 类不再进入产物。真实队列、房间、远端服务、玩家消息和镜像建场仍待联调。
 
 B6-settings-screen-symbols（2026-09-19）：SettingsScreen 的 64 个基线剩余声明已全部建立语义对应，其中私有记录 `Row` 改为 `PreferenceToggle`，其余 63 项字段、方法、参数和局部变量完成语义改名。快速 `classes` 与 JDK21 离线 clean build 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误，公开 javap 与原 JAR 无差异。真实客户端渲染、返回按钮和偏好开关点击仍待验证。
+
+B6-ui-symbols（2026-09-19）：Ui 的 59 个基线剩余参数、循环索引和模式绑定变量已全部完成语义改名；既有 `outputStream` 不在本轮基线剩余项中并保持。快速 `classes` 与 JDK21 离线 clean build 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误，公开 javap 与原 JAR 无差异。真实字体资源及 13 个调用文件的客户端显示仍待验证。
