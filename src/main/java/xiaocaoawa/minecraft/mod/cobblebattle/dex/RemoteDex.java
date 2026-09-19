@@ -30,18 +30,18 @@ import org.slf4j.LoggerFactory;
 import io.github.rinicesiberia.shadowbattle.dex.DexLegalityRules;
 
 public final class RemoteDex {
-   private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle/Dex");
-   private static final Gson GSON = new Gson();
-   private static final Path CACHE_FILE = Paths.get("config", "cobblebattle-dex.json");
-   private static final String[] STAT_KEYS = new String[]{"hp", "atk", "def", "spa", "spd", "spe"};
+   private static final Logger DEX_LOGGER = LoggerFactory.getLogger("CobbleBattle/Dex");
+   private static final Gson JSON_CODEC = new Gson();
+   private static final Path DEX_CACHE_PATH = Paths.get("config", "cobblebattle-dex.json");
+   private static final String[] SHOWDOWN_STAT_KEYS = new String[]{"hp", "atk", "def", "spa", "spd", "spe"};
    private final RemoteDexSnapshotState snapshotState = new RemoteDexSnapshotState();
-   private volatile boolean strictBaseStats = true;
-   private volatile boolean strictAbilities = false;
-   private volatile boolean strictMoves = false;
-   private volatile int maxEvPerStat = 0;
-   private volatile int maxEvTotal = 0;
-   private volatile int maxIv = 0;
-   private static final Map<Stat, String> STAT_NAMES = Map.of(
+   private volatile boolean enforceBaseStats = true;
+   private volatile boolean enforceAbilities = false;
+   private volatile boolean enforceMoves = false;
+   private volatile int effortValuePerStatLimit = 0;
+   private volatile int totalEffortValueLimit = 0;
+   private volatile int individualValueLimit = 0;
+   private static final Map<Stat, String> SHOWDOWN_STAT_NAMES = Map.of(
       Stats.HP, "hp", Stats.ATTACK, "atk", Stats.DEFENCE, "def", Stats.SPECIAL_ATTACK, "spa", Stats.SPECIAL_DEFENCE, "spd", Stats.SPEED, "spe"
    );
 
@@ -70,108 +70,108 @@ public final class RemoteDex {
    }
 
    public void loadFromDisk() {
-      if (Files.exists(CACHE_FILE)) {
+      if (Files.exists(DEX_CACHE_PATH)) {
          try {
-            JsonElement parsed = JsonParser.parseString(Files.readString(CACHE_FILE, StandardCharsets.UTF_8));
-            if (!parsed.isJsonObject()) {
+            JsonElement cachedDocument = JsonParser.parseString(Files.readString(DEX_CACHE_PATH, StandardCharsets.UTF_8));
+            if (!cachedDocument.isJsonObject()) {
                throw new IllegalStateException("not a JSON object");
             }
 
-            this.adopt(parsed.getAsJsonObject());
-            LOGGER.info("Restored {} cached species from {} (digest {})", new Object[]{this.snapshotState.size(), CACHE_FILE, this.snapshotState.shortDigest()});
+            this.replaceSnapshot(cachedDocument.getAsJsonObject());
+            DEX_LOGGER.info("Restored {} cached species from {} (digest {})", new Object[]{this.snapshotState.size(), DEX_CACHE_PATH, this.snapshotState.shortDigest()});
          } catch (Exception failure) {
-            LOGGER.warn("Could not read {} ({}); the dex will be fetched again", CACHE_FILE, failure.getMessage());
+            DEX_LOGGER.warn("Could not read {} ({}); the dex will be fetched again", DEX_CACHE_PATH, failure.getMessage());
             this.snapshotState.discardCachedData();
          }
       }
    }
 
-   public void accept(JsonObject snapshot) {
-      if (snapshot.has("unchanged") && snapshot.get("unchanged").getAsBoolean()) {
+   public void accept(JsonObject snapshotDocument) {
+      if (snapshotDocument.has("unchanged") && snapshotDocument.get("unchanged").getAsBoolean()) {
          if (this.snapshotState.confirmUnchanged()) {
-            LOGGER.info("The battle host confirmed our cached dex ({} species, digest {})", this.snapshotState.size(), this.snapshotState.shortDigest());
+            DEX_LOGGER.info("The battle host confirmed our cached dex ({} species, digest {})", this.snapshotState.size(), this.snapshotState.shortDigest());
          } else {
-            LOGGER.warn("The battle host says our dex is unchanged, but nothing is cached");
+            DEX_LOGGER.warn("The battle host says our dex is unchanged, but nothing is cached");
          }
       } else {
-         this.adopt(snapshot);
+         this.replaceSnapshot(snapshotDocument);
          this.snapshotState.markAccepted();
-         LOGGER.info("Cached {} species from the battle host (digest {})", this.snapshotState.size(), this.snapshotState.shortDigest());
-         this.saveToDisk();
+         DEX_LOGGER.info("Cached {} species from the battle host (digest {})", this.snapshotState.size(), this.snapshotState.shortDigest());
+         this.persistSnapshot();
       }
    }
 
-   private void adopt(JsonObject snapshot) {
-      this.snapshotState.adopt(snapshot);
+   private void replaceSnapshot(JsonObject snapshotDocument) {
+      this.snapshotState.adopt(snapshotDocument);
    }
 
-   private void saveToDisk() {
-      JsonObject document = this.snapshotState.serializableDocument();
-      if (document != null) {
+   private void persistSnapshot() {
+      JsonObject snapshotDocument = this.snapshotState.serializableDocument();
+      if (snapshotDocument != null) {
          try {
-            Path parent = CACHE_FILE.getParent();
-            if (parent != null) {
-               Files.createDirectories(parent);
+            Path cacheDirectory = DEX_CACHE_PATH.getParent();
+            if (cacheDirectory != null) {
+               Files.createDirectories(cacheDirectory);
             }
 
-            Path temporary = CACHE_FILE.resolveSibling(CACHE_FILE.getFileName() + ".tmp");
-            Files.writeString(temporary, GSON.toJson(document), StandardCharsets.UTF_8);
-            Files.move(temporary, CACHE_FILE, StandardCopyOption.REPLACE_EXISTING);
+            Path temporaryCachePath = DEX_CACHE_PATH.resolveSibling(DEX_CACHE_PATH.getFileName() + ".tmp");
+            Files.writeString(temporaryCachePath, JSON_CODEC.toJson(snapshotDocument), StandardCharsets.UTF_8);
+            Files.move(temporaryCachePath, DEX_CACHE_PATH, StandardCopyOption.REPLACE_EXISTING);
          } catch (Exception failure) {
-            LOGGER.warn("Could not write {}: {}", CACHE_FILE, failure.getMessage());
+            DEX_LOGGER.warn("Could not write {}: {}", DEX_CACHE_PATH, failure.getMessage());
          }
       }
    }
 
-   public void suspend(String reason) {
+   public void suspend(String suspensionReason) {
       this.snapshotState.suspend();
-      LOGGER.info("Dex cache suspended: {} ({} species kept for the next handshake)", reason, this.snapshotState.size());
+      DEX_LOGGER.info("Dex cache suspended: {} ({} species kept for the next handshake)", suspensionReason, this.snapshotState.size());
    }
 
-   public void invalidate(String reason) {
+   public void invalidate(String invalidationReason) {
       this.snapshotState.invalidate();
-      LOGGER.info("Dex cache invalidated: {}", reason);
+      DEX_LOGGER.info("Dex cache invalidated: {}", invalidationReason);
    }
 
-   public void setStrictBaseStats(boolean strict) {
-      this.strictBaseStats = strict;
+   public void setStrictBaseStats(boolean enableBaseStatValidation) {
+      this.enforceBaseStats = enableBaseStatValidation;
    }
 
-   public void setTeamRules(boolean strictAbilities, boolean strictMoves, int maxEvPerStat, int maxEvTotal, int maxIv) {
-      this.strictAbilities = strictAbilities;
-      this.strictMoves = strictMoves;
-      this.maxEvPerStat = DexLegalityRules.nonNegativeLimit(maxEvPerStat);
-      this.maxEvTotal = DexLegalityRules.nonNegativeLimit(maxEvTotal);
-      this.maxIv = DexLegalityRules.nonNegativeLimit(maxIv);
+   public void setTeamRules(boolean enforceAbilities, boolean enforceMoves, int effortValuePerStatLimit, int totalEffortValueLimit, int individualValueLimit) {
+      this.enforceAbilities = enforceAbilities;
+      this.enforceMoves = enforceMoves;
+      this.effortValuePerStatLimit = DexLegalityRules.nonNegativeLimit(effortValuePerStatLimit);
+      this.totalEffortValueLimit = DexLegalityRules.nonNegativeLimit(totalEffortValueLimit);
+      this.individualValueLimit = DexLegalityRules.nonNegativeLimit(individualValueLimit);
    }
 
-   public List<RemoteDex.Rejection> check(Pokemon creature, int slot) {
-      return this.check(creature, slot, true);
+   public List<RemoteDex.Rejection> check(Pokemon creature, int rosterSlot) {
+      return this.check(creature, rosterSlot, true);
    }
 
-   public List<RemoteDex.Rejection> check(Pokemon creature, int slot, boolean dexAuthority) {
+   public List<RemoteDex.Rejection> check(Pokemon creature, int rosterSlot, boolean enforceDexSnapshot) {
       String speciesTemplateId = creature.showdownId();
-      Component name = creature.getSpecies().getTranslatedName();
-      RemoteDex.Entry entry = this.snapshotState.get(speciesTemplateId);
-      if (entry == null && dexAuthority) {
-         return List.of(new RemoteDex.Rejection(slot, name, speciesTemplateId, RemoteDex.Rejection.Kind.UNKNOWN_SPECIES, Component.literal(speciesTemplateId)));
+      Component speciesDisplayName = creature.getSpecies().getTranslatedName();
+      RemoteDex.Entry remoteSpecies = this.snapshotState.get(speciesTemplateId);
+      if (remoteSpecies == null && enforceDexSnapshot) {
+         return List.of(new RemoteDex.Rejection(rosterSlot, speciesDisplayName, speciesTemplateId, RemoteDex.Rejection.Kind.UNKNOWN_SPECIES, Component.literal(speciesTemplateId)));
       } else {
          List<RemoteDex.Rejection> outputStream = new ArrayList<>();
-         if (this.strictBaseStats && dexAuthority) {
-            Map<Stat, Integer> local = creature.getForm().getBaseStats();
-            Stat[] stats = new Stat[]{Stats.HP, Stats.ATTACK, Stats.DEFENCE, Stats.SPECIAL_ATTACK, Stats.SPECIAL_DEFENCE, Stats.SPEED};
+         if (this.enforceBaseStats && enforceDexSnapshot) {
+            Map<Stat, Integer> localBaseStats = creature.getForm().getBaseStats();
+            Stat[] statOrder = new Stat[]{Stats.HP, Stats.ATTACK, Stats.DEFENCE, Stats.SPECIAL_ATTACK, Stats.SPECIAL_DEFENCE, Stats.SPEED};
 
-            for (int i = 0; i < STAT_KEYS.length; i++) {
-               Integer localValue = local.get(stats[i]);
-               Integer hostValue = entry.baseStats().get(STAT_KEYS[i]);
-               if (localValue == null || hostValue == null || !localValue.equals(hostValue)) {
+            for (int statIndex = 0; statIndex < SHOWDOWN_STAT_KEYS.length; statIndex++) {
+               Integer localStatValue = localBaseStats.get(statOrder[statIndex]);
+               Integer remoteStatValue = remoteSpecies.baseStats().get(SHOWDOWN_STAT_KEYS[statIndex]);
+               if (localStatValue == null || remoteStatValue == null || !localStatValue.equals(remoteStatValue)) {
                   outputStream.add(
                      new RemoteDex.Rejection(
-                        slot,
-                        name,
+                        rosterSlot,
+                        speciesDisplayName,
                         speciesTemplateId,
                         RemoteDex.Rejection.Kind.BASE_STAT_MISMATCH,
-                        Component.literal(STAT_KEYS[i] + ": " + localValue + " / " + hostValue)
+                        Component.literal(SHOWDOWN_STAT_KEYS[statIndex] + ": " + localStatValue + " / " + remoteStatValue)
                      )
                   );
                   break;
@@ -179,97 +179,97 @@ public final class RemoteDex {
             }
          }
 
-         this.checkAbility(creature, slot, name, speciesTemplateId, outputStream);
-         this.checkMoves(creature, slot, name, speciesTemplateId, outputStream);
-         this.checkEffortAndIndividual(creature, slot, name, speciesTemplateId, outputStream);
+         this.validateAbility(creature, rosterSlot, speciesDisplayName, speciesTemplateId, outputStream);
+         this.validateMoves(creature, rosterSlot, speciesDisplayName, speciesTemplateId, outputStream);
+         this.validateTrainingValues(creature, rosterSlot, speciesDisplayName, speciesTemplateId, outputStream);
          return outputStream;
       }
    }
 
-   private void checkAbility(Pokemon creature, int slot, Component name, String speciesTemplateId, List<RemoteDex.Rejection> outputStream) {
-      if (this.strictAbilities) {
-         AbilityTemplate template = creature.getAbility().getTemplate();
-         String ability = template.getName();
+   private void validateAbility(Pokemon creature, int rosterSlot, Component speciesDisplayName, String speciesTemplateId, List<RemoteDex.Rejection> outputStream) {
+      if (this.enforceAbilities) {
+         AbilityTemplate selectedAbilityTemplate = creature.getAbility().getTemplate();
+         String selectedAbilityId = selectedAbilityTemplate.getName();
          List<String> available = new ArrayList<>();
-         for (PotentialAbility potential : creature.getForm().getAbilities()) {
-            available.add(potential.getTemplate().getName());
+         for (PotentialAbility availableAbility : creature.getForm().getAbilities()) {
+            available.add(availableAbility.getTemplate().getName());
          }
-         if (!DexLegalityRules.abilityAllowed(ability, available)) {
+         if (!DexLegalityRules.abilityAllowed(selectedAbilityId, available)) {
             outputStream.add(
                new RemoteDex.Rejection(
-                  slot, name, speciesTemplateId, RemoteDex.Rejection.Kind.ILLEGAL_ABILITY, Component.translatableWithFallback(template.getDisplayName(), ability)
+                  rosterSlot, speciesDisplayName, speciesTemplateId, RemoteDex.Rejection.Kind.ILLEGAL_ABILITY, Component.translatableWithFallback(selectedAbilityTemplate.getDisplayName(), selectedAbilityId)
                )
             );
          }
       }
    }
 
-   private void checkMoves(Pokemon creature, int slot, Component name, String speciesTemplateId, List<RemoteDex.Rejection> outputStream) {
-      if (this.strictMoves) {
-         Learnset learnset = creature.getForm().getMoves();
+   private void validateMoves(Pokemon creature, int rosterSlot, Component speciesDisplayName, String speciesTemplateId, List<RemoteDex.Rejection> outputStream) {
+      if (this.enforceMoves) {
+         Learnset speciesLearnset = creature.getForm().getMoves();
          List<String> available = new ArrayList<>();
 
-         for (MoveTemplate move : learnset.getAllLegalMoves()) {
-            available.add(move.getName());
+         for (MoveTemplate standardMoveTemplate : speciesLearnset.getAllLegalMoves()) {
+            available.add(standardMoveTemplate.getName());
          }
 
-         for (MoveTemplate move : learnset.getLegacyMoves()) {
-            available.add(move.getName());
+         for (MoveTemplate legacyMoveTemplate : speciesLearnset.getLegacyMoves()) {
+            available.add(legacyMoveTemplate.getName());
          }
 
-         for (MoveTemplate move : learnset.getSpecialMoves()) {
-            available.add(move.getName());
+         for (MoveTemplate specialMoveTemplate : speciesLearnset.getSpecialMoves()) {
+            available.add(specialMoveTemplate.getName());
          }
 
-         Set<String> legal = DexLegalityRules.legalMoveIds(available);
-         for (Move move : creature.getMoveSet().getMoves()) {
-            if (!DexLegalityRules.moveAllowed(move.getTemplate().getName(), legal)) {
-               outputStream.add(new RemoteDex.Rejection(slot, name, speciesTemplateId, RemoteDex.Rejection.Kind.ILLEGAL_MOVE, move.getTemplate().getDisplayName()));
+         Set<String> legalMoveIds = DexLegalityRules.legalMoveIds(available);
+         for (Move selectedMove : creature.getMoveSet().getMoves()) {
+            if (!DexLegalityRules.moveAllowed(selectedMove.getTemplate().getName(), legalMoveIds)) {
+               outputStream.add(new RemoteDex.Rejection(rosterSlot, speciesDisplayName, speciesTemplateId, RemoteDex.Rejection.Kind.ILLEGAL_MOVE, selectedMove.getTemplate().getDisplayName()));
             }
          }
       }
    }
 
-   private void checkEffortAndIndividual(Pokemon creature, int slot, Component name, String speciesTemplateId, List<RemoteDex.Rejection> outputStream) {
-      if (this.maxEvPerStat > 0 || this.maxEvTotal > 0) {
-         int total = 0;
+   private void validateTrainingValues(Pokemon creature, int rosterSlot, Component speciesDisplayName, String speciesTemplateId, List<RemoteDex.Rejection> outputStream) {
+      if (this.effortValuePerStatLimit > 0 || this.totalEffortValueLimit > 0) {
+         int totalEffortValues = 0;
 
-         for (Map.Entry<? extends Stat, ? extends Integer> entry : creature.getEvs()) {
-            int value = entry.getValue();
-            total += value;
-            if (DexLegalityRules.exceedsLimit(value, this.maxEvPerStat)) {
+         for (Map.Entry<? extends Stat, ? extends Integer> effortEntry : creature.getEvs()) {
+            int effortValue = effortEntry.getValue();
+            totalEffortValues += effortValue;
+            if (DexLegalityRules.exceedsLimit(effortValue, this.effortValuePerStatLimit)) {
                outputStream.add(
                   new RemoteDex.Rejection(
-                     slot,
-                     name,
+                     rosterSlot,
+                     speciesDisplayName,
                      speciesTemplateId,
                      RemoteDex.Rejection.Kind.EV_OVER_CAP,
-                     Component.literal(statName(entry.getKey()) + " " + value + " > " + this.maxEvPerStat)
+                     Component.literal(showdownStatName(effortEntry.getKey()) + " " + effortValue + " > " + this.effortValuePerStatLimit)
                   )
                );
             }
          }
 
-         if (DexLegalityRules.exceedsLimit(total, this.maxEvTotal)) {
+         if (DexLegalityRules.exceedsLimit(totalEffortValues, this.totalEffortValueLimit)) {
             outputStream.add(
                new RemoteDex.Rejection(
-                  slot, name, speciesTemplateId, RemoteDex.Rejection.Kind.EV_OVER_CAP, Component.literal("total " + total + " > " + this.maxEvTotal)
+                  rosterSlot, speciesDisplayName, speciesTemplateId, RemoteDex.Rejection.Kind.EV_OVER_CAP, Component.literal("total " + totalEffortValues + " > " + this.totalEffortValueLimit)
                )
             );
          }
       }
 
-      if (this.maxIv > 0) {
-         for (Map.Entry<? extends Stat, ? extends Integer> entryx : creature.getIvs()) {
-            int value = entryx.getValue();
-            if (DexLegalityRules.exceedsLimit(value, this.maxIv)) {
+      if (this.individualValueLimit > 0) {
+         for (Map.Entry<? extends Stat, ? extends Integer> individualEntry : creature.getIvs()) {
+            int individualValue = individualEntry.getValue();
+            if (DexLegalityRules.exceedsLimit(individualValue, this.individualValueLimit)) {
                outputStream.add(
                   new RemoteDex.Rejection(
-                     slot,
-                     name,
+                     rosterSlot,
+                     speciesDisplayName,
                      speciesTemplateId,
                      RemoteDex.Rejection.Kind.IV_OVER_CAP,
-                     Component.literal(statName(entryx.getKey()) + " " + value + " > " + this.maxIv)
+                     Component.literal(showdownStatName(individualEntry.getKey()) + " " + individualValue + " > " + this.individualValueLimit)
                   )
                );
             }
@@ -277,43 +277,43 @@ public final class RemoteDex {
       }
    }
 
-   private static String statName(Stat stat) {
-      String known = STAT_NAMES.get(stat);
-      return known != null ? known : showdownId(stat.getIdentifier().getPath());
+   private static String showdownStatName(Stat pokemonStat) {
+      String knownName = SHOWDOWN_STAT_NAMES.get(pokemonStat);
+      return knownName != null ? knownName : normalizeShowdownId(pokemonStat.getIdentifier().getPath());
    }
 
-   private static String showdownId(String raw) {
-      return DexLegalityRules.normalizedId(raw);
+   private static String normalizeShowdownId(String rawName) {
+      return DexLegalityRules.normalizedId(rawName);
    }
 
    public JsonArray describeTeam(List<Pokemon> roster) {
-      JsonArray meta = new JsonArray();
+      JsonArray rosterMetadata = new JsonArray();
 
-      for (int i = 0; i < roster.size(); i++) {
-         Pokemon creature = roster.get(i);
-         Map<Stat, Integer> local = creature.getForm().getBaseStats();
-         JsonObject baseStats = new JsonObject();
-         baseStats.addProperty("hp", local.getOrDefault(Stats.HP, 1));
-         baseStats.addProperty("atk", local.getOrDefault(Stats.ATTACK, 1));
-         baseStats.addProperty("def", local.getOrDefault(Stats.DEFENCE, 1));
-         baseStats.addProperty("spa", local.getOrDefault(Stats.SPECIAL_ATTACK, 1));
-         baseStats.addProperty("spd", local.getOrDefault(Stats.SPECIAL_DEFENCE, 1));
-         baseStats.addProperty("spe", local.getOrDefault(Stats.SPEED, 1));
-         JsonArray types = new JsonArray();
+      for (int rosterIndex = 0; rosterIndex < roster.size(); rosterIndex++) {
+         Pokemon creature = roster.get(rosterIndex);
+         Map<Stat, Integer> localBaseStats = creature.getForm().getBaseStats();
+         JsonObject serializedBaseStats = new JsonObject();
+         serializedBaseStats.addProperty("hp", localBaseStats.getOrDefault(Stats.HP, 1));
+         serializedBaseStats.addProperty("atk", localBaseStats.getOrDefault(Stats.ATTACK, 1));
+         serializedBaseStats.addProperty("def", localBaseStats.getOrDefault(Stats.DEFENCE, 1));
+         serializedBaseStats.addProperty("spa", localBaseStats.getOrDefault(Stats.SPECIAL_ATTACK, 1));
+         serializedBaseStats.addProperty("spd", localBaseStats.getOrDefault(Stats.SPECIAL_DEFENCE, 1));
+         serializedBaseStats.addProperty("spe", localBaseStats.getOrDefault(Stats.SPEED, 1));
+         JsonArray serializedTypes = new JsonArray();
 
-         for (ElementalType type : creature.getForm().getTypes()) {
-            types.add(showdownId(type.getName()));
+         for (ElementalType elementalType : creature.getForm().getTypes()) {
+            serializedTypes.add(normalizeShowdownId(elementalType.getName()));
          }
 
-         JsonObject slot = new JsonObject();
-         slot.addProperty("index", i);
-         slot.addProperty("speciesId", creature.showdownId());
-         slot.add("baseStats", baseStats);
-         slot.add("types", types);
-         meta.add(slot);
+         JsonObject slotDocument = new JsonObject();
+         slotDocument.addProperty("index", rosterIndex);
+         slotDocument.addProperty("speciesId", creature.showdownId());
+         slotDocument.add("baseStats", serializedBaseStats);
+         slotDocument.add("types", serializedTypes);
+         rosterMetadata.add(slotDocument);
       }
 
-      return meta;
+      return rosterMetadata;
    }
 
    public record Entry(String id, Map<String, Integer> baseStats) {

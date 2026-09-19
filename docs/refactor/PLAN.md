@@ -150,3 +150,5 @@ B6-ranked-screen-symbols（2026-09-17）：完成 RankedScreen 安全内部符�
 B6-main-menu-screen-symbols（2026-09-17）：主菜单仅完成内部声明职责命名和私有类型重命名，保留公开构造与 Screen 覆写、六个动作、网络载荷、纹理路径、布局数值和渲染顺序；真实客户端渲染与交互仍列入 B5/B6 集成验收。
 
 B6-cross-server-service-symbols（2026-09-19）：完成 CrossServerBattleService 的连接生命周期、远端消息分发、镜像对战、房间、认证、聊天和排行榜安全内部声明语义改名，并同步 Java 与 Kotlin 调用点。公开方法签名、协议字段、配置、事件与副作用顺序保持；真实跨服服务和游戏内对象继续作为集成验收项。
+
+B6-remote-dex-symbols（2026-09-19）：完成 RemoteDex 的缓存、快照、合法性检查和队伍元数据安全内部声明语义改名。公开方法名、JVM 签名、JSON 字段、缓存路径、拒绝顺序和文件副作用保持；真实 Pokémon 注册对象、拒绝文本和远端图鉴握手继续作为集成验收项。

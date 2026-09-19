@@ -276,3 +276,7 @@ B6-ranked-screen-symbols（2026-09-17）：排位界面固定纹理尺寸居中�
 ## B6-cross-server-service-symbols（2026-09-19）
 
 CrossServerBattleService 的字段、包内方法、私有处理器、参数和局部变量按连接、握手、图鉴、排位、匹配、战斗、房间、认证、聊天和排行榜职责完成语义改名。BattleQueue、TeamPreviews、MatchedBattleAssembly、MirrorLifecycleCleanup 与 SpectatorSessions 的包内调用点同步更新。消息类型、JSON 字段、翻译键、网络发送时机、事件顺序、错误传播和清理分支未改。JDK21 离线 clean build 成功，259 项测试、0 失败、0 错误；javac 快照为 97 个文件、4277 个声明、0 个分析错误；CrossServerBattleService 的公开 javap 签名与原 JAR 无差异。真实跨服连接、镜像实体、Mixin、玩家消息和客户端界面仍待联调。日志 `D:/workspace/gradle-cross-server-symbols.log`。
+
+## B6-remote-dex-symbols（2026-09-19）
+
+RemoteDex 的 72 个基线剩余声明已按缓存文件、图鉴快照、种族值、能力、招式、EV/IV 和队伍元数据职责完成语义改名。公开方法名、record 字段、JSON 字段、缓存路径、日志文本、判断顺序、拒绝顺序、异常处理和磁盘替换副作用未改。JDK21 离线 clean build 成功，259 项测试、0 失败、0 错误、0 跳过；javac 快照为 97 个文件、4277 个声明、0 个分析错误；RemoteDex 的公开 javap 签名与原 JAR 无差异。真实 Pokémon 注册对象、拒绝文本、缓存文件和远端图鉴握手仍待联调。日志 `D:/workspace/gradle-remote-dex-symbols.log`。
