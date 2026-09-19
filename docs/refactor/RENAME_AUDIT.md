@@ -48,3 +48,5 @@ B6-room-state-payload-symbols（2026-09-19）：移除 RoomStatePayload 的 20 �
 B6-backdrop-symbols（2026-09-19）：移除 Backdrop 的 20 个安全内部命名候选并记录新语义名；公开 draw、贴图路径、动画与裁剪参数保持。构建与 259 项测试通过，源码 SHA-256：19269970B988FCE4EF20A8900BA15C690239229CF9037AD0DBB2C65E4E35A438。
 
 B6-back-button-symbols（2026-09-19）：`BackButton` 的 19 个基线剩余声明已建立对应并改名：私有颜色常量改为 `NORMAL_FILL_COLOR`、`HOVER_FILL_COLOR`、`BORDER_COLOR`、`LABEL_COLOR`，绘制和命中检测参数/局部变量改为屏幕原点、指针、按钮几何和悬停语义。公开常量及方法签名保持。JDK21 离线 clean build 成功，259 项测试零失败；真实客户端按钮渲染与点击仍待集成验证。
+B6-api-events-symbols（2026-09-19）：完成 ApiEvents 的 18 个安全内部声明语义改名。
+B6-player-portrait-symbols（2026-09-19）：完成 PlayerPortrait 的 16 个安全内部声明语义改名。

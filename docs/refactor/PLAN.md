@@ -191,3 +191,7 @@ B6-room-state-payload-symbols（2026-09-19）：完成 RoomStatePayload 编解�
 B6-backdrop-symbols（2026-09-19）：完成 Backdrop 的 20 个安全内部声明语义重命名；保留贴图路径、动画周期、裁剪区域、绘制坐标和公开 draw 签名。JDK21 离线 clean build 与 259 项测试通过。
 
 B6-back-button-symbols（2026-09-19）：完成 `BackButton` 的颜色、绘制上下文、屏幕原点、指针坐标、按钮几何和悬停状态内部声明语义改名；公开常量、公开方法签名、按钮边界、颜色值、翻译键和绘制顺序保持。JDK21 离线 clean build 通过，259 项测试零失败；真实客户端渲染和点击仍待集成验证。
+
+## B6-symbol-followups（2026-09-19）
+
+完成 ApiEvents 与 PlayerPortrait 的安全内部命名批次；两批均通过 JDK21 离线 clean build，259 项测试零失败。

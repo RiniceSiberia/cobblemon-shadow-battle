@@ -13,58 +13,58 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
 
 public final class PlayerPortrait {
-   private LivingEntity entity;
-   private PlayerSkin skin;
+   private LivingEntity portraitEntity;
+   private PlayerSkin playerSkin;
 
-   private PlayerPortrait(PlayerSkin skin) {
-      this.skin = skin;
+   private PlayerPortrait(PlayerSkin initialSkin) {
+      this.playerSkin = initialSkin;
    }
 
    public LivingEntity entity() {
-      return this.entity;
+      return this.portraitEntity;
    }
 
    public PlayerSkin skin() {
-      return this.skin;
+      return this.playerSkin;
    }
 
-   public static PlayerPortrait of(AbstractClientPlayer participant) {
-      PlayerPortrait portrait = new PlayerPortrait(participant.getSkin());
-      portrait.entity = participant;
+   public static PlayerPortrait of(AbstractClientPlayer clientPlayer) {
+      PlayerPortrait portrait = new PlayerPortrait(clientPlayer.getSkin());
+      portrait.portraitEntity = clientPlayer;
       return portrait;
    }
 
-   private static String mojangName(String displayName) {
-      int hash = displayName.indexOf(35);
-      return hash < 0 ? displayName : displayName.substring(0, hash);
+   private static String extractMojangName(String decoratedName) {
+      int separatorIndex = decoratedName.indexOf(35);
+      return separatorIndex < 0 ? decoratedName : decoratedName.substring(0, separatorIndex);
    }
 
-   public static PlayerPortrait lookup(String displayName, long accountNumber) {
-      Minecraft minecraft = Minecraft.getInstance();
-      String name = mojangName(displayName);
-      UUID standIn = new UUID(0L, accountNumber);
-      final PlayerPortrait portrait = new PlayerPortrait(DefaultPlayerSkin.get(standIn));
-      if (minecraft.level != null && !name.isEmpty()) {
-         portrait.entity = new RemotePlayer(minecraft.level, new GameProfile(standIn, name)) {
+   public static PlayerPortrait lookup(String accountDisplayName, long accountNumber) {
+      Minecraft clientInstance = Minecraft.getInstance();
+      String mojangName = extractMojangName(accountDisplayName);
+      UUID syntheticUuid = new UUID(0L, accountNumber);
+      final PlayerPortrait portraitRecord = new PlayerPortrait(DefaultPlayerSkin.get(syntheticUuid));
+      if (clientInstance.level != null && !mojangName.isEmpty()) {
+         portraitRecord.portraitEntity = new RemotePlayer(clientInstance.level, new GameProfile(syntheticUuid, mojangName)) {
             public PlayerSkin getSkin() {
-               return portrait.skin;
+               return portraitRecord.playerSkin;
             }
          };
-         portrait.entity.moveTo(0.0, -1000000.0, 0.0, 0.0F, 0.0F);
-         SkullBlockEntity.fetchGameProfile(name)
+         portraitRecord.portraitEntity.moveTo(0.0, -1000000.0, 0.0, 0.0F, 0.0F);
+         SkullBlockEntity.fetchGameProfile(mojangName)
             .thenCompose(
-               profile -> profile.<CompletionStage<PlayerSkin>>map(found -> minecraft.getSkinManager().getOrLoad(found))
+               profileResult -> profileResult.<CompletionStage<PlayerSkin>>map(foundProfile -> clientInstance.getSkinManager().getOrLoad(foundProfile))
                   .orElseGet(() -> CompletableFuture.completedFuture((PlayerSkin)null))
             )
-            .thenAccept(fetched -> {
-               if (fetched != null) {
-                  minecraft.execute(() -> portrait.skin = fetched);
+            .thenAccept(fetchedSkin -> {
+               if (fetchedSkin != null) {
+                  clientInstance.execute(() -> portraitRecord.playerSkin = fetchedSkin);
                }
             })
-            .exceptionally(e -> null);
-         return portrait;
+            .exceptionally(failure -> null);
+         return portraitRecord;
       } else {
-         return portrait;
+         return portraitRecord;
       }
    }
 }

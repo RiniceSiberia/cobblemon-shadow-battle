@@ -354,3 +354,9 @@ RoomStatePayload 的编码顺序仍为房间标识、邀请码、名称、锁定
 ## B6-back-button-symbols（2026-09-19）
 
 `BackButton` 保留 `X/Y/W/H`、`draw`、`contains` 的公开入口和原有几何值。绘制仍先填充按钮，再绘制四条边框，最后居中绘制翻译标签；悬停颜色、普通颜色、边框颜色和标签颜色未改变。命中检测继续使用左闭右开边界，并与绘制使用同一按钮原点和尺寸。JDK21 离线 `clean build` 完成，259 项测试零失败；客户端真实渲染与点击尚未验证。
+
+## B6-api-events-symbols（2026-09-19）
+ApiEvents 的公开事件入口、事件字符串、载荷字段、监听器调用顺序和异常隔离保持。
+
+## B6-player-portrait-symbols（2026-09-19）
+PlayerPortrait.lookup 继续裁剪显示名后缀、构造占位 UUID、创建隐藏远程实体并异步更新皮肤。
