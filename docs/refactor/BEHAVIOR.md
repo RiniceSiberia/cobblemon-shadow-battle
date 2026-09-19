@@ -300,3 +300,9 @@ ServerDex 的 65 个基线剩余声明已按服务端图鉴激活状态、原图
 ## B6-ui-symbols（2026-09-19）
 
 `Ui` 的文本、样式、组件数组、循环索引、画布、字体、坐标、颜色、阴影和模式绑定变量完成语义改名。公开静态方法和全部重载签名、`cobblebattle:ui` 字体资源、默认字体回退、组件间 ` · ` 分隔符、文本包装、绘制返回值、居中绘制和宽度测量分支保持。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；59 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实字体加载及 13 个调用文件的客户端显示仍待验证。日志 `D:/workspace/gradle-ui-symbols.log`。
+
+## B6-chat-hud-symbols（2026-09-19）
+
+`ChatHud` 的悬浮层画布、活动屏幕、指针坐标、悬停消息、身份提示行、面板原点、空态消息、滚动输入与范围、输入提示框、可见草稿和光标位置完成语义改名；包内 `draw` 改为 `drawChatPanel`，`ChatScreen` 调用同步迁移。早期误名 `connectionRequested` 改为 `targetScrollOffset`，一行滚动常量恢复为实际计算输入。
+
+公开 `render`、`drawOver`、`drawNameCard`、`interactiveOver` 和 `scroll` 签名保持。聊天显示条件、原版聊天屏幕与 BattleGUI 覆盖判断、身份提示文本顺序、面板绘制顺序、战斗频道空态、输入框 153×10 裁剪、147 像素可用宽度、按 Unicode code point 从头裁剪、500 毫秒光标节奏、滚轮符号方向和 0..max 钳制保持。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；45 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实 HUD、聊天屏幕、滚轮和玩家身份提示仍待客户端验证。日志 `D:/workspace/gradle-chat-hud-symbols.log`。

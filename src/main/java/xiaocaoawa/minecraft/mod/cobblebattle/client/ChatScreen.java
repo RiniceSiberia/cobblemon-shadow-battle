@@ -26,7 +26,7 @@ public final class ChatScreen extends Screen {
    }
 
    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-      ChatHud.draw(graphics, this.width, this.height, ChatInput.draftOrNull());
+      ChatHud.drawChatPanel(graphics, this.width, this.height, ChatInput.draftOrNull());
       super.render(graphics, mouseX, mouseY, partialTick);
       ChatHud.drawNameCard(graphics, mouseX, mouseY);
    }

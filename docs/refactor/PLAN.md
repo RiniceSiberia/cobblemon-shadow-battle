@@ -160,3 +160,5 @@ B6-matchmaking-queue-symbols（2026-09-19）：将原 `BattleQueue` 顶层协调
 B6-settings-screen-symbols（2026-09-19）：完成 `SettingsScreen` 的纹理、布局、颜色、父界面、选项行、渲染、命中检测和切换声明语义改名，私有 `Row` 记录改为 `PreferenceToggle`。公开构造、Screen 覆写、配置键、纹理路径、坐标、颜色和配置写入时机保持；真实客户端渲染、返回和开关点击继续作为集成验收项。
 
 B6-ui-symbols（2026-09-19）：完成 `Ui` 文本包装、拼接、绘制、居中绘制和宽度测量参数及局部声明语义改名。公开静态方法、重载签名、字体资源、分隔符、阴影参数和 Minecraft 绘制调用保持；真实字体资源和各界面显示继续作为客户端集成验收项。
+
+B6-chat-hud-symbols（2026-09-19）：完成 `ChatHud` 的悬浮层画布、活动屏幕、指针坐标、身份提示、面板布局、空态消息、滚动范围、输入提示、草稿裁剪和光标声明语义改名；包内 `draw` 改为 `drawChatPanel` 并同步 `ChatScreen` 调用。早期误名 `connectionRequested` 修正为滚动目标含义。公开静态入口、翻译键、坐标与颜色、裁剪范围、滚动方向和钳制、Unicode 头部裁剪及光标节奏保持；真实客户端 HUD 与聊天交互继续作为集成验收项。
