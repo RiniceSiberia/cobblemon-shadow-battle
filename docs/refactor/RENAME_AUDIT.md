@@ -44,3 +44,5 @@ B6-team-preview-coordinator-symbols（2026-09-19）：原 TeamPreviews 的 25 �
 B6-battle-server-client-symbols（2026-09-19）：`BattleServerClient` 的 23 个基线剩余字段和参数已全部建立语义对应并改名，公开方法签名与传输边界保持。JDK21 离线 `clean build` 成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；23 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实远端连接、帧往返、断线重连和认证握手仍待联调。
 
 B6-room-state-payload-symbols（2026-09-19）：移除 RoomStatePayload 的 20 个安全内部命名候选并记录新语义名；公开 record 组件、TYPE、CODEC 和协议顺序未改。构建与 259 项测试通过，源码 SHA-256：C90D57AE9DEA6BF40E2D6FB47410BF500BBF2719763E3320A2AEC2ABD71D07AD。
+
+B6-backdrop-symbols（2026-09-19）：移除 Backdrop 的 20 个安全内部命名候选并记录新语义名；公开 draw、贴图路径、动画与裁剪参数保持。构建与 259 项测试通过，源码 SHA-256：19269970B988FCE4EF20A8900BA15C690239229CF9037AD0DBB2C65E4E35A438。

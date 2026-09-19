@@ -187,3 +187,5 @@ B6-cobblemon-compat-symbols（2026-09-19）：完成 `CobblemonCompat` 的日志
 连接启动、按需连接、会话就绪标志、引用分配、发送失败结果、主动断开、拒绝暂停、失败观察和关闭状态保持。`msg`、`str`、`integer`、`bool`、`longer` 继续使用相同消息字段、默认值和解析顺序。JDK21 离线 `clean build` 成功，259 项测试零失败；23 个基线旧声明精确匹配为 0；公开 javap 与原 JAR 无差异。真实远端连接、帧往返、断线重连和认证握手仍待联调。日志 `D:/workspace/gradle-battle-server-client-symbols.log`。
 
 B6-room-state-payload-symbols（2026-09-19）：完成 RoomStatePayload 编解码器内部 20 个参数和局部变量的语义重命名；保留 record 组件、包类型、字段顺序、列表上限及公开签名。JDK21 离线 clean build 与 259 项测试通过。
+
+B6-backdrop-symbols（2026-09-19）：完成 Backdrop 的 20 个安全内部声明语义重命名；保留贴图路径、动画周期、裁剪区域、绘制坐标和公开 draw 签名。JDK21 离线 clean build 与 259 项测试通过。
