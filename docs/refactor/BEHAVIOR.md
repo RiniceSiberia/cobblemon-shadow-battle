@@ -306,3 +306,9 @@ ServerDex 的 65 个基线剩余声明已按服务端图鉴激活状态、原图
 `ChatHud` 的悬浮层画布、活动屏幕、指针坐标、悬停消息、身份提示行、面板原点、空态消息、滚动输入与范围、输入提示框、可见草稿和光标位置完成语义改名；包内 `draw` 改为 `drawChatPanel`，`ChatScreen` 调用同步迁移。早期误名 `connectionRequested` 改为 `targetScrollOffset`，一行滚动常量恢复为实际计算输入。
 
 公开 `render`、`drawOver`、`drawNameCard`、`interactiveOver` 和 `scroll` 签名保持。聊天显示条件、原版聊天屏幕与 BattleGUI 覆盖判断、身份提示文本顺序、面板绘制顺序、战斗频道空态、输入框 153×10 裁剪、147 像素可用宽度、按 Unicode code point 从头裁剪、500 毫秒光标节奏、滚轮符号方向和 0..max 钳制保持。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；45 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实 HUD、聊天屏幕、滚轮和玩家身份提示仍待客户端验证。日志 `D:/workspace/gradle-chat-hud-symbols.log`。
+
+## B6-message-catalogue-symbols（2026-09-19）
+
+`Msg` 的日志器、默认语言、内置与外部目录、活动消息表、当前语言、语言解析、目录读取、模板替换和组件组合声明完成语义改名。早期误名 `connectionRequested` 改为 `resolvedLanguageCode`，两个 `outputStream` 分别改为纯文本结果和组合组件含义；默认语言与内置目录常量恢复为实际引用。
+
+公开 `language`、`init`、`raw`、两个 `of` 和两个 `compose` 签名保持。空语言回退 `zh_cn`、请求语言 trim/lowercase、缺失目录回退、基础目录先加载、区域目录覆盖、外部文件最后覆盖、UTF-8、缺键回显键名、顺序替换 `{n}`、非法或越界组件占位符保留为普通文本、组件参数保留样式及最终整体样式应用保持。快速 `classes` 与 JDK21 离线 `clean build` 均成功，259 项测试零失败；javac 快照为 97 个文件、4277 个声明、0 个分析错误；45 个基线旧声明精确匹配为 0，公开 javap 与原 JAR 无差异。真实外部语言文件、读取失败日志和全部消息目录仍待验证。日志 `D:/workspace/gradle-msg-symbols.log`。

@@ -15,160 +15,160 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class Msg {
-   private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle/Lang");
-   private static final String FALLBACK = "zh_cn";
-   private static final String RESOURCE_DIR = "lang/";
-   private static final Path EXTERNAL_DIR = Paths.get("config", "lang");
-   private static Properties strings = new Properties();
-   private static String language = "zh_cn";
+   private static final Logger LOG = LoggerFactory.getLogger("CobbleBattle/Lang");
+   private static final String DEFAULT_LANGUAGE_CODE = "zh_cn";
+   private static final String BUNDLED_CATALOGUE_DIRECTORY = "lang/";
+   private static final Path EXTERNAL_CATALOGUE_DIRECTORY = Paths.get("config", "lang");
+   private static Properties activeMessages = new Properties();
+   private static String activeLanguageCode = DEFAULT_LANGUAGE_CODE;
 
    private Msg() {
    }
 
    public static String language() {
-      return language;
+      return activeLanguageCode;
    }
 
-   public static void init(String code) {
-      String connectionRequested = code != null && !code.isBlank() ? code.trim().toLowerCase() : "zh_cn";
-      Properties fallback = loadBundled("zh_cn");
-      if (fallback == null) {
-         LOGGER.error("Bundled {} catalogue is missing; messages will show as keys", "zh_cn");
-         fallback = new Properties();
+   public static void init(String languageCode) {
+      String resolvedLanguageCode = languageCode != null && !languageCode.isBlank() ? languageCode.trim().toLowerCase() : DEFAULT_LANGUAGE_CODE;
+      Properties fallbackMessages = loadBundledCatalogue(DEFAULT_LANGUAGE_CODE);
+      if (fallbackMessages == null) {
+         LOG.error("Bundled {} catalogue is missing; messages will show as keys", DEFAULT_LANGUAGE_CODE);
+         fallbackMessages = new Properties();
       }
 
-      Properties chosen = new Properties();
-      chosen.putAll(fallback);
-      if (!"zh_cn".equals(connectionRequested)) {
-         Properties bundled = loadBundled(connectionRequested);
-         if (bundled == null) {
-            LOGGER.warn("No message catalogue for '{}', using {}", connectionRequested, "zh_cn");
-            connectionRequested = "zh_cn";
+      Properties mergedMessages = new Properties();
+      mergedMessages.putAll(fallbackMessages);
+      if (!DEFAULT_LANGUAGE_CODE.equals(resolvedLanguageCode)) {
+         Properties localizedMessages = loadBundledCatalogue(resolvedLanguageCode);
+         if (localizedMessages == null) {
+            LOG.warn("No message catalogue for '{}', using {}", resolvedLanguageCode, DEFAULT_LANGUAGE_CODE);
+            resolvedLanguageCode = DEFAULT_LANGUAGE_CODE;
          } else {
-            chosen.putAll(bundled);
+            mergedMessages.putAll(localizedMessages);
          }
       }
 
-      Properties external = loadExternal(connectionRequested);
-      if (external != null) {
-         chosen.putAll(external);
+      Properties overrideMessages = loadExternalCatalogue(resolvedLanguageCode);
+      if (overrideMessages != null) {
+         mergedMessages.putAll(overrideMessages);
       }
 
-      strings = chosen;
-      language = connectionRequested;
+      activeMessages = mergedMessages;
+      activeLanguageCode = resolvedLanguageCode;
    }
 
-   private static Properties loadBundled(String code) {
-      String name = "lang/" + code + ".properties";
+   private static Properties loadBundledCatalogue(String languageCode) {
+      String resourcePath = BUNDLED_CATALOGUE_DIRECTORY + languageCode + ".properties";
 
       try {
-         Properties var4;
-         try (InputStream in = Msg.class.getResourceAsStream("/" + name)) {
-            if (in == null) {
+         Properties loadedCatalogue;
+         try (InputStream resourceStream = Msg.class.getResourceAsStream("/" + resourcePath)) {
+            if (resourceStream == null) {
                return null;
             }
 
-            Properties p = new Properties();
-            p.load(new InputStreamReader(in, StandardCharsets.UTF_8));
-            var4 = p;
+            Properties catalogue = new Properties();
+            catalogue.load(new InputStreamReader(resourceStream, StandardCharsets.UTF_8));
+            loadedCatalogue = catalogue;
          }
 
-         return var4;
+         return loadedCatalogue;
       } catch (Exception failure) {
-         LOGGER.warn("Could not read the bundled {} catalogue: {}", code, failure.getMessage());
+         LOG.warn("Could not read the bundled {} catalogue: {}", languageCode, failure.getMessage());
          return null;
       }
    }
 
-   private static Properties loadExternal(String code) {
-      Path file = EXTERNAL_DIR.resolve(code + ".properties");
-      if (!Files.isRegularFile(file)) {
+   private static Properties loadExternalCatalogue(String languageCode) {
+      Path catalogueFile = EXTERNAL_CATALOGUE_DIRECTORY.resolve(languageCode + ".properties");
+      if (!Files.isRegularFile(catalogueFile)) {
          return null;
       } else {
          try {
-            Properties var4;
-            try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-               Properties p = new Properties();
-               p.load(reader);
-               LOGGER.info("Using the message catalogue at {}", file.toAbsolutePath());
-               var4 = p;
+            Properties loadedCatalogue;
+            try (Reader catalogueReader = Files.newBufferedReader(catalogueFile, StandardCharsets.UTF_8)) {
+               Properties catalogue = new Properties();
+               catalogue.load(catalogueReader);
+               LOG.info("Using the message catalogue at {}", catalogueFile.toAbsolutePath());
+               loadedCatalogue = catalogue;
             }
 
-            return var4;
+            return loadedCatalogue;
          } catch (Exception failure) {
-            LOGGER.warn("Could not read {}: {} - using the bundled text", file, failure.getMessage());
+            LOG.warn("Could not read {}: {} - using the bundled text", catalogueFile, failure.getMessage());
             return null;
          }
       }
    }
 
-   public static String raw(String key, Object... args) {
-      String template = strings.getProperty(key);
-      if (template == null) {
-         LOGGER.warn("Missing message key '{}'", key);
-         return key;
+   public static String raw(String messageKey, Object... substitutions) {
+      String messageTemplate = activeMessages.getProperty(messageKey);
+      if (messageTemplate == null) {
+         LOG.warn("Missing message key '{}'", messageKey);
+         return messageKey;
       } else {
-         String outputStream = template;
+         String renderedText = messageTemplate;
 
-         for (int i = 0; i < args.length; i++) {
-            outputStream = outputStream.replace("{" + i + "}", String.valueOf(args[i]));
+         for (int substitutionIndex = 0; substitutionIndex < substitutions.length; substitutionIndex++) {
+            renderedText = renderedText.replace("{" + substitutionIndex + "}", String.valueOf(substitutions[substitutionIndex]));
          }
 
-         return outputStream;
+         return renderedText;
       }
    }
 
-   public static MutableComponent of(String key, Object... args) {
-      return Component.literal(raw(key, args));
+   public static MutableComponent of(String messageKey, Object... substitutions) {
+      return Component.literal(raw(messageKey, substitutions));
    }
 
-   public static MutableComponent of(ChatFormatting style, String key, Object... args) {
-      return Component.literal(raw(key, args)).withStyle(style);
+   public static MutableComponent of(ChatFormatting textStyle, String messageKey, Object... substitutions) {
+      return Component.literal(raw(messageKey, substitutions)).withStyle(textStyle);
    }
 
-   public static MutableComponent compose(String key, Object... args) {
-      String template = strings.getProperty(key);
-      if (template == null) {
-         LOGGER.warn("Missing message key '{}'", key);
-         return Component.literal(key);
+   public static MutableComponent compose(String messageKey, Object... substitutions) {
+      String messageTemplate = activeMessages.getProperty(messageKey);
+      if (messageTemplate == null) {
+         LOG.warn("Missing message key '{}'", messageKey);
+         return Component.literal(messageKey);
       } else {
-         MutableComponent outputStream = Component.empty();
-         StringBuilder plain = new StringBuilder();
+         MutableComponent assembledMessage = Component.empty();
+         StringBuilder literalBuffer = new StringBuilder();
 
-         for (int i = 0; i < template.length(); i++) {
-            char c = template.charAt(i);
-            int close = c == '{' ? template.indexOf(125, i) : -1;
-            int index = -1;
-            if (close > i) {
+         for (int cursorIndex = 0; cursorIndex < messageTemplate.length(); cursorIndex++) {
+            char currentCharacter = messageTemplate.charAt(cursorIndex);
+            int placeholderEnd = currentCharacter == '{' ? messageTemplate.indexOf(125, cursorIndex) : -1;
+            int substitutionIndex = -1;
+            if (placeholderEnd > cursorIndex) {
                try {
-                  index = Integer.parseInt(template.substring(i + 1, close));
+                  substitutionIndex = Integer.parseInt(messageTemplate.substring(cursorIndex + 1, placeholderEnd));
                } catch (NumberFormatException failure) {
                }
             }
 
-            if (index >= 0 && index < args.length) {
-               if (!plain.isEmpty()) {
-                  outputStream.append(Component.literal(plain.toString()));
-                  plain.setLength(0);
+            if (substitutionIndex >= 0 && substitutionIndex < substitutions.length) {
+               if (!literalBuffer.isEmpty()) {
+                  assembledMessage.append(Component.literal(literalBuffer.toString()));
+                  literalBuffer.setLength(0);
                }
 
-               Object arg = args[index];
-               outputStream.append((Component)(arg instanceof Component component ? component : Component.literal(String.valueOf(arg))));
-               i = close;
+               Object substitution = substitutions[substitutionIndex];
+               assembledMessage.append((Component)(substitution instanceof Component componentSubstitution ? componentSubstitution : Component.literal(String.valueOf(substitution))));
+               cursorIndex = placeholderEnd;
             } else {
-               plain.append(c);
+               literalBuffer.append(currentCharacter);
             }
          }
 
-         if (!plain.isEmpty()) {
-            outputStream.append(Component.literal(plain.toString()));
+         if (!literalBuffer.isEmpty()) {
+            assembledMessage.append(Component.literal(literalBuffer.toString()));
          }
 
-         return outputStream;
+         return assembledMessage;
       }
    }
 
-   public static MutableComponent compose(ChatFormatting style, String key, Object... args) {
-      return compose(key, args).withStyle(style);
+   public static MutableComponent compose(ChatFormatting textStyle, String messageKey, Object... substitutions) {
+      return compose(messageKey, substitutions).withStyle(textStyle);
    }
 }
