@@ -18,8 +18,8 @@ public enum AuthMode {
       return this == REGISTER;
    }
 
-   public static AuthMode byOrdinal(int ordinal) {
-      AuthMode[] all = values();
-      return ordinal >= 0 && ordinal < all.length ? all[ordinal] : LOGIN;
+   public static AuthMode byOrdinal(int ordinalValue) {
+      AuthMode[] availableModes = values();
+      return ordinalValue >= 0 && ordinalValue < availableModes.length ? availableModes[ordinalValue] : LOGIN;
    }
 }

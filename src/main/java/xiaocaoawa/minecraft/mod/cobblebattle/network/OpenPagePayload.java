@@ -23,8 +23,8 @@ public record OpenPagePayload(String page, String ranked, String have) implement
       OpenPagePayload::new
    );
 
-   public static OpenPagePayload of(String page) {
-      return new OpenPagePayload(page, "", "");
+   public static OpenPagePayload of(String pageIdentifier) {
+      return new OpenPagePayload(pageIdentifier, "", "");
    }
 
    public Type<? extends CustomPacketPayload> type() {

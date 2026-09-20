@@ -66,3 +66,5 @@ B6-account-client-batch（2026-09-20）：完成 AuthService 与 UnknownMark 的
 B6-runtime-entry-batch（2026-09-20）：完成四个运行时入口类的安全内部声明语义改名；当前剩余 63 项。
 
 B6-battle-factory-payload-batch（2026-09-20）：完成六个战斗/协议类的安全内部声明语义改名；剩余候选以 RENAME_REMAINING.csv 为准。
+
+B6-chat-auth-page-batch（2026-09-20）：完成四个聊天/认证/页面类的安全内部声明语义改名。

@@ -222,3 +222,6 @@ B6-back-button-symbols（2026-09-19）：完成 `BackButton` 的颜色、绘制�
 
 ## B6-battle-factory-payload-batch（2026-09-20）
 完成 MirrorPokemon、MirrorFactory、SpectatorFactory、ServerDexPayload、SubmitAuthPayload 与 RoomListPayload 的内部命名改写；构造、生命周期和协议字段保持。JDK21 离线 clean build 通过，259 项测试零失败。
+
+## B6-chat-auth-page-batch（2026-09-20）
+完成 ChatState、ChatLog、AuthMode 与 OpenPagePayload 的内部命名改写；聊天会话、枚举回退和页面载荷保持。JDK21 离线 clean build 通过，259 项测试零失败。

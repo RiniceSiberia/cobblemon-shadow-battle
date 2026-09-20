@@ -384,3 +384,6 @@ RemoteBattleActor 继续保留来源服务器、座位、名称、镜像队伍�
 
 ## B6-battle-factory-payload-batch（2026-09-20）
 镜像宝可梦接管、对战工厂、观战会话和图鉴/认证/房间载荷继续保持原委托和编解码顺序。验证日志：D:/workspace/gradle-final-batch.log。
+
+## B6-chat-auth-page-batch（2026-09-20）
+聊天频道与会话状态、认证模式序号回退和页面载荷默认字段保持原行为。验证日志：D:/workspace/gradle-final-small-batch.log。
