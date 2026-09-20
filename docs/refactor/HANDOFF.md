@@ -3,3 +3,5 @@
 B6-rename-ledger-closeout（2026-09-20）已完成：RENAME_REMAINING.csv 当前为空，所有已纳入命名范围的候选均已完成源码核对或记录为兼容保留。
 下一步运行最终完整构建、Git 差异审查，并核对尚未完成的真实客户端、实体/Mixin、远端联调、IDEA 验证、GitHub 提交和最终目录清理。
 整体重构仍不能宣称完成，直到上述集成和交付项完成。
+
+B6-integration-closeout（2026-09-20）：JDK21 IDEA 模型生成成功；runServer 冒烟进入服务端 Done，日志 D:/workspace/gradle-idea-model.log 与 D:/workspace/gradle-run-server-smoke.log。已推送 origin/main，远程 SHA 与本地一致。
