@@ -70,3 +70,5 @@ B6-battle-factory-payload-batch（2026-09-20）：完成六个战斗/协议类�
 B6-chat-auth-page-batch（2026-09-20）：完成四个聊天/认证/页面类的安全内部声明语义改名。
 
 B6-settings-ranking-batch（2026-09-20）：完成三个设置/认证/排行榜类的安全内部声明语义改名。
+
+B6-chat-command-config-batch（2026-09-20）：完成 ChatInput、ChatScreenHandler、MainCommand 与 CobbleBattleConfig 的安全内部声明语义改名。

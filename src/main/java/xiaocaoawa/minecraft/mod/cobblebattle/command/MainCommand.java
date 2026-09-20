@@ -5,7 +5,7 @@ import java.util.List;
 import net.minecraft.commands.CommandSourceStack;
 
 public final class MainCommand {
-   private static final List<SubCommand> SUBCOMMANDS = List.of(
+   private static final List<SubCommand> REGISTERED_COMMANDS = List.of(
       new SubOpenCommand(),
       new SubLogoutCommand(),
       new SubJoinCommand(),
@@ -18,7 +18,7 @@ public final class MainCommand {
    private MainCommand() {
    }
 
-   public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-      CommandExecutionRuntime.register(dispatcher, SUBCOMMANDS);
+   public static void register(CommandDispatcher<CommandSourceStack> commandDispatcher) {
+      CommandExecutionRuntime.register(commandDispatcher, REGISTERED_COMMANDS);
    }
 }

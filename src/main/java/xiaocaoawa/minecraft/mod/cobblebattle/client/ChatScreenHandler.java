@@ -8,8 +8,8 @@ public final class ChatScreenHandler {
       ClientHandlerRuntime.initializeChat();
    }
 
-   static void send(ChatLog.Channel selectedConversation, String text) {
-      ClientHandlerRuntime.sendChat(selectedConversation, text);
+   static void send(ChatLog.Channel conversationChannel, String messageText) {
+      ClientHandlerRuntime.sendChat(conversationChannel, messageText);
    }
 
    public static void onDisconnect() {

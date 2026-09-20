@@ -5,7 +5,8 @@ import com.google.gson.GsonBuilder;
 import java.util.List;
 
 public final class CobbleBattleConfig {
-   static final Gson GSON = new GsonBuilder().create();
+   static final Gson CONFIG_GSON = new GsonBuilder().create();
+   static final Gson GSON = CONFIG_GSON;
    public String serverHost = "127.0.0.1";
    public int serverPort = 18470;
    public String authToken = "CHANGE_ME_SHARED_SECRET";

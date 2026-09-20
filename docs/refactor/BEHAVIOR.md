@@ -390,3 +390,6 @@ RemoteBattleActor 继续保留来源服务器、座位、名称、镜像队伍�
 
 ## B6-settings-ranking-batch（2026-09-20）
 客户端设置存储、认证界面载荷和排行榜条目编解码继续保持原字段与顺序。验证日志：D:/workspace/gradle-settings-payload-batch.log。
+
+## B6-chat-command-config-batch（2026-09-20）
+聊天字符提交、命令树注册和配置 GSON 入口继续保持原行为。验证日志：D:/workspace/gradle-chat-command-batch.log；测试依赖 GSON 兼容入口，已恢复别名后通过。

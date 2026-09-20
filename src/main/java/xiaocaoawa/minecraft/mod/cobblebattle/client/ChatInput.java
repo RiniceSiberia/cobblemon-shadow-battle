@@ -24,8 +24,8 @@ public final class ChatInput {
       COMPOSER.pause();
    }
 
-   public static boolean type(char ch) {
-      return COMPOSER.append(ch);
+   public static boolean type(char inputCharacter) {
+      return COMPOSER.append(inputCharacter);
    }
 
    public static void backspace() {
@@ -37,9 +37,9 @@ public final class ChatInput {
    }
 
    public static void send() {
-      String text = COMPOSER.finish();
-      if (!text.isEmpty()) {
-         ChatScreenHandler.send(ChatState.channel(), text);
+      String messageText = COMPOSER.finish();
+      if (!messageText.isEmpty()) {
+         ChatScreenHandler.send(ChatState.channel(), messageText);
       }
    }
 

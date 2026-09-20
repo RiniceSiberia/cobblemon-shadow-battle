@@ -228,3 +228,6 @@ B6-back-button-symbols（2026-09-19）：完成 `BackButton` 的颜色、绘制�
 
 ## B6-settings-ranking-batch（2026-09-20）
 完成 ClientSettings、OpenAuthScreenPayload 与 LeaderboardPayload 的内部命名改写；配置文件路径、认证序号和排行榜协议顺序保持。JDK21 离线 clean build 通过，259 项测试零失败。
+
+## B6-chat-command-config-batch（2026-09-20）
+完成 ChatInput、ChatScreenHandler、MainCommand 与 CobbleBattleConfig 的内部命名改写；聊天提交、命令注册和配置兼容别名保持。JDK21 离线 clean build 通过，259 项测试零失败。
