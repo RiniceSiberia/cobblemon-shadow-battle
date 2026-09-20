@@ -369,3 +369,6 @@ CrossServerBattles 继续委托同一 BattleProjectionIndex，保留注入、选
 
 ## B6-remote-battle-actor-symbols（2026-09-20）
 RemoteBattleActor 继续保留来源服务器、座位、名称、镜像队伍和 BattleActor 空操作入口；只调整内部字段和参数名称。验证日志：D:/workspace/gradle-remote-battle-actor-symbols.log。
+
+## B6-payload-codec-batch（2026-09-20）
+队伍预览与队伍选择载荷继续保持 UTF 长度、槽位数量上限、字段顺序和列表快照行为。验证日志：D:/workspace/gradle-payload-symbols-batch.log。

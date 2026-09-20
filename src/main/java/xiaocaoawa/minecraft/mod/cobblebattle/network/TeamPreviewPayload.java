@@ -25,53 +25,44 @@ public record TeamPreviewPayload(
    private static final int MAX_SLOTS = 6;
    public static final Type<TeamPreviewPayload> TYPE = PayloadTypeCatalog.named("team_preview");
    public static final StreamCodec<RegistryFriendlyByteBuf, TeamPreviewPayload> CODEC = StreamCodec.of(
-      (buf, p) -> {
-         buf.writeUtf(p.battleId(), 48);
-         buf.writeUtf(p.you(), 64);
-         buf.writeUtf(p.opponent(), 64);
-         buf.writeUtf(p.opponentServer(), 64);
-         buf.writeVarInt(p.pick());
-         buf.writeVarInt(p.lead());
-         buf.writeLong(p.deadlineMs());
-         writeSlots(buf, p.mine());
-         writeSlots(buf, p.theirs());
-         buf.writeBoolean(p.mineReady());
-         buf.writeBoolean(p.theirsReady());
-         buf.writeUtf(p.closed(), 32);
+      (buffer, preview) -> {
+         buffer.writeUtf(preview.battleId(), 48);
+         buffer.writeUtf(preview.you(), 64);
+         buffer.writeUtf(preview.opponent(), 64);
+         buffer.writeUtf(preview.opponentServer(), 64);
+         buffer.writeVarInt(preview.pick());
+         buffer.writeVarInt(preview.lead());
+         buffer.writeLong(preview.deadlineMs());
+         writeSlots(buffer, preview.mine());
+         writeSlots(buffer, preview.theirs());
+         buffer.writeBoolean(preview.mineReady());
+         buffer.writeBoolean(preview.theirsReady());
+         buffer.writeUtf(preview.closed(), 32);
       },
-      buf -> new TeamPreviewPayload(
-         buf.readUtf(48),
-         buf.readUtf(64),
-         buf.readUtf(64),
-         buf.readUtf(64),
-         buf.readVarInt(),
-         buf.readVarInt(),
-         buf.readLong(),
-         readSlots(buf),
-         readSlots(buf),
-         buf.readBoolean(),
-         buf.readBoolean(),
-         buf.readUtf(32)
+      buffer -> new TeamPreviewPayload(
+         buffer.readUtf(48), buffer.readUtf(64), buffer.readUtf(64), buffer.readUtf(64),
+         buffer.readVarInt(), buffer.readVarInt(), buffer.readLong(), readSlots(buffer), readSlots(buffer),
+         buffer.readBoolean(), buffer.readBoolean(), buffer.readUtf(32)
       )
    );
 
-   private static void writeSlots(RegistryFriendlyByteBuf buf, List<TeamPreviewPayload.Slot> slots) {
-      buf.writeVarInt(slots.size());
+   private static void writeSlots(RegistryFriendlyByteBuf buffer, List<TeamPreviewPayload.Slot> slots) {
+      buffer.writeVarInt(slots.size());
 
-      for (TeamPreviewPayload.Slot slot : slots) {
-         TeamPreviewPayload.Slot.CODEC.encode(buf, slot);
+      for (TeamPreviewPayload.Slot slotEntry : slots) {
+         TeamPreviewPayload.Slot.CODEC.encode(buffer, slotEntry);
       }
    }
 
-   private static List<TeamPreviewPayload.Slot> readSlots(RegistryFriendlyByteBuf buf) {
-      int count = Math.min(buf.readVarInt(), 6);
-      List<TeamPreviewPayload.Slot> outputStream = new ArrayList<>(count);
+   private static List<TeamPreviewPayload.Slot> readSlots(RegistryFriendlyByteBuf buffer) {
+      int slotCount = Math.min(buffer.readVarInt(), 6);
+      List<TeamPreviewPayload.Slot> decodedSlots = new ArrayList<>(slotCount);
 
-      for (int i = 0; i < count; i++) {
-         outputStream.add((TeamPreviewPayload.Slot)TeamPreviewPayload.Slot.CODEC.decode(buf));
+      for (int slotIndex = 0; slotIndex < slotCount; slotIndex++) {
+         decodedSlots.add((TeamPreviewPayload.Slot)TeamPreviewPayload.Slot.CODEC.decode(buffer));
       }
 
-      return outputStream;
+      return decodedSlots;
    }
 
    public Type<? extends CustomPacketPayload> type() {
@@ -79,12 +70,12 @@ public record TeamPreviewPayload(
    }
 
    public record Slot(String species, int level, String gender, boolean shiny, String item) {
-      public static final StreamCodec<RegistryFriendlyByteBuf, TeamPreviewPayload.Slot> CODEC = StreamCodec.of((buf, s) -> {
-         buf.writeUtf(s.species(), 64);
-         buf.writeVarInt(s.level());
-         buf.writeUtf(s.gender(), 2);
-         buf.writeBoolean(s.shiny());
-         buf.writeUtf(s.item(), 96);
-      }, buf -> new TeamPreviewPayload.Slot(buf.readUtf(64), buf.readVarInt(), buf.readUtf(2), buf.readBoolean(), buf.readUtf(96)));
+      public static final StreamCodec<RegistryFriendlyByteBuf, TeamPreviewPayload.Slot> CODEC = StreamCodec.of((buffer, slotEntry) -> {
+         buffer.writeUtf(slotEntry.species(), 64);
+         buffer.writeVarInt(slotEntry.level());
+         buffer.writeUtf(slotEntry.gender(), 2);
+         buffer.writeBoolean(slotEntry.shiny());
+         buffer.writeUtf(slotEntry.item(), 96);
+      }, buffer -> new TeamPreviewPayload.Slot(buffer.readUtf(64), buffer.readVarInt(), buffer.readUtf(2), buffer.readBoolean(), buffer.readUtf(96)));
    }
 }

@@ -56,3 +56,5 @@ B6-open-main-menu-symbols（2026-09-20）：完成 OpenMainMenuPayload 的 15 �
 B6-cross-server-battles-symbols（2026-09-20）：完成 CrossServerBattles 的 14 个安全内部声明语义改名；当前剩余 167 项。
 
 B6-remote-battle-actor-symbols（2026-09-20）：完成 RemoteBattleActor 的 14 个安全内部声明语义改名；当前剩余 153 项。
+
+B6-payload-codec-batch（2026-09-20）：完成 TeamPreviewPayload 与 TeamPickPayload 的 20 个安全内部声明语义改名；当前剩余 133 项。

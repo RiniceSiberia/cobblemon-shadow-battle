@@ -11,23 +11,23 @@ import io.github.rinicesiberia.shadowbattle.network.PayloadTypeCatalog;
 public record TeamPickPayload(String battleId, List<Integer> picks) implements CustomPacketPayload {
    private static final int MAX_PICKS = 6;
    public static final Type<TeamPickPayload> TYPE = PayloadTypeCatalog.named("team_pick");
-   public static final StreamCodec<RegistryFriendlyByteBuf, TeamPickPayload> CODEC = StreamCodec.of((buf, p) -> {
-      buf.writeUtf(p.battleId(), 48);
-      buf.writeVarInt(p.picks().size());
+   public static final StreamCodec<RegistryFriendlyByteBuf, TeamPickPayload> CODEC = StreamCodec.of((buffer, payload) -> {
+      buffer.writeUtf(payload.battleId(), 48);
+      buffer.writeVarInt(payload.picks().size());
 
-      for (int pick : p.picks()) {
-         buf.writeVarInt(pick);
+      for (int selectedSlot : payload.picks()) {
+         buffer.writeVarInt(selectedSlot);
       }
-   }, buf -> {
-      String battleId = buf.readUtf(48);
-      int count = Math.min(buf.readVarInt(), 6);
-      List<Integer> picks = new ArrayList<>(count);
+   }, buffer -> {
+      String battleIdentifier = buffer.readUtf(48);
+      int selectionCount = Math.min(buffer.readVarInt(), 6);
+      List<Integer> selectedSlots = new ArrayList<>(selectionCount);
 
-      for (int i = 0; i < count; i++) {
-         picks.add(buf.readVarInt());
+      for (int selectionIndex = 0; selectionIndex < selectionCount; selectionIndex++) {
+         selectedSlots.add(buffer.readVarInt());
       }
 
-      return new TeamPickPayload(battleId, List.copyOf(picks));
+      return new TeamPickPayload(battleIdentifier, List.copyOf(selectedSlots));
    });
 
    public Type<? extends CustomPacketPayload> type() {
