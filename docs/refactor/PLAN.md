@@ -195,3 +195,7 @@ B6-back-button-symbols（2026-09-19）：完成 `BackButton` 的颜色、绘制�
 ## B6-symbol-followups（2026-09-19）
 
 完成 ApiEvents 与 PlayerPortrait 的安全内部命名批次；两批均通过 JDK21 离线 clean build，259 项测试零失败。
+
+## B6-open-main-menu-symbols（2026-09-20）
+
+完成 OpenMainMenuPayload 内部编解码命名改写，record 字段、协议顺序和规则数量上限保持。JDK21 离线 clean build 通过，259 项测试零失败。

@@ -360,3 +360,6 @@ ApiEvents 的公开事件入口、事件字符串、载荷字段、监听器调�
 
 ## B6-player-portrait-symbols（2026-09-19）
 PlayerPortrait.lookup 继续裁剪显示名后缀、构造占位 UUID、创建隐藏远程实体并异步更新皮肤。
+
+## B6-open-main-menu-symbols（2026-09-20）
+OpenMainMenuPayload 的排行榜规则写入/读取顺序、UTF 长度、规则数量截断至 256 及 record 组件保持。验证日志：D:/workspace/gradle-open-main-menu-symbols.log。
