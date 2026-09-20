@@ -10,7 +10,8 @@ public final class SubOpenCommand extends AbstractSubCommand {
    }
 
    @Override
-   public void build(LiteralArgumentBuilder<CommandSourceStack> node) {
-      CommandExecutionRuntime.buildOpen(node);
+   public void build(LiteralArgumentBuilder<CommandSourceStack> commandNode) {
+      CommandExecutionRuntime.buildOpen(commandNode);
    }
 }
+

@@ -10,7 +10,8 @@ public final class SubLogoutCommand extends AbstractSubCommand {
    }
 
    @Override
-   public void build(LiteralArgumentBuilder<CommandSourceStack> node) {
-      CommandExecutionRuntime.buildLogout(node);
+   public void build(LiteralArgumentBuilder<CommandSourceStack> commandNode) {
+      CommandExecutionRuntime.buildLogout(commandNode);
    }
 }
+

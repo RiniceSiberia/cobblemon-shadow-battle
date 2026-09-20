@@ -10,7 +10,8 @@ public final class SubJoinCommand extends AbstractSubCommand {
    }
 
    @Override
-   public void build(LiteralArgumentBuilder<CommandSourceStack> node) {
-      CommandExecutionRuntime.buildJoin(node);
+   public void build(LiteralArgumentBuilder<CommandSourceStack> commandNode) {
+      CommandExecutionRuntime.buildJoin(commandNode);
    }
 }
+

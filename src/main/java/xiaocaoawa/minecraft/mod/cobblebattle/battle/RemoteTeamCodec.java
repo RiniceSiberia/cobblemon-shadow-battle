@@ -16,7 +16,7 @@ public final class RemoteTeamCodec {
       RemoteRosterAssembly.warmSpeciesCache();
    }
 
-   public static List<BattlePokemon> decode(String packed) {
-      return RemoteRosterAssembly.decode(packed);
+   public static List<BattlePokemon> decode(String packedRoster) {
+      return RemoteRosterAssembly.decode(packedRoster);
    }
 }

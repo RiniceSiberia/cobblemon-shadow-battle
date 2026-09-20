@@ -10,7 +10,8 @@ public final class SubCheckCommand extends AbstractSubCommand {
    }
 
    @Override
-   public void build(LiteralArgumentBuilder<CommandSourceStack> node) {
-      CommandExecutionRuntime.buildCheck(node);
+   public void build(LiteralArgumentBuilder<CommandSourceStack> commandNode) {
+      CommandExecutionRuntime.buildCheck(commandNode);
    }
 }
+

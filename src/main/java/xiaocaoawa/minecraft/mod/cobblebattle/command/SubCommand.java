@@ -10,5 +10,6 @@ public interface SubCommand {
       return 0;
    }
 
-   void build(LiteralArgumentBuilder<CommandSourceStack> var1);
+   void build(LiteralArgumentBuilder<CommandSourceStack> commandNode);
 }
+

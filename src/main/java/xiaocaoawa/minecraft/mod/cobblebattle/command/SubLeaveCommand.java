@@ -10,7 +10,8 @@ public final class SubLeaveCommand extends AbstractSubCommand {
    }
 
    @Override
-   public void build(LiteralArgumentBuilder<CommandSourceStack> node) {
-      CommandExecutionRuntime.buildLeave(node);
+   public void build(LiteralArgumentBuilder<CommandSourceStack> commandNode) {
+      CommandExecutionRuntime.buildLeave(commandNode);
    }
 }
+

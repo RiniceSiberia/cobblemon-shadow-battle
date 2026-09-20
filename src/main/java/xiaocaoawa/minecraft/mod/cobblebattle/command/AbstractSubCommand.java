@@ -11,12 +11,14 @@ public abstract class AbstractSubCommand implements SubCommand {
       return CobbleBattle.service();
    }
 
-   protected static ServerPlayer requirePlayer(CommandSourceStack source, String documentKey) {
-      ServerPlayer participant = source.getPlayer();
+   protected static ServerPlayer requirePlayer(CommandSourceStack commandSource, String documentKey) {
+      ServerPlayer participant = commandSource.getPlayer();
       if (participant == null) {
-         source.sendFailure(Msg.of(documentKey));
+         commandSource.sendFailure(Msg.of(documentKey));
       }
 
       return participant;
    }
 }
+
+

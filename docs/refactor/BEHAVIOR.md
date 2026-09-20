@@ -393,3 +393,6 @@ RemoteBattleActor 继续保留来源服务器、座位、名称、镜像队伍�
 
 ## B6-chat-command-config-batch（2026-09-20）
 聊天字符提交、命令树注册和配置 GSON 入口继续保持原行为。验证日志：D:/workspace/gradle-chat-command-batch.log；测试依赖 GSON 兼容入口，已恢复别名后通过。
+
+## B6-command-roster-batch（2026-09-20）
+命令子树构建、玩家检查和远端队伍解码委托保持原行为。验证日志：D:/workspace/gradle-commands-remote-team.log。
