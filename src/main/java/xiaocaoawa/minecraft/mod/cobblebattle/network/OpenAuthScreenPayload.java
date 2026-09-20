@@ -20,8 +20,8 @@ public record OpenAuthScreenPayload(int mode, String suggestedId, boolean emailE
       OpenAuthScreenPayload::new
    );
 
-   public static OpenAuthScreenPayload of(AuthMode mode, String suggestedId, boolean emailEnabled) {
-      return new OpenAuthScreenPayload(mode.ordinal(), suggestedId == null ? "" : suggestedId, emailEnabled);
+   public static OpenAuthScreenPayload of(AuthMode authMode, String suggestedId, boolean emailEnabled) {
+      return new OpenAuthScreenPayload(authMode.ordinal(), suggestedId == null ? "" : suggestedId, emailEnabled);
    }
 
    public AuthMode authMode() {

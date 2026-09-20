@@ -387,3 +387,6 @@ RemoteBattleActor 继续保留来源服务器、座位、名称、镜像队伍�
 
 ## B6-chat-auth-page-batch（2026-09-20）
 聊天频道与会话状态、认证模式序号回退和页面载荷默认字段保持原行为。验证日志：D:/workspace/gradle-final-small-batch.log。
+
+## B6-settings-ranking-batch（2026-09-20）
+客户端设置存储、认证界面载荷和排行榜条目编解码继续保持原字段与顺序。验证日志：D:/workspace/gradle-settings-payload-batch.log。

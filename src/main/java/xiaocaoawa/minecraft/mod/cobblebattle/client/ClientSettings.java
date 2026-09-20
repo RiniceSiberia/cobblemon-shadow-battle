@@ -7,18 +7,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class ClientSettings {
-   private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle/Settings");
-   private static final ClientSettingsStore SETTINGS = new ClientSettingsStore(ClientSettings::file, message -> LOGGER.warn("{}", message));
+   private static final Logger SETTINGS_LOGGER = LoggerFactory.getLogger("CobbleBattle/Settings");
+   private static final ClientSettingsStore SETTINGS_STORE = new ClientSettingsStore(ClientSettings::file, message -> SETTINGS_LOGGER.warn("{}", message));
 
    private ClientSettings() {
    }
 
    public static boolean chatHud() {
-      return SETTINGS.chatHudEnabled();
+      return SETTINGS_STORE.chatHudEnabled();
    }
 
    public static void setChatHud(boolean on) {
-      SETTINGS.updateChatHud(on);
+      SETTINGS_STORE.updateChatHud(on);
    }
 
    private static Path file() {

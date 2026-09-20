@@ -31,18 +31,18 @@ public record LeaderboardPayload(String rankedId, String name, int players, List
 
    public record Entry(int rank, long uid, String name, long score, int wins, int losses, int streak, String favourite) {
       public static final StreamCodec<RegistryFriendlyByteBuf, LeaderboardPayload.Entry> CODEC = StreamCodec.of(
-         (buf, e) -> {
-            buf.writeVarInt(e.rank());
-            buf.writeVarLong(e.uid());
-            buf.writeUtf(e.name(), 64);
-            buf.writeVarLong(e.score());
-            buf.writeVarInt(e.wins());
-            buf.writeVarInt(e.losses());
-            buf.writeVarInt(e.streak());
-            buf.writeUtf(e.favourite(), 64);
+         (buffer, entry) -> {
+            buffer.writeVarInt(entry.rank());
+            buffer.writeVarLong(entry.uid());
+            buffer.writeUtf(entry.name(), 64);
+            buffer.writeVarLong(entry.score());
+            buffer.writeVarInt(entry.wins());
+            buffer.writeVarInt(entry.losses());
+            buffer.writeVarInt(entry.streak());
+            buffer.writeUtf(entry.favourite(), 64);
          },
-         buf -> new LeaderboardPayload.Entry(
-            buf.readVarInt(), buf.readVarLong(), buf.readUtf(64), buf.readVarLong(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readUtf(64)
+         buffer -> new LeaderboardPayload.Entry(
+            buffer.readVarInt(), buffer.readVarLong(), buffer.readUtf(64), buffer.readVarLong(), buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(), buffer.readUtf(64)
          )
       );
       public static final LeaderboardPayload.Entry NONE = new LeaderboardPayload.Entry(0, 0L, "", 0L, 0, 0, 0, "");
