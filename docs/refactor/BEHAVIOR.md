@@ -396,3 +396,6 @@ RemoteBattleActor 继续保留来源服务器、座位、名称、镜像队伍�
 
 ## B6-command-roster-batch（2026-09-20）
 命令子树构建、玩家检查和远端队伍解码委托保持原行为。验证日志：D:/workspace/gradle-commands-remote-team.log。
+
+## B6-rename-ledger-closeout（2026-09-20）
+主菜单排行榜规则编解码已核对：字段顺序、长度限制、规则数量上限和默认行为保持。

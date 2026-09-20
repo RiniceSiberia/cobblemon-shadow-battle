@@ -74,3 +74,5 @@ B6-settings-ranking-batch（2026-09-20）：完成三个设置/认证/排行榜�
 B6-chat-command-config-batch（2026-09-20）：完成 ChatInput、ChatScreenHandler、MainCommand 与 CobbleBattleConfig 的安全内部声明语义改名。
 
 B6-command-roster-batch（2026-09-20）：完成命令子类、抽象命令入口与 RemoteTeamCodec 的安全内部声明语义改名。
+
+B6-rename-ledger-closeout（2026-09-20）：OpenMainMenuPayload 的 15 条残留记录完成源码核对并清除；RENAME_REMAINING.csv 当前为空。

@@ -234,3 +234,6 @@ B6-back-button-symbols（2026-09-19）：完成 `BackButton` 的颜色、绘制�
 
 ## B6-command-roster-batch（2026-09-20）
 完成命令子类、RemoteTeamCodec 及抽象命令入口的内部命名改写；命令树和远端队伍解码入口保持。JDK21 离线 clean build 通过，259 项测试零失败。
+
+## B6-rename-ledger-closeout（2026-09-20）
+OpenMainMenuPayload 的 15 条残留台账已与源码核对并清除；编解码变量已在前序批次完成语义改名，record 字段和协议顺序保持。
