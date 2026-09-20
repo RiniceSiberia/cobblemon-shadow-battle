@@ -27,44 +27,35 @@ public record RoomActionPayload(
    public static final String START = "start";
    public static final Type<RoomActionPayload> TYPE = PayloadTypeCatalog.named("room_action");
    public static final StreamCodec<RegistryFriendlyByteBuf, RoomActionPayload> CODEC = StreamCodec.of(
-      (buf, a) -> {
-         buf.writeUtf(a.action(), 16);
-         buf.writeUtf(a.roomId(), 16);
-         buf.writeUtf(a.name(), 64);
-         buf.writeUtf(a.password(), 32);
-         buf.writeUtf(a.battleType(), 32);
-         buf.writeVarInt(a.level());
-         buf.writeVarInt(a.pick());
-         buf.writeBoolean(a.fullHeal());
-         buf.writeBoolean(a.hostEngine());
-         buf.writeBoolean(a.legality());
-         buf.writeUtf(a.inviteCode(), 32);
+      (buffer, actionPayload) -> {
+         buffer.writeUtf(actionPayload.action(), 16);
+         buffer.writeUtf(actionPayload.roomId(), 16);
+         buffer.writeUtf(actionPayload.name(), 64);
+         buffer.writeUtf(actionPayload.password(), 32);
+         buffer.writeUtf(actionPayload.battleType(), 32);
+         buffer.writeVarInt(actionPayload.level());
+         buffer.writeVarInt(actionPayload.pick());
+         buffer.writeBoolean(actionPayload.fullHeal());
+         buffer.writeBoolean(actionPayload.hostEngine());
+         buffer.writeBoolean(actionPayload.legality());
+         buffer.writeUtf(actionPayload.inviteCode(), 32);
       },
-      buf -> new RoomActionPayload(
-         buf.readUtf(16),
-         buf.readUtf(16),
-         buf.readUtf(64),
-         buf.readUtf(32),
-         buf.readUtf(32),
-         buf.readVarInt(),
-         buf.readVarInt(),
-         buf.readBoolean(),
-         buf.readBoolean(),
-         buf.readBoolean(),
-         buf.readUtf(32)
+      buffer -> new RoomActionPayload(
+         buffer.readUtf(16), buffer.readUtf(16), buffer.readUtf(64), buffer.readUtf(32), buffer.readUtf(32),
+         buffer.readVarInt(), buffer.readVarInt(), buffer.readBoolean(), buffer.readBoolean(), buffer.readBoolean(), buffer.readUtf(32)
       )
    );
 
-   public static RoomActionPayload of(String action) {
-      return new RoomActionPayload(action, "", "", "", "singles", -1, 6, true, false, true, "");
+   public static RoomActionPayload of(String actionName) {
+      return new RoomActionPayload(actionName, "", "", "", "singles", -1, 6, true, false, true, "");
    }
 
-   public static RoomActionPayload join(String roomId, String password, String battleType, boolean hostEngine, boolean legality) {
-      return new RoomActionPayload("join", roomId, "", password, battleType, -1, 6, true, hostEngine, legality, "");
+   public static RoomActionPayload join(String roomIdentifier, String roomPassword, String battleFormat, boolean useHostEngine, boolean legalTeam) {
+      return new RoomActionPayload("join", roomIdentifier, "", roomPassword, battleFormat, -1, 6, true, useHostEngine, legalTeam, "");
    }
 
-   public static RoomActionPayload joinByCode(String inviteCode) {
-      return new RoomActionPayload("join_code", "", "", "", "", -1, 6, true, false, true, inviteCode);
+   public static RoomActionPayload joinByCode(String invitationCode) {
+      return new RoomActionPayload("join_code", "", "", "", "", -1, 6, true, false, true, invitationCode);
    }
 
    public Type<? extends CustomPacketPayload> type() {

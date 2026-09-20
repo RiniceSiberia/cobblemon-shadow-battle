@@ -210,3 +210,6 @@ B6-back-button-symbols（2026-09-19）：完成 `BackButton` 的颜色、绘制�
 
 ## B6-payload-codec-batch（2026-09-20）
 完成 TeamPreviewPayload 与 TeamPickPayload 的内部编解码命名改写；协议字段、顺序和数量上限保持。JDK21 离线 clean build 通过，259 项测试零失败。
+
+## B6-network-request-batch（2026-09-20）
+完成 CobbleBattleNetwork 与 RoomActionPayload 的内部参数和编解码变量改名；协议字段、包类型和发送顺序保持。JDK21 离线 clean build 通过，259 项测试零失败。

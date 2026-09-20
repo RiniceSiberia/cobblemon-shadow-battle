@@ -13,45 +13,45 @@ public final class CobbleBattleNetwork {
       PayloadChannelCoordinator.initialize();
    }
 
-   public static boolean sendTeamPreview(ServerPlayer participant, TeamPreviewPayload preview) {
-      return PayloadChannelCoordinator.sendWhenSupported(participant, TeamPreviewPayload.TYPE, () -> preview);
+   public static boolean sendTeamPreview(ServerPlayer participant, TeamPreviewPayload previewPayload) {
+      return PayloadChannelCoordinator.sendWhenSupported(participant, TeamPreviewPayload.TYPE, () -> previewPayload);
    }
 
-   public static boolean sendMainMenu(ServerPlayer participant, OpenMainMenuPayload menu) {
-      return PayloadChannelCoordinator.sendWhenSupported(participant, OpenMainMenuPayload.TYPE, () -> menu);
+   public static boolean sendMainMenu(ServerPlayer participant, OpenMainMenuPayload menuPayload) {
+      return PayloadChannelCoordinator.sendWhenSupported(participant, OpenMainMenuPayload.TYPE, () -> menuPayload);
    }
 
-   public static boolean sendRooms(ServerPlayer participant, RoomListPayload rooms) {
-      return PayloadChannelCoordinator.sendWhenSupported(participant, RoomListPayload.TYPE, () -> rooms);
+   public static boolean sendRooms(ServerPlayer participant, RoomListPayload roomListPayload) {
+      return PayloadChannelCoordinator.sendWhenSupported(participant, RoomListPayload.TYPE, () -> roomListPayload);
    }
 
-   public static boolean sendRoomState(ServerPlayer participant, RoomStatePayload state) {
-      return PayloadChannelCoordinator.sendWhenSupported(participant, RoomStatePayload.TYPE, () -> state);
+   public static boolean sendRoomState(ServerPlayer participant, RoomStatePayload roomStatePayload) {
+      return PayloadChannelCoordinator.sendWhenSupported(participant, RoomStatePayload.TYPE, () -> roomStatePayload);
    }
 
-   public static boolean sendServerDex(ServerPlayer participant, ServerDexPayload dex) {
-      return PayloadChannelCoordinator.sendWhenSupported(participant, ServerDexPayload.TYPE, () -> dex);
+   public static boolean sendServerDex(ServerPlayer participant, ServerDexPayload dexPayload) {
+      return PayloadChannelCoordinator.sendWhenSupported(participant, ServerDexPayload.TYPE, () -> dexPayload);
    }
 
-   public static boolean openScreen(ServerPlayer participant, AuthMode mode, String suggestedId, boolean emailEnabled) {
+   public static boolean openScreen(ServerPlayer participant, AuthMode authMode, String suggestedId, boolean emailEnabled) {
       return PayloadChannelCoordinator.sendWhenSupported(
-         participant, OpenAuthScreenPayload.TYPE, () -> OpenAuthScreenPayload.of(mode, suggestedId, emailEnabled)
+         participant, OpenAuthScreenPayload.TYPE, () -> OpenAuthScreenPayload.of(authMode, suggestedId, emailEnabled)
       );
    }
 
-   public static void sendResult(ServerPlayer participant, boolean ok, Component document) {
-      PayloadChannelCoordinator.sendWhenSupported(participant, AuthResultPayload.TYPE, () -> new AuthResultPayload(ok, document.getString()));
+   public static void sendResult(ServerPlayer participant, boolean succeeded, Component resultComponent) {
+      PayloadChannelCoordinator.sendWhenSupported(participant, AuthResultPayload.TYPE, () -> new AuthResultPayload(succeeded, resultComponent.getString()));
    }
 
-   public static void sendChatLine(ServerPlayer participant, ChatLinePayload line) {
-      PayloadChannelCoordinator.sendWhenSupported(participant, ChatLinePayload.TYPE, () -> line);
+   public static void sendChatLine(ServerPlayer participant, ChatLinePayload chatLinePayload) {
+      PayloadChannelCoordinator.sendWhenSupported(participant, ChatLinePayload.TYPE, () -> chatLinePayload);
    }
 
-   public static void sendLeaderboard(ServerPlayer participant, LeaderboardPayload board) {
-      PayloadChannelCoordinator.sendWhenSupported(participant, LeaderboardPayload.TYPE, () -> board);
+   public static void sendLeaderboard(ServerPlayer participant, LeaderboardPayload leaderboardPayload) {
+      PayloadChannelCoordinator.sendWhenSupported(participant, LeaderboardPayload.TYPE, () -> leaderboardPayload);
    }
 
-   public static void sendChatState(ServerPlayer participant, ChatStatePayload state) {
-      PayloadChannelCoordinator.sendWhenSupported(participant, ChatStatePayload.TYPE, () -> state);
+   public static void sendChatState(ServerPlayer participant, ChatStatePayload chatStatePayload) {
+      PayloadChannelCoordinator.sendWhenSupported(participant, ChatStatePayload.TYPE, () -> chatStatePayload);
    }
 }

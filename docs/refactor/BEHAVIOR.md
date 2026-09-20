@@ -372,3 +372,6 @@ RemoteBattleActor 继续保留来源服务器、座位、名称、镜像队伍�
 
 ## B6-payload-codec-batch（2026-09-20）
 队伍预览与队伍选择载荷继续保持 UTF 长度、槽位数量上限、字段顺序和列表快照行为。验证日志：D:/workspace/gradle-payload-symbols-batch.log。
+
+## B6-network-request-batch（2026-09-20）
+网络发送入口继续按原 payload 类型分发；房间动作载荷继续保持字段顺序、默认 singles、队伍上限和邀请码入口。验证日志：D:/workspace/gradle-network-room-action-batch.log。
