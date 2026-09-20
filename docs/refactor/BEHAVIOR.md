@@ -381,3 +381,6 @@ RemoteBattleActor 继续保留来源服务器、座位、名称、镜像队伍�
 
 ## B6-runtime-entry-batch（2026-09-20）
 模组初始化、服务器事件、镜像实体入口、实体位置缓存和认证提交继续保持原调用顺序与副作用。验证日志：D:/workspace/gradle-runtime-entry-batch.log。
+
+## B6-battle-factory-payload-batch（2026-09-20）
+镜像宝可梦接管、对战工厂、观战会话和图鉴/认证/房间载荷继续保持原委托和编解码顺序。验证日志：D:/workspace/gradle-final-batch.log。

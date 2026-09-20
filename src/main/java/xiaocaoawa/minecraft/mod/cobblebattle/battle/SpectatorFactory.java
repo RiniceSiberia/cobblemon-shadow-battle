@@ -2,18 +2,18 @@ package xiaocaoawa.minecraft.mod.cobblebattle.battle;
 
 import com.google.gson.JsonObject;
 
-final class SpectatorFactory {
+final class SpectatorSessionFactory {
    private final SpectatorSessions sessions;
 
-   SpectatorFactory(CrossServerBattleService service) {
-      sessions = new SpectatorSessions(service);
+   SpectatorSessionFactory(CrossServerBattleService battleService) {
+      sessions = new SpectatorSessions(battleService);
    }
 
-   void begin(JsonObject document) {
-      sessions.begin(document);
+   void begin(JsonObject spectatorDocument) {
+      sessions.begin(spectatorDocument);
    }
 
-   void end(JsonObject document) {
-      sessions.end(document);
+   void end(JsonObject spectatorDocument) {
+      sessions.end(spectatorDocument);
    }
 }

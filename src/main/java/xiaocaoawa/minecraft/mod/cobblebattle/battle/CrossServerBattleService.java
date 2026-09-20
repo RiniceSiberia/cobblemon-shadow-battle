@@ -71,9 +71,9 @@ public final class CrossServerBattleService {
    private final CobbleBattleConfig serviceConfig;
    private final RemoteDex remoteDex = new RemoteDex();
    private final MatchmakingQueueCoordinator matchmakingQueue = new MatchmakingQueueCoordinator(this);
-   private final MirrorFactory battleMirrorFactory = new MirrorFactory(this);
+   private final MirrorBattleFactory battleMirrorFactory = new MirrorBattleFactory(this);
    private final MirrorLifecycleCleanup lifecycleCleanup = new MirrorLifecycleCleanup(this);
-   private final SpectatorFactory spectatorSessions = new SpectatorFactory(this);
+   private final SpectatorSessionFactory spectatorSessions = new SpectatorSessionFactory(this);
    private final TeamPreviewCoordinator teamPreviewSessions = new TeamPreviewCoordinator(this);
    private final AuthService authenticationService = new AuthService();
    private final Map<String, CrossServerBattleService.Ranked> rankedCompetitions = new LinkedHashMap<>();

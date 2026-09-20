@@ -24,9 +24,9 @@ public record SubmitAuthPayload(int mode, String accountId, String email, String
       SubmitAuthPayload::new
    );
 
-   public static SubmitAuthPayload of(AuthMode mode, String accountId, String email, String password, String code) {
+   public static SubmitAuthPayload of(AuthMode authMode, String accountId, String email, String password, String verificationCode) {
       return new SubmitAuthPayload(
-         mode.ordinal(), accountId == null ? "" : accountId, email == null ? "" : email, password == null ? "" : password, code == null ? "" : code
+         authMode.ordinal(), accountId == null ? "" : accountId, email == null ? "" : email, password == null ? "" : password, verificationCode == null ? "" : verificationCode
       );
    }
 

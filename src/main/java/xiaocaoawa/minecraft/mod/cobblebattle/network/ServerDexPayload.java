@@ -34,17 +34,17 @@ public record ServerDexPayload(String digest, boolean unchanged, List<ServerDexP
 
    public record Entry(String id, int hp, int atk, int def, int spa, int spd, int spe) {
       public static final StreamCodec<RegistryFriendlyByteBuf, ServerDexPayload.Entry> CODEC = StreamCodec.of(
-         (buf, e) -> {
-            buf.writeUtf(e.id(), 64);
-            buf.writeVarInt(e.hp());
-            buf.writeVarInt(e.atk());
-            buf.writeVarInt(e.def());
-            buf.writeVarInt(e.spa());
-            buf.writeVarInt(e.spd());
-            buf.writeVarInt(e.spe());
+         (buffer, entry) -> {
+            buffer.writeUtf(entry.id(), 64);
+            buffer.writeVarInt(entry.hp());
+            buffer.writeVarInt(entry.atk());
+            buffer.writeVarInt(entry.def());
+            buffer.writeVarInt(entry.spa());
+            buffer.writeVarInt(entry.spd());
+            buffer.writeVarInt(entry.spe());
          },
-         buf -> new ServerDexPayload.Entry(
-            buf.readUtf(64), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt()
+         buffer -> new ServerDexPayload.Entry(
+            buffer.readUtf(64), buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt()
          )
       );
    }

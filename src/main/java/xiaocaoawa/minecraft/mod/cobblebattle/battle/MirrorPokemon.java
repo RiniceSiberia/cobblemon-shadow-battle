@@ -10,15 +10,15 @@ public final class MirrorPokemon {
    private MirrorPokemon() {
    }
 
-   static void claim(MirrorBattle mirror, List<BattlePokemon> roster) {
-      MirrorPropEntities.claim(mirror, roster);
+   static void claim(MirrorBattle mirrorBattle, List<BattlePokemon> roster) {
+      MirrorPropEntities.claim(mirrorBattle, roster);
    }
 
    static void release(List<BattlePokemon> roster) {
       MirrorPropEntities.release(roster);
    }
 
-   public static boolean onEntityAdded(Entity entity) {
-      return MirrorPropEntities.onEntityAdded(entity);
+   public static boolean onEntityAdded(Entity addedEntity) {
+      return MirrorPropEntities.onEntityAdded(addedEntity);
    }
 }

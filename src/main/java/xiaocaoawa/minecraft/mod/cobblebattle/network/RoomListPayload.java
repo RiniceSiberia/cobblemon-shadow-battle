@@ -37,41 +37,16 @@ public record RoomListPayload(List<RoomListPayload.Room> rooms, boolean refresh)
       boolean legality
    ) {
       public static final StreamCodec<RegistryFriendlyByteBuf, RoomListPayload.Room> CODEC = StreamCodec.of(
-         (buf, r) -> {
-            buf.writeUtf(r.id(), 16);
-            buf.writeUtf(r.name(), 64);
-            buf.writeUtf(r.host(), 64);
-            buf.writeVarLong(r.hostUid());
-            buf.writeUtf(r.battleType(), 32);
-            buf.writeVarInt(r.level());
-            buf.writeVarInt(r.pick());
-            buf.writeBoolean(r.fullHeal());
-            buf.writeBoolean(r.locked());
-            buf.writeUtf(r.lead(), 64);
-            buf.writeBoolean(r.hasGuest());
-            buf.writeVarInt(r.watchers());
-            buf.writeBoolean(r.mine());
-            buf.writeBoolean(r.hostEngine());
-            buf.writeBoolean(r.fighting());
-            buf.writeBoolean(r.legality());
+         (buffer, room) -> {
+            buffer.writeUtf(room.id(), 16); buffer.writeUtf(room.name(), 64); buffer.writeUtf(room.host(), 64); buffer.writeVarLong(room.hostUid());
+            buffer.writeUtf(room.battleType(), 32); buffer.writeVarInt(room.level()); buffer.writeVarInt(room.pick()); buffer.writeBoolean(room.fullHeal());
+            buffer.writeBoolean(room.locked()); buffer.writeUtf(room.lead(), 64); buffer.writeBoolean(room.hasGuest()); buffer.writeVarInt(room.watchers());
+            buffer.writeBoolean(room.mine()); buffer.writeBoolean(room.hostEngine()); buffer.writeBoolean(room.fighting()); buffer.writeBoolean(room.legality());
          },
-         buf -> new RoomListPayload.Room(
-            buf.readUtf(16),
-            buf.readUtf(64),
-            buf.readUtf(64),
-            buf.readVarLong(),
-            buf.readUtf(32),
-            buf.readVarInt(),
-            buf.readVarInt(),
-            buf.readBoolean(),
-            buf.readBoolean(),
-            buf.readUtf(64),
-            buf.readBoolean(),
-            buf.readVarInt(),
-            buf.readBoolean(),
-            buf.readBoolean(),
-            buf.readBoolean(),
-            buf.readBoolean()
+         buffer -> new RoomListPayload.Room(
+            buffer.readUtf(16), buffer.readUtf(64), buffer.readUtf(64), buffer.readVarLong(), buffer.readUtf(32), buffer.readVarInt(), buffer.readVarInt(),
+            buffer.readBoolean(), buffer.readBoolean(), buffer.readUtf(64), buffer.readBoolean(), buffer.readVarInt(), buffer.readBoolean(),
+            buffer.readBoolean(), buffer.readBoolean(), buffer.readBoolean()
          )
       );
    }

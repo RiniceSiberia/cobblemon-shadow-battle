@@ -2,14 +2,14 @@ package xiaocaoawa.minecraft.mod.cobblebattle.battle;
 
 import com.google.gson.JsonObject;
 
-final class MirrorFactory {
+final class MirrorBattleFactory {
    private final MatchedBattleAssembly assembly;
 
-   MirrorFactory(CrossServerBattleService service) {
-      assembly = new MatchedBattleAssembly(service);
+   MirrorBattleFactory(CrossServerBattleService battleService) {
+      assembly = new MatchedBattleAssembly(battleService);
    }
 
-   void build(JsonObject document) {
-      assembly.build(document);
+   void build(JsonObject battleDocument) {
+      assembly.build(battleDocument);
    }
 }

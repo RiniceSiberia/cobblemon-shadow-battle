@@ -219,3 +219,6 @@ B6-back-button-symbols（2026-09-19）：完成 `BackButton` 的颜色、绘制�
 
 ## B6-runtime-entry-batch（2026-09-20）
 完成 CobbleBattle、MirrorNpc、EntityBackedRemoteBattleActor 与 AuthScreenHandler 的内部命名改写；生命周期、实体代理和认证提交行为保持。JDK21 离线 clean build 通过，259 项测试零失败。
+
+## B6-battle-factory-payload-batch（2026-09-20）
+完成 MirrorPokemon、MirrorFactory、SpectatorFactory、ServerDexPayload、SubmitAuthPayload 与 RoomListPayload 的内部命名改写；构造、生命周期和协议字段保持。JDK21 离线 clean build 通过，259 项测试零失败。
