@@ -199,3 +199,7 @@ B6-back-button-symbols（2026-09-19）：完成 `BackButton` 的颜色、绘制�
 ## B6-open-main-menu-symbols（2026-09-20）
 
 完成 OpenMainMenuPayload 内部编解码命名改写，record 字段、协议顺序和规则数量上限保持。JDK21 离线 clean build 通过，259 项测试零失败。
+
+## B6-cross-server-battles-symbols（2026-09-20）
+
+完成 CrossServerBattles 索引入口的安全内部命名改写，公开方法、路由和清理行为保持。JDK21 离线 clean build 通过，259 项测试零失败。

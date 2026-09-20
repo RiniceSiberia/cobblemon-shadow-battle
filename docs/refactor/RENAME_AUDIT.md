@@ -52,3 +52,5 @@ B6-api-events-symbols（2026-09-19）：完成 ApiEvents 的 18 个安全内部�
 B6-player-portrait-symbols（2026-09-19）：完成 PlayerPortrait 的 16 个安全内部声明语义改名。
 
 B6-open-main-menu-symbols（2026-09-20）：完成 OpenMainMenuPayload 的 15 个安全内部声明语义改名；当前剩余 181 项。
+
+B6-cross-server-battles-symbols（2026-09-20）：完成 CrossServerBattles 的 14 个安全内部声明语义改名；当前剩余 167 项。

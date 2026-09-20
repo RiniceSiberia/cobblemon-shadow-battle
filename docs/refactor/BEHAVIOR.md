@@ -363,3 +363,6 @@ PlayerPortrait.lookup 继续裁剪显示名后缀、构造占位 UUID、创建�
 
 ## B6-open-main-menu-symbols（2026-09-20）
 OpenMainMenuPayload 的排行榜规则写入/读取顺序、UTF 长度、规则数量截断至 256 及 record 组件保持。验证日志：D:/workspace/gradle-open-main-menu-symbols.log。
+
+## B6-cross-server-battles-symbols（2026-09-20）
+CrossServerBattles 继续委托同一 BattleProjectionIndex，保留注入、选择转发、输出转发、构造登记、按本地/远端/玩家查找、清理和数量查询行为。验证日志：D:/workspace/gradle-cross-server-battles-symbols.log。
