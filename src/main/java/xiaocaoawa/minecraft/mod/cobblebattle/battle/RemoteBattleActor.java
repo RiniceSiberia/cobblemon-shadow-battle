@@ -13,23 +13,23 @@ import net.minecraft.network.chat.MutableComponent;
 import xiaocaoawa.minecraft.mod.cobblebattle.lang.Msg;
 
 public class RemoteBattleActor extends BattleActor {
-   private final String displayName;
-   private final String originServerId;
-   private final String seat;
+   private final String actorDisplayName;
+   private final String originServerIdentifier;
+   private final String battleSeat;
 
-   public RemoteBattleActor(UUID participantUuid, String displayName, String originServerId, String seat, List<BattlePokemon> creature) {
-      super(participantUuid, new ArrayList<>(creature));
-      this.displayName = displayName;
-      this.originServerId = originServerId;
-      this.seat = seat;
+   public RemoteBattleActor(UUID participantUuid, String actorDisplayName, String originServerIdentifier, String battleSeat, List<BattlePokemon> remoteTeam) {
+      super(participantUuid, new ArrayList<>(remoteTeam));
+      this.actorDisplayName = actorDisplayName;
+      this.originServerIdentifier = originServerIdentifier;
+      this.battleSeat = battleSeat;
    }
 
    public String getOriginServerId() {
-      return this.originServerId;
+      return this.originServerIdentifier;
    }
 
    public String getSeat() {
-      return this.seat;
+      return this.battleSeat;
    }
 
    public ActorType getType() {
@@ -37,26 +37,26 @@ public class RemoteBattleActor extends BattleActor {
    }
 
    public MutableComponent getName() {
-      return Component.literal(this.displayName);
+      return Component.literal(this.actorDisplayName);
    }
 
-   public MutableComponent nameOwned(String name) {
-      return Msg.of("actor.possessive", this.displayName, name);
+   public MutableComponent nameOwned(String ownedName) {
+      return Msg.of("actor.possessive", this.actorDisplayName, ownedName);
    }
 
-   public void sendUpdate(NetworkPacket<?> packet) {
+   public void sendUpdate(NetworkPacket<?> updatePacket) {
    }
 
-   public void sendMessage(Component component) {
+   public void sendMessage(Component messageComponent) {
    }
 
-   public void awardExperience(BattlePokemon battleCreature, int experience) {
+   public void awardExperience(BattlePokemon battlePokemon, int experienceAmount) {
    }
 
-   public void win(List<? extends BattleActor> otherWinners, List<? extends BattleActor> losers) {
+   public void win(List<? extends BattleActor> coWinners, List<? extends BattleActor> losingActors) {
    }
 
-   public void lose(List<? extends BattleActor> winners, List<? extends BattleActor> otherLosers) {
+   public void lose(List<? extends BattleActor> winningActors, List<? extends BattleActor> coLosers) {
    }
 
    public List<BattlePokemon> mirrorTeam() {
