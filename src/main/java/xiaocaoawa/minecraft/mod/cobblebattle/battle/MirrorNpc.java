@@ -9,19 +9,19 @@ public final class MirrorNpc {
    private MirrorNpc() {
    }
 
-   public static boolean isOrphan(Entity entity) {
-      return MirrorNpcRuntime.isOrphan(entity);
+   public static boolean isOrphan(Entity candidateEntity) {
+      return MirrorNpcRuntime.isOrphan(candidateEntity);
    }
 
-   public static NPCEntity spawn(ServerPlayer viewer, String opponentName) {
-      return MirrorNpcRuntime.spawn(viewer, opponentName);
+   public static NPCEntity spawn(ServerPlayer observer, String opponentName) {
+      return MirrorNpcRuntime.spawn(observer, opponentName);
    }
 
-   public static NPCEntity[] spawnPair(ServerPlayer viewer, String firstName, String secondName) {
-      return MirrorNpcRuntime.spawnPair(viewer, firstName, secondName);
+   public static NPCEntity[] spawnPair(ServerPlayer observer, String firstOpponentName, String secondOpponentName) {
+      return MirrorNpcRuntime.spawnPair(observer, firstOpponentName, secondOpponentName);
    }
 
-   public static void despawn(NPCEntity npc) {
-      MirrorNpcRuntime.despawn(npc);
+   public static void despawn(NPCEntity npcEntity) {
+      MirrorNpcRuntime.despawn(npcEntity);
    }
 }

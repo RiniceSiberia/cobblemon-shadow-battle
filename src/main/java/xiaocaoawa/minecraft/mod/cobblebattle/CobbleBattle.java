@@ -23,45 +23,45 @@ import xiaocaoawa.minecraft.mod.cobblebattle.network.CobbleBattleNetwork;
 
 public final class CobbleBattle {
    public static final String MOD_ID = "cobblebattle";
-   private static final Logger LOGGER = LoggerFactory.getLogger("CobbleBattle");
-   private static CobbleBattleConfig config;
-   private static CrossServerBattleService service;
+   private static final Logger MOD_LOGGER = LoggerFactory.getLogger("CobbleBattle");
+   private static CobbleBattleConfig activeConfig;
+   private static CrossServerBattleService battleService;
 
    private CobbleBattle() {
    }
 
    public static void init() {
-      config = CobbleBattleConfig.load();
-      Msg.init(config.language);
-      service = new CrossServerBattleService(config);
+      activeConfig = CobbleBattleConfig.load();
+      Msg.init(activeConfig.language);
+      battleService = new CrossServerBattleService(activeConfig);
       CobbleBattleNetwork.init();
-      LifecycleEvent.SERVER_STARTED.register((ServerState)server -> {
+      LifecycleEvent.SERVER_STARTED.register((ServerState)startedServer -> {
          RemoteTeamCodec.invalidateSpeciesCache();
-         service.onServerStarted(server);
+         battleService.onServerStarted(startedServer);
       });
-      LifecycleEvent.SERVER_STOPPING.register((ServerState)server -> service.onServerStopping());
-      CommandRegistrationEvent.EVENT.register((CommandRegistrationEvent)(dispatcher, registry, selection) -> MainCommand.register(dispatcher));
-      PlayerEvent.PLAYER_QUIT.register((PlayerQuit)participant -> service.onPlayerDisconnect(participant));
-      PlayerEvent.PLAYER_JOIN.register((PlayerJoin)player -> service.onPlayerJoin(player));
-      EntityEvent.ADD.register((Add)(entity, level) -> {
-         if (level.isClientSide()) {
+      LifecycleEvent.SERVER_STOPPING.register((ServerState)stoppingServer -> battleService.onServerStopping());
+      CommandRegistrationEvent.EVENT.register((CommandRegistrationEvent)(commandDispatcher, commandRegistry, environmentSelection) -> MainCommand.register(commandDispatcher));
+      PlayerEvent.PLAYER_QUIT.register((PlayerQuit)leavingPlayer -> battleService.onPlayerDisconnect(leavingPlayer));
+      PlayerEvent.PLAYER_JOIN.register((PlayerJoin)joiningPlayer -> battleService.onPlayerJoin(joiningPlayer));
+      EntityEvent.ADD.register((Add)(addedEntity, entityLevel) -> {
+         if (entityLevel.isClientSide()) {
             return EventResult.pass();
-         } else if (MirrorNpc.isOrphan(entity)) {
-            entity.discard();
-            LOGGER.info("Removed a leftover mirror NPC at {}", entity.blockPosition());
+         } else if (MirrorNpc.isOrphan(addedEntity)) {
+            addedEntity.discard();
+            MOD_LOGGER.info("Removed a leftover mirror NPC at {}", addedEntity.blockPosition());
             return EventResult.interruptFalse();
          } else {
-            return MirrorPokemon.onEntityAdded(entity) ? EventResult.interruptFalse() : EventResult.pass();
+            return MirrorPokemon.onEntityAdded(addedEntity) ? EventResult.interruptFalse() : EventResult.pass();
          }
       });
-      LOGGER.info("CobbleBattle initialised (serverId '{}', battle server {}:{})", new Object[]{ServerIdentity.get(), config.serverHost, config.serverPort});
+      MOD_LOGGER.info("CobbleBattle initialised (serverId '{}', battle server {}:{})", new Object[]{ServerIdentity.get(), activeConfig.serverHost, activeConfig.serverPort});
    }
 
    public static CobbleBattleConfig config() {
-      return config;
+      return activeConfig;
    }
 
    public static CrossServerBattleService service() {
-      return service;
+      return battleService;
    }
 }

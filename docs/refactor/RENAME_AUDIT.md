@@ -62,3 +62,5 @@ B6-payload-codec-batch（2026-09-20）：完成 TeamPreviewPayload 与 TeamPickP
 B6-network-request-batch（2026-09-20）：完成 CobbleBattleNetwork 与 RoomActionPayload 的安全内部声明语义改名；当前剩余 111 项。
 
 B6-account-client-batch（2026-09-20）：完成 AuthService 与 UnknownMark 的安全内部声明语义改名；当前剩余 94 项。
+
+B6-runtime-entry-batch（2026-09-20）：完成四个运行时入口类的安全内部声明语义改名；当前剩余 63 项。

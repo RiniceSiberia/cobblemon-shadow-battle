@@ -10,7 +10,7 @@ public final class AuthScreenHandler {
       ClientHandlerRuntime.initializeAuthentication();
    }
 
-   static void submit(AuthMode mode, String accountId, String email, String password, String code) {
-      ClientHandlerRuntime.submitAuthentication(mode, accountId, email, password, code);
+   static void submit(AuthMode authMode, String accountId, String email, String password, String verificationCode) {
+      ClientHandlerRuntime.submitAuthentication(authMode, accountId, email, password, verificationCode);
    }
 }

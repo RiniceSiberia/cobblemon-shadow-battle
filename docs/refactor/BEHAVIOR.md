@@ -378,3 +378,6 @@ RemoteBattleActor 继续保留来源服务器、座位、名称、镜像队伍�
 
 ## B6-account-client-batch（2026-09-20）
 认证会话入口继续使用同一 AccountSessions；UnknownMark 继续使用原纹理和宽高比例绘制。验证日志：D:/workspace/gradle-account-unknown-batch.log。
+
+## B6-runtime-entry-batch（2026-09-20）
+模组初始化、服务器事件、镜像实体入口、实体位置缓存和认证提交继续保持原调用顺序与副作用。验证日志：D:/workspace/gradle-runtime-entry-batch.log。

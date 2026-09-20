@@ -8,24 +8,24 @@ import java.util.UUID;
 import net.minecraft.world.phys.Vec3;
 
 public final class EntityBackedRemoteBattleActor extends RemoteBattleActor implements EntityBackedBattleActor<NPCEntity> {
-   private final NPCEntity npc;
-   private final Vec3 initialPos;
+   private final NPCEntity backingNpc;
+   private final Vec3 initialPosition;
 
-   public EntityBackedRemoteBattleActor(UUID participantUuid, String displayName, String originServerId, String seat, List<BattlePokemon> creature, NPCEntity npc) {
+   public EntityBackedRemoteBattleActor(UUID participantUuid, String displayName, String originServerId, String seat, List<BattlePokemon> creature, NPCEntity npcEntity) {
       super(participantUuid, displayName, originServerId, seat, creature);
-      if (npc == null) {
+      if (npcEntity == null) {
          throw new IllegalArgumentException("an entity-backed mirror actor needs an entity");
       } else {
-         this.npc = npc;
-         this.initialPos = npc.position();
+         this.backingNpc = npcEntity;
+         this.initialPosition = npcEntity.position();
       }
    }
 
    public NPCEntity getEntity() {
-      return this.npc;
+      return this.backingNpc;
    }
 
    public Vec3 getInitialPos() {
-      return this.initialPos;
+      return this.initialPosition;
    }
 }

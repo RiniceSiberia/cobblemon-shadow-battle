@@ -216,3 +216,6 @@ B6-back-button-symbols（2026-09-19）：完成 `BackButton` 的颜色、绘制�
 
 ## B6-account-client-batch（2026-09-20）
 完成 AuthService 与 UnknownMark 的内部命名改写；账号会话委托、画像纹理、绘制几何保持。JDK21 离线 clean build 通过，259 项测试零失败。
+
+## B6-runtime-entry-batch（2026-09-20）
+完成 CobbleBattle、MirrorNpc、EntityBackedRemoteBattleActor 与 AuthScreenHandler 的内部命名改写；生命周期、实体代理和认证提交行为保持。JDK21 离线 clean build 通过，259 项测试零失败。
