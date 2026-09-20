@@ -375,3 +375,6 @@ RemoteBattleActor 继续保留来源服务器、座位、名称、镜像队伍�
 
 ## B6-network-request-batch（2026-09-20）
 网络发送入口继续按原 payload 类型分发；房间动作载荷继续保持字段顺序、默认 singles、队伍上限和邀请码入口。验证日志：D:/workspace/gradle-network-room-action-batch.log。
+
+## B6-account-client-batch（2026-09-20）
+认证会话入口继续使用同一 AccountSessions；UnknownMark 继续使用原纹理和宽高比例绘制。验证日志：D:/workspace/gradle-account-unknown-batch.log。

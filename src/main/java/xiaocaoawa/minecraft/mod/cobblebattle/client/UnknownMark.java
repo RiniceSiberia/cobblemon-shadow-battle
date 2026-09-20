@@ -4,15 +4,15 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 public final class UnknownMark {
-   private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/gui/pokedex/platform_unknown.png");
-   private static final int TEXTURE_W = 390;
-   private static final int TEXTURE_H = 444;
+   private static final ResourceLocation UNKNOWN_TEXTURE = ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/gui/pokedex/platform_unknown.png");
+   private static final int UNKNOWN_TEXTURE_WIDTH = 390;
+   private static final int UNKNOWN_TEXTURE_HEIGHT = 444;
 
    private UnknownMark() {
    }
 
-   public static void draw(GuiGraphics graphics, int centreX, int floorY, int height) {
-      int width = Math.max(1, height * 390 / 444);
-      graphics.blit(TEXTURE, centreX - width / 2, floorY - height, width, height, 0.0F, 0.0F, 390, 444, 390, 444);
+   public static void draw(GuiGraphics graphics, int centerX, int baseY, int targetHeight) {
+      int targetWidth = Math.max(1, targetHeight * UNKNOWN_TEXTURE_WIDTH / UNKNOWN_TEXTURE_HEIGHT);
+      graphics.blit(UNKNOWN_TEXTURE, centerX - targetWidth / 2, baseY - targetHeight, targetWidth, targetHeight, 0.0F, 0.0F, UNKNOWN_TEXTURE_WIDTH, UNKNOWN_TEXTURE_HEIGHT, UNKNOWN_TEXTURE_WIDTH, UNKNOWN_TEXTURE_HEIGHT);
    }
 }
