@@ -1,6 +1,16 @@
 # 排障模式，打印每一条进出的 showdown 协议行，非常吵
 debug: false
 
+# 对战后端：LOCAL_SERVICE 使用原自建跨服务器服务；POKEMON_SHOWDOWN 使用官方 PS WebSocket。
+backend: "LOCAL_SERVICE"
+# 官方 PS WebSocket 地址，仅 backend=POKEMON_SHOWDOWN 时使用
+showdownWebSocket: "wss://sim3.psim.us/showdown/websocket"
+# 官方 PS 格式，例如 gen9ou；队伍必须通过官方 validator
+showdownFormat: "gen9ou"
+# 可选：由服务端代管的 PS 账号。密码不会写入日志。
+showdownUsername: ""
+showdownPassword: ""
+
 # 对战服务端地址
 serverHost: "150.138.79.9"
 # 对战服务端端口
