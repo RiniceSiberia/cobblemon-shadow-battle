@@ -35,6 +35,8 @@ object PackedTeamCodec {
                 gigantamax = misc.getOrElse(3) { "" }, dynamaxLevel = misc.getOrElse(4) { "" }, teraType = misc.getOrElse(5) { "" }
             )
         }
+
+    fun unpackSingle(value: String): ShowdownSet? = unpack(value).firstOrNull()
 }
 
 data class ShowdownSet(

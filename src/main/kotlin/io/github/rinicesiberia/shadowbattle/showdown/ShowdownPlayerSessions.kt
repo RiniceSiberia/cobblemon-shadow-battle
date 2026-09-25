@@ -15,6 +15,8 @@ import xiaocaoawa.minecraft.mod.cobblebattle.CobbleBattle
 /** 负责命令注册、玩家上线自动登录和下线断开 PS 会话。 */
 object ShowdownPlayerSessions {
     private val accounts = ShowdownAccountStore()
+    private val teams = ShowdownTeamStore()
+    private val formats = ShowdownFormatCatalog()
     private val sessions = ConcurrentHashMap<UUID, PlayerSession>()
     private val pendingRegistrations = ConcurrentHashMap<UUID, PendingRegistration>()
 
@@ -35,6 +37,29 @@ object ShowdownPlayerSessions {
                         }))
                     .then(Commands.literal("logout").executes { context -> logout(context.source) })
                     .then(Commands.literal("status").executes { context -> status(context.source) })
+                    .then(Commands.literal("formats").executes { context -> listFormats(context.source) })
+                    .then(Commands.literal("team")
+                        .then(Commands.literal("upload")
+                            .then(Commands.argument("format", StringArgumentType.word())
+                                .then(Commands.argument("name", StringArgumentType.greedyString()).executes { context ->
+                                    uploadTeam(context.source, StringArgumentType.getString(context, "format"), StringArgumentType.getString(context, "name"))
+                                })))
+                        .then(Commands.literal("list").executes { context -> listTeams(context.source) })
+                        .then(Commands.literal("get").then(Commands.argument("key", StringArgumentType.word()).executes { context ->
+                            getTeam(context.source, StringArgumentType.getString(context, "key"))
+                        }))
+                        .then(Commands.literal("delete").then(Commands.argument("key", StringArgumentType.word()).executes { context ->
+                            deleteTeam(context.source, StringArgumentType.getString(context, "key"))
+                        }))
+                        .then(Commands.literal("download").requires { it.hasPermission(4) }
+                            .then(Commands.argument("key", StringArgumentType.word()).executes { context ->
+                                downloadTeam(context.source, StringArgumentType.getString(context, "key"))
+                            }))
+                    )
+                    .then(Commands.literal("ladder").then(Commands.argument("key", StringArgumentType.word()).executes { context ->
+                        ladder(context.source, StringArgumentType.getString(context, "key"))
+                    }))
+                    .then(Commands.literal("cancel").executes { context -> cancelSearch(context.source) })
             )
         }
         PlayerEvent.PLAYER_JOIN.register { player -> autoLogin(player) }
@@ -125,6 +150,73 @@ object ShowdownPlayerSessions {
         return 1
     }
 
+    private fun listFormats(source: net.minecraft.commands.CommandSourceStack): Int {
+        val player = source.getPlayerOrException()
+        val session = sessions[player.uuid] ?: return failure(source, "请先登录 PS")
+        session.requestFormats()
+        source.sendSuccess({ Component.literal("已请求官方分级列表，请稍后再次执行 /pokemonshowdown formats") }, false)
+        formats.all().forEach { format -> source.sendSuccess({ Component.literal("${format.id} - ${format.displayName}") }, false) }
+        return 1
+    }
+
+    private fun uploadTeam(source: net.minecraft.commands.CommandSourceStack, format: String, name: String): Int {
+        val player = source.getPlayerOrException()
+        val session = sessions[player.uuid] ?: return failure(source, "请先登录 PS")
+        val selected = formats.find(format) ?: ShowdownFormatCatalog.Format(format, format, true)
+        val packed = runCatching { CobblemonShowdownTeamExporter.export(player) }.getOrElse { return failure(source, "队伍序列化失败: ${root(it)}") }
+        session.validateAndUpload(selected.id, packed).whenComplete { _, error -> player.server.execute {
+            if (error != null) player.sendSystemMessage(Component.literal("队伍未上传，PS 校验失败: ${root(error)}"))
+            else {
+                val saved = teams.upsert(player.uuid, name.trim(), selected.id, packed)
+                player.sendSystemMessage(Component.literal("队伍已上传: ${saved.name} (${saved.id})"))
+            }
+        } }
+        source.sendSuccess({ Component.literal("正在上传并校验队伍……") }, false)
+        return 1
+    }
+
+    private fun listTeams(source: net.minecraft.commands.CommandSourceStack): Int {
+        val player = source.getPlayerOrException()
+        val entries = teams.list(player.uuid)
+        if (entries.isEmpty()) source.sendSuccess({ Component.literal("没有已保存的队伍") }, false)
+        entries.forEach { team -> source.sendSuccess({ Component.literal("${team.id} ${team.name} [${team.format}]") }, false) }
+        return 1
+    }
+
+    private fun getTeam(source: net.minecraft.commands.CommandSourceStack, key: String): Int {
+        val player = source.getPlayerOrException()
+        val team = teams.find(player.uuid, key) ?: return failure(source, "找不到队伍: $key")
+        source.sendSuccess({ Component.literal("${team.name} (${team.id}) [${team.format}]\n${team.packed}") }, false)
+        return 1
+    }
+
+    private fun deleteTeam(source: net.minecraft.commands.CommandSourceStack, key: String): Int {
+        val player = source.getPlayerOrException()
+        return if (teams.remove(player.uuid, key)) { source.sendSuccess({ Component.literal("队伍已删除: $key") }, false); 1 } else failure(source, "找不到队伍: $key")
+    }
+
+    private fun downloadTeam(source: net.minecraft.commands.CommandSourceStack, key: String): Int {
+        val player = source.getPlayerOrException()
+        val team = teams.find(player.uuid, key) ?: return failure(source, "找不到队伍: $key")
+        return failure(source, "队伍 ${team.name} 已读取；Cobblemon party 的安全写回适配器尚未启用，请保留当前 party")
+    }
+
+    private fun ladder(source: net.minecraft.commands.CommandSourceStack, key: String): Int {
+        val player = source.getPlayerOrException()
+        val session = sessions[player.uuid] ?: return failure(source, "请先登录 PS")
+        val team = teams.find(player.uuid, key) ?: return failure(source, "找不到队伍: $key")
+        session.search(team.format, team.packed)
+        source.sendSuccess({ Component.literal("已提交排位匹配: ${team.name} (${team.format})") }, false)
+        return 1
+    }
+
+    private fun cancelSearch(source: net.minecraft.commands.CommandSourceStack): Int {
+        val player = source.getPlayerOrException()
+        sessions[player.uuid]?.cancelSearch()
+        source.sendSuccess({ Component.literal("已请求取消排位匹配") }, false)
+        return 1
+    }
+
     private fun replaceSession(player: UUID): PlayerSession {
         sessions.remove(player)?.close()
         return PlayerSession(URI.create(CobbleBattle.config().showdownWebSocket)).also { sessions[player] = it }
@@ -150,6 +242,21 @@ object ShowdownPlayerSessions {
         private var pendingUsername: String? = null
         private var pendingPassword: String? = null
         private var pendingResult: CompletableFuture<String>? = null
+        private var pendingTeamResult: CompletableFuture<Unit>? = null
+
+        fun requestFormats() { client?.send("|/formats") }
+        fun cancelSearch() { client?.send(ShowdownProtocol.cancelSearch()) }
+        fun search(format: String, packed: String) { client?.send(ShowdownProtocol.uploadTeam(packed)); client?.send(ShowdownProtocol.search(format)) }
+        fun validateAndUpload(format: String, packed: String): CompletableFuture<Unit> {
+            val result = CompletableFuture<Unit>()
+            pendingTeamResult = result
+            client?.send(ShowdownProtocol.uploadTeam(packed))?.thenCompose { client?.send(ShowdownProtocol.validate(format)) ?: CompletableFuture.failedFuture(IllegalStateException("PS 尚未连接")) }
+                ?.exceptionally { result.completeExceptionally(it); null }
+            java.util.concurrent.CompletableFuture.delayedExecutor(15, java.util.concurrent.TimeUnit.SECONDS).execute {
+                if (result.completeExceptionally(IllegalStateException("PS 队伍校验超时"))) pendingTeamResult = null
+            }
+            return result
+        }
 
         fun login(username: String, password: String): CompletableFuture<String> = authenticate(username, password)
 
@@ -200,6 +307,15 @@ object ShowdownPlayerSessions {
             val result = CompletableFuture<String>()
             lateinit var active: OfficialShowdownClient
             active = OfficialShowdownClient(endpoint, { frame ->
+                formats.update(frame)
+                val validationLine = frame.lines.firstOrNull { line ->
+                    line.contains("team", true) && (line.contains("valid", true) || line.contains("invalid", true) || line.contains("error", true))
+                } ?: frame.lines.firstOrNull { it.startsWith("|popup|") }
+                if (pendingTeamResult != null && validationLine != null) {
+                    val result = pendingTeamResult
+                    pendingTeamResult = null
+                    if (validationLine.contains("invalid", true) || validationLine.contains("error", true)) result?.completeExceptionally(IllegalStateException(validationLine.removePrefix("|"))) else result?.complete(Unit)
+                }
                 frame.lines.firstOrNull { it.startsWith("|updateuser|") }?.let { line ->
                     val fields = line.split('|')
                     val named = fields.getOrNull(2) == "1"
