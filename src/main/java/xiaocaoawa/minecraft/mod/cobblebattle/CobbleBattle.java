@@ -20,6 +20,7 @@ import xiaocaoawa.minecraft.mod.cobblebattle.config.CobbleBattleConfig;
 import xiaocaoawa.minecraft.mod.cobblebattle.config.ServerIdentity;
 import xiaocaoawa.minecraft.mod.cobblebattle.lang.Msg;
 import xiaocaoawa.minecraft.mod.cobblebattle.network.CobbleBattleNetwork;
+import io.github.rinicesiberia.shadowbattle.showdown.ShowdownPlayerSessions;
 
 public final class CobbleBattle {
    public static final String MOD_ID = "cobblebattle";
@@ -34,6 +35,7 @@ public final class CobbleBattle {
       activeConfig = CobbleBattleConfig.load();
       Msg.init(activeConfig.language);
       battleService = new CrossServerBattleService(activeConfig);
+      ShowdownPlayerSessions.register();
       CobbleBattleNetwork.init();
       LifecycleEvent.SERVER_STARTED.register((ServerState)startedServer -> {
          RemoteTeamCodec.invalidateSpeciesCache();

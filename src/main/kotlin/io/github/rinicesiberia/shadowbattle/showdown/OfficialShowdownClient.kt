@@ -6,6 +6,9 @@ import java.net.http.WebSocket
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 
 /** 官方 PS WebSocket 的传输层。认证和房间状态由上层按 frame 处理。 */
 class OfficialShowdownClient @JvmOverloads constructor(
@@ -18,6 +21,7 @@ class OfficialShowdownClient @JvmOverloads constructor(
     private val closed = AtomicBoolean(false)
     private val buffer = StringBuilder()
     @Volatile private var socket: WebSocket? = null
+    @Volatile private var heartbeat: ScheduledFuture<*>? = null
 
     fun connect(): CompletableFuture<Unit> = httpClient.newWebSocketBuilder().buildAsync(endpoint, this).thenApply {
         socket = it
@@ -31,6 +35,13 @@ class OfficialShowdownClient @JvmOverloads constructor(
 
     override fun onOpen(webSocket: WebSocket) {
         socket = webSocket
+        heartbeat?.cancel(false)
+        heartbeat = HEARTBEAT.scheduleWithFixedDelay({
+            if (!closed.get() && socket === webSocket) {
+                webSocket.sendPing(java.nio.ByteBuffer.wrap("cobblebattle".toByteArray()))
+                    .exceptionally { error -> onFailure(error); null }
+            }
+        }, 30, 30, TimeUnit.SECONDS)
         webSocket.request(1)
     }
 
@@ -51,12 +62,22 @@ class OfficialShowdownClient @JvmOverloads constructor(
 
     override fun onClose(webSocket: WebSocket, statusCode: Int, reason: String): CompletionStage<*> {
         socket = null
+        heartbeat?.cancel(false)
+        heartbeat = null
         if (!closed.get()) onFailure(IllegalStateException("官方 PS 连接关闭: $statusCode $reason"))
         return CompletableFuture.completedFuture(Unit)
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) socket?.sendClose(WebSocket.NORMAL_CLOSURE, "shutdown")
+        heartbeat?.cancel(false)
+        heartbeat = null
         socket = null
+    }
+
+    private companion object {
+        val HEARTBEAT = Executors.newSingleThreadScheduledExecutor { task ->
+            Thread(task, "CobbleBattle-PS-Heartbeat").apply { isDaemon = true }
+        }
     }
 }

@@ -65,9 +65,6 @@ import io.github.rinicesiberia.shadowbattle.battle.ServiceRequestLedger;
 import io.github.rinicesiberia.shadowbattle.transport.BattleControlMessages;
 import io.github.rinicesiberia.shadowbattle.transport.ServiceRequests;
 import io.github.rinicesiberia.shadowbattle.transport.ServiceProtocolMessages;
-import io.github.rinicesiberia.shadowbattle.showdown.OfficialShowdownClient;
-import io.github.rinicesiberia.shadowbattle.showdown.ShowdownFrame;
-import java.net.URI;
 
 public final class CrossServerBattleService {
    private static final Logger SERVICE_LOGGER = LoggerFactory.getLogger("CobbleBattle");
@@ -82,7 +79,6 @@ public final class CrossServerBattleService {
    private final Map<String, CrossServerBattleService.Ranked> rankedCompetitions = new LinkedHashMap<>();
    private final ServiceRequestLedger requestLedger = new ServiceRequestLedger();
    private BattleServerClient battleServerClient;
-   private OfficialShowdownClient officialShowdownClient;
    private MinecraftServer gameServer;
    private final Set<UUID> waitingChunksAuthOpens = ConcurrentHashMap.newKeySet();
    private ScheduledExecutorService idleDisconnectScheduler;
@@ -165,18 +161,6 @@ public final class CrossServerBattleService {
 
    public void onServerStarted(MinecraftServer startedServer) {
       this.gameServer = startedServer;
-      if (this.serviceConfig.backend == CobbleBattleConfig.Backend.POKEMON_SHOWDOWN) {
-         try {
-            this.officialShowdownClient = new OfficialShowdownClient(
-               URI.create(this.serviceConfig.showdownWebSocket),
-               frame -> { this.handleOfficialFrame(frame); return kotlin.Unit.INSTANCE; },
-               error -> { SERVICE_LOGGER.warn("Official Pokémon Showdown connection failed", error); return kotlin.Unit.INSTANCE; }
-            );
-            this.officialShowdownClient.connect().exceptionally(error -> { SERVICE_LOGGER.warn("Official Pokémon Showdown connection failed", error); return null; });
-         } catch (RuntimeException error) {
-            SERVICE_LOGGER.warn("Invalid official Pokémon Showdown endpoint", error);
-         }
-      }
       if (this.serviceConfig.backend == CobbleBattleConfig.Backend.POKEMON_SHOWDOWN) return;
       this.remoteDex.loadFromDisk();
       CrossServerBattles.setChoiceRelay(this::sendBattleChoice);
@@ -269,10 +253,6 @@ public final class CrossServerBattleService {
       if (this.battleServerClient != null) {
          this.battleServerClient.stop();
       }
-      if (this.officialShowdownClient != null) {
-         this.officialShowdownClient.close();
-         this.officialShowdownClient = null;
-      }
 
       for (MirrorBattle activeMirror : CrossServerBattles.all()) {
          this.lifecycleCleanup.sweepEntities(activeMirror, 0L);
@@ -283,9 +263,6 @@ public final class CrossServerBattleService {
       this.teamPreviewSessions.clearSessions();
    }
 
-   private void handleOfficialFrame(ShowdownFrame frame) {
-      SERVICE_LOGGER.debug("Official PS frame room={} lines={}", frame.getRoomId(), frame.getLines().size());
-   }
 
    private void sendHandshakeAfterConnect() {
       JsonObject handshake = ServiceProtocolMessages.hello(
