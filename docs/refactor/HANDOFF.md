@@ -15,3 +15,5 @@ B6-integration-closeout（2026-09-20）：JDK21 IDEA 模型生成成功；runSer
 ## B7-team-data-world-snapshot（2026-09-27）
 队伍数据改为绑定当前服务端 world：world/cobblebattle/pokemon/showdown-teams.json。上传记录 Showdown packed team、完整 Cobblemon Pokémon JSON 快照和按 UUID/槽位/物种/形态/道具/能力/招式/有效性格/EV/有效IV/性别/等级/闪光/球种/太晶等字段生成的 SHA-256 指纹；有效 IV 优先调用运行时 getEffectiveBattleIV，兼容 Hyper Training，原始 IV 差异时推导 Hidden Power。修正 packed misc 字段顺序为 happiness,pokeball,hpType,gigantamax,dynamaxLevel,teraType。排位前重新导出并拒绝 party 变化；4 级 download 先加载全部快照，成功后一次性覆盖 party，失败尝试恢复原 party。分级解析按官方 |formats| 后缀处理。对战塔对照：其 TeamSnapshot 用 Pokemon.copyFrom 保存完整 NBT，开战前比较队伍数量、UUID 集合、物种、携带物和能力；本实现进一步比较所有对战字段并保持槽位顺序。JDK21 gradlew test 通过。官方 PS 不提供账号云端命名队伍存储，/utm 仅设置当前会话队伍，因此本地 world 仓库是有意设计。
 
+
+B4-showdown-temporary-state（2026-09-27）：官方 Showdown 和原跨服队列统一使用 `PartyStore.toBattleTeam(true, true, null)` 创建临时副本；新增 `ShowdownBattleStatePolicy`，对副本清除异常及持续时间、恢复 HP、清零 Cobblemon PP Up 阶段并设置 Showdown 基础 PP 上限。官方 packed team 继续调用 Cobblemon `BattleRegistry.packTeam` 后剥离 Cobblemon 私有字段；上传快照读取原始 party，指纹使用原始 UUID，避免副本 UUID 导致队伍一致性误判。JDK21 `gradlew test --no-daemon` 通过；真实游戏内战斗结束后的副本回收、官方房间镜像及客户端显示仍待集成验证。

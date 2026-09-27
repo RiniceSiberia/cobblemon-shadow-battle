@@ -29,6 +29,7 @@ import io.github.rinicesiberia.shadowbattle.battle.QueueResponseDecoding;
 import io.github.rinicesiberia.shadowbattle.transport.PlayerIdentityPayload;
 import io.github.rinicesiberia.shadowbattle.transport.QueueRequests;
 import io.github.rinicesiberia.shadowbattle.transport.RoomQueueRequests;
+import io.github.rinicesiberia.shadowbattle.showdown.ShowdownBattleStatePolicy;
 
 final class MatchmakingQueueCoordinator {
    private final CrossServerBattleService battleService;
@@ -82,7 +83,8 @@ final class MatchmakingQueueCoordinator {
       } else {
          RemoteTeamCodec.warmSpeciesCache();
          PartyStore party = PlayerExtensionsKt.party(participant);
-         List<BattlePokemon> roster = party.toBattleTeam(false, false, null);
+         List<BattlePokemon> roster = party.toBattleTeam(true, true, null);
+         ShowdownBattleStatePolicy.INSTANCE.normalize(roster);
          if (roster.isEmpty()) {
             throw new MatchmakingQueueCoordinator.QueuePreparationFailure(Msg.of(ChatFormatting.RED, "queue.no_pokemon"));
          } else {
@@ -294,7 +296,8 @@ final class MatchmakingQueueCoordinator {
 
    Component evaluatePartyCompatibility(ServerPlayer participant) {
       PartyStore partyStore = PlayerExtensionsKt.party(participant);
-      List<BattlePokemon> roster = partyStore.toBattleTeam(false, false, null);
+      List<BattlePokemon> roster = partyStore.toBattleTeam(true, true, null);
+      ShowdownBattleStatePolicy.INSTANCE.normalize(roster);
       if (roster.isEmpty()) {
          return Msg.of(ChatFormatting.YELLOW, "check.no_pokemon");
       } else {
