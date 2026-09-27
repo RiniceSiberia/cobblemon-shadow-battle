@@ -40,6 +40,7 @@ public final class CobbleBattle {
       LifecycleEvent.SERVER_STARTED.register((ServerState)startedServer -> {
          RemoteTeamCodec.invalidateSpeciesCache();
          battleService.onServerStarted(startedServer);
+         ShowdownPlayerSessions.onServerStarted(startedServer);
       });
       LifecycleEvent.SERVER_STOPPING.register((ServerState)stoppingServer -> battleService.onServerStopping());
       CommandRegistrationEvent.EVENT.register((CommandRegistrationEvent)(commandDispatcher, commandRegistry, environmentSelection) -> MainCommand.register(commandDispatcher));

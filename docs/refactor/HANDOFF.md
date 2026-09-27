@@ -10,3 +10,8 @@ B6-integration-closeout（2026-09-20）：JDK21 IDEA 模型生成成功；runSer
 ## B7-official-team-commands（2026-09-25）
 官方 PS 队伍命令批次：新增 ShowdownTeamStore、ShowdownFormatCatalog 和 CobblemonShowdownTeamExporter；接入 /pokemonshowdown formats、team upload/list/get/delete/download、ladder、cancel。队伍上传发送 /utm 与 /vtm，校验成功后才写入本地存储，同名保留原队伍 ID 并覆盖 packed 内容；保存采用临时文件替换。JDK21 下 gradlew test 全量通过。队伍从线上安全实例化回写 Cobblemon party 尚未完成，download 命令要求权限 4 并返回明确未启用反馈；官方 battle room 到原 MirrorBattle 的镜像接入仍待后续批次。
 
+
+
+## B7-team-data-world-snapshot（2026-09-27）
+队伍数据改为绑定当前服务端 world：world/cobblebattle/pokemon/showdown-teams.json。上传记录 Showdown packed team、完整 Cobblemon Pokémon JSON 快照和按 UUID/槽位/物种/形态/道具/能力/招式/有效性格/EV/有效IV/性别/等级/闪光/球种/太晶等字段生成的 SHA-256 指纹；有效 IV 优先调用运行时 getEffectiveBattleIV，兼容 Hyper Training，原始 IV 差异时推导 Hidden Power。修正 packed misc 字段顺序为 happiness,pokeball,hpType,gigantamax,dynamaxLevel,teraType。排位前重新导出并拒绝 party 变化；4 级 download 先加载全部快照，成功后一次性覆盖 party，失败尝试恢复原 party。分级解析按官方 |formats| 后缀处理。对战塔对照：其 TeamSnapshot 用 Pokemon.copyFrom 保存完整 NBT，开战前比较队伍数量、UUID 集合、物种、携带物和能力；本实现进一步比较所有对战字段并保持槽位顺序。JDK21 gradlew test 通过。官方 PS 不提供账号云端命名队伍存储，/utm 仅设置当前会话队伍，因此本地 world 仓库是有意设计。
+

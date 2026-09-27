@@ -17,7 +17,7 @@ object PackedTeamCodec {
             set.ivs,
             if (set.shiny) "S" else "",
             set.level.takeUnless { it == "100" }.orEmpty(),
-            listOf(set.happiness, set.hpType, set.hpPower, set.gigantamax, set.dynamaxLevel, set.teraType).joinToString(",")
+            listOf(set.happiness, set.pokeball, set.hpType, set.gigantamax, set.dynamaxLevel, set.teraType).joinToString(",")
         ).joinToString("|")
     }
 
@@ -31,7 +31,7 @@ object PackedTeamCodec {
                 nickname = field(0), species = field(1).ifBlank { field(0) }, item = field(2), ability = field(3),
                 moves = field(4).split(',').filter(String::isNotEmpty), nature = field(5), evs = field(6),
                 gender = field(7), ivs = field(8), shiny = field(9) == "S", level = field(10).ifBlank { "100" },
-                happiness = misc.getOrElse(0) { "" }, hpType = misc.getOrElse(1) { "" }, hpPower = misc.getOrElse(2) { "" },
+                happiness = misc.getOrElse(0) { "" }, pokeball = misc.getOrElse(1) { "" }, hpType = misc.getOrElse(2) { "" },
                 gigantamax = misc.getOrElse(3) { "" }, dynamaxLevel = misc.getOrElse(4) { "" }, teraType = misc.getOrElse(5) { "" }
             )
         }
@@ -51,8 +51,8 @@ data class ShowdownSet(
     val ivs: String = "",
     val shiny: Boolean = false,
     val happiness: String = "",
+    val pokeball: String = "",
     val hpType: String = "",
-    val hpPower: String = "",
     val level: String = "",
     val gigantamax: String = "",
     val dynamaxLevel: String = "",
