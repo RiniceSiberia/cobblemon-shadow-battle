@@ -16,6 +16,7 @@ import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import xiaocaoawa.minecraft.mod.cobblebattle.CobbleBattle
+import xiaocaoawa.minecraft.mod.cobblebattle.battle.CrossServerBattles
 
 /** 负责命令注册、玩家上线自动登录和下线断开 PS 会话。 */
 object ShowdownPlayerSessions {
@@ -24,6 +25,8 @@ object ShowdownPlayerSessions {
     private val formats = ShowdownFormatCatalog()
     private val sessions = ConcurrentHashMap<UUID, PlayerSession>()
     private val pendingRegistrations = ConcurrentHashMap<UUID, PendingRegistration>()
+
+    internal fun sessionFor(player: UUID): PlayerSession? = sessions[player]
 
     @JvmStatic
     fun register() {
@@ -79,6 +82,17 @@ object ShowdownPlayerSessions {
             .resolve("pokemon")
             .resolve("showdown-teams.json")
         teams = ShowdownTeamStore(location)
+        OfficialShowdownMirrorBridge.onServerStarted(server)
+        if (CobbleBattle.config().backend == xiaocaoawa.minecraft.mod.cobblebattle.config.CobbleBattleConfig.Backend.POKEMON_SHOWDOWN) {
+            CrossServerBattles.setChoiceRelay(OfficialShowdownMirrorBridge::forwardChoice)
+        }
+    }
+
+    @JvmStatic
+    fun onServerStopping() {
+        OfficialShowdownMirrorBridge.onServerStopping()
+        sessions.values.forEach { it.close() }
+        sessions.clear()
     }
 
     private fun passwordArguments(withId: Boolean) = Commands.argument("password", StringArgumentType.word())
@@ -263,7 +277,7 @@ object ShowdownPlayerSessions {
 
     private fun replaceSession(player: UUID): PlayerSession {
         sessions.remove(player)?.close()
-        return PlayerSession(URI.create(CobbleBattle.config().showdownWebSocket)).also { sessions[player] = it }
+        return PlayerSession(URI.create(CobbleBattle.config().showdownWebSocket), player).also { sessions[player] = it }
     }
 
     private fun failure(source: net.minecraft.commands.CommandSourceStack, message: String): Int {
@@ -277,7 +291,7 @@ object ShowdownPlayerSessions {
         return current.message ?: current.javaClass.simpleName
     }
 
-    private class PlayerSession(private val endpoint: URI) : AutoCloseable {
+    internal class PlayerSession(private val endpoint: URI, private val playerUuid: UUID) : AutoCloseable {
         @Volatile var status: String = "未连接"
             private set
         private val http = ShowdownLoginHttp()
@@ -289,6 +303,7 @@ object ShowdownPlayerSessions {
         private var pendingTeamResult: CompletableFuture<Unit>? = null
 
         fun requestFormats() { client?.send("|/formats") }
+        fun sendToRoom(roomId: String, command: String) { client?.send("$roomId|$command") }
         fun cancelSearch() { client?.send(ShowdownProtocol.cancelSearch()) }
         fun search(format: String, packed: String) {
             val active = client ?: return
@@ -358,6 +373,7 @@ object ShowdownPlayerSessions {
             lateinit var active: OfficialShowdownClient
             active = OfficialShowdownClient(endpoint, { frame ->
                 formats.update(frame)
+                if (frame.roomId?.startsWith("battle-") == true) OfficialShowdownMirrorBridge.accept(playerUuid, frame)
                 val validationLine = frame.lines.firstOrNull { line ->
                     if (!line.startsWith("|popup|")) return@firstOrNull false
                     val popup = line.removePrefix("|popup|").trim()

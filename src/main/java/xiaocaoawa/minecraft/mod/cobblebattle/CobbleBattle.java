@@ -42,7 +42,10 @@ public final class CobbleBattle {
          battleService.onServerStarted(startedServer);
          ShowdownPlayerSessions.onServerStarted(startedServer);
       });
-      LifecycleEvent.SERVER_STOPPING.register((ServerState)stoppingServer -> battleService.onServerStopping());
+      LifecycleEvent.SERVER_STOPPING.register((ServerState)stoppingServer -> {
+         ShowdownPlayerSessions.onServerStopping();
+         battleService.onServerStopping();
+      });
       CommandRegistrationEvent.EVENT.register((CommandRegistrationEvent)(commandDispatcher, commandRegistry, environmentSelection) -> MainCommand.register(commandDispatcher));
       PlayerEvent.PLAYER_QUIT.register((PlayerQuit)leavingPlayer -> battleService.onPlayerDisconnect(leavingPlayer));
       PlayerEvent.PLAYER_JOIN.register((PlayerJoin)joiningPlayer -> battleService.onPlayerJoin(joiningPlayer));

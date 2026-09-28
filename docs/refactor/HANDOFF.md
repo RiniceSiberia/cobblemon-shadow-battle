@@ -17,3 +17,5 @@ B6-integration-closeout（2026-09-20）：JDK21 IDEA 模型生成成功；runSer
 
 
 B4-showdown-temporary-state（2026-09-27）：官方 Showdown 和原跨服队列统一使用 `PartyStore.toBattleTeam(true, true, null)` 创建临时副本；新增 `ShowdownBattleStatePolicy`，对副本清除异常及持续时间、恢复 HP、清零 Cobblemon PP Up 阶段并设置 Showdown 基础 PP 上限。官方 packed team 继续调用 Cobblemon `BattleRegistry.packTeam` 后剥离 Cobblemon 私有字段；上传快照读取原始 party，指纹使用原始 UUID，避免副本 UUID 导致队伍一致性误判。JDK21 `gradlew test --no-daemon` 通过；真实游戏内战斗结束后的副本回收、官方房间镜像及客户端显示仍待集成验证。
+
+B7-official-mirrorbattle（2026-09-28）：新增官方 PS battle room 适配器。PlayerSession 识别 `battle-*` 房间，把 `|player|`、`|poke|`、`|start|` 和后续 battle stream 转交 `OfficialShowdownMirrorBridge`；桥接器创建临时 Cobblemon battle 副本，复用 `MirrorBattle`、`ShowdownInterpreter` 和 `CrossServerBattles`，本地选择通过官方房间命令回传。对手仅按 PS 已公开的 `|poke|` 物种创建占位 roster，不伪造未公开能力和招式；服务停止时关闭房间和会话。JDK21 `gradlew test --no-daemon` 通过。真实服务器匹配、客户端画面及不同格式事件仍需联调，当前实现保留官方 stream 与本地规则差异的风险记录。
